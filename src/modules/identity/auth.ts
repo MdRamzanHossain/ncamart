@@ -650,6 +650,74 @@ export const authService = {
     return null;
   },
 
+  async findCustomerByPhone(phone: string): Promise<CustomerRow | null> {
+    const normalized = normalizeBdPhone(phone);
+    try {
+      const rows = await db.select().from(customers).where(eq(customers.phone, normalized)).limit(1);
+      if (rows[0]) return rows[0];
+    } catch {
+      // Ignored
+    }
+    return memCustomerStore.get(normalized) ?? null;
+  },
+
+  async findOrCreateCustomerByPhone(
+    phone: string,
+    fullName?: string | null
+  ): Promise<CustomerRow> {
+    const normalized = normalizeBdPhone(phone);
+    let existing = await this.findCustomerByPhone(normalized);
+    if (existing) {
+      if (fullName && !existing.fullName) {
+        existing.fullName = fullName;
+        await this.saveCustomer(existing);
+      }
+      return existing;
+    }
+
+    const now = new Date();
+    const newCustomer: typeof customers.$inferInsert = {
+      phone: normalized,
+      fullName: fullName ?? null,
+      status: "ACTIVE",
+      preferredLocale: "bn",
+      lastActiveAt: now,
+    };
+
+    try {
+      const [inserted] = await db.insert(customers).values(newCustomer).returning();
+      if (inserted) {
+        memCustomerStore.set(normalized, inserted);
+        return inserted;
+      }
+    } catch {
+      // Memory fallback
+    }
+
+    const memoryCustomer: CustomerRow = {
+      id: crypto.randomUUID(),
+      phone: normalized,
+      fullName: fullName ?? null,
+      email: null,
+      emailVerified: false,
+      status: "ACTIVE",
+      deliveredOrderCount: 0,
+      rtoCount12m: 0,
+      codBlocked: false,
+      codBlockReason: null,
+      codBlockLiftedBy: null,
+      marketingOptIn: false,
+      marketingOptInAt: null,
+      preferredLocale: "bn",
+      lastActiveAt: now,
+      previousCustomerId: null,
+      createdAt: now,
+      updatedAt: now,
+    };
+    memCustomerStore.set(normalized, memoryCustomer);
+    return memoryCustomer;
+  },
+
   async saveCustomer(customer: CustomerRow): Promise<void> {
     try {
       await db.update(customers).set(customer).where(eq(customers.id, customer.id));

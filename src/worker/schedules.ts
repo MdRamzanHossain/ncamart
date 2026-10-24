@@ -11,6 +11,7 @@ import { paymentsService } from "@/modules/payments";
 import { preorderService } from "@/modules/preorder";
 import { trustService } from "@/modules/trust";
 import { logisticsService } from "@/modules/logistics";
+import { posService } from "@/modules/pos";
 
 export interface ScheduledTask {
   name: string;
@@ -301,6 +302,15 @@ export const recurringSchedules: ScheduledTask[] = [
     handler: async () => {
       await logisticsService.runRtoRecomputeJob();
       await heartbeat("rto-count-12m-recompute");
+    },
+  },
+  {
+    name: "unclaimed-pickups",
+    cron: "30 9 * * *", // daily at 09:30 Asia/Dhaka
+    description: "Sends Day 3/6 pickup reminders, expires unpaid Day 8 pickups with restock, and flags prepaid Day 14 pickups",
+    handler: async () => {
+      await posService.runUnclaimedPickupsJob();
+      await heartbeat("unclaimed-pickups");
     },
   },
 ];
