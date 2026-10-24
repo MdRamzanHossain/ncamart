@@ -1,0 +1,95 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ncamart_postgres_dev
+    environment:
+      POSTGRES_USER: ncamart
+      POSTGRES_PASSWORD: ncamart_dev_pwd
+      POSTGRES_DB: ncamart_dev
+      TZ: Asia/Dhaka
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ncamart -d ncamart_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: ncamart_redis_dev
+    command: redis-server --appendonly yes --requirepass ""
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata_dev:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.12
+    container_name: ncamart_meilisearch_dev
+    environment:
+      MEILI_ENV: development
+      MEILI_MASTER_KEY: ncamart_meili_master_key_local_dev
+      MEILI_NO_ANALYTICS: "true"
+    ports:
+      - "7700:7700"
+    volumes:
+      - meilidata_dev:/meili_data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7700/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:RELEASE.2024-11-07T00-52-28Z
+    container_name: ncamart_minio_dev
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - miniodata_dev:/data
+
+  minio-init:
+    image: minio/mc:RELEASE.2024-11-05T19-33-06Z
+    container_name: ncamart_minio_init_dev
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc alias set local http://minio:9000 minioadmin minioadmin;
+      /usr/bin/mc mb --ignore-existing local/ncamart-media;
+      /usr/bin/mc mb --ignore-existing local/ncamart-private;
+      /usr/bin/mc mb --ignore-existing local/ncamart-audit;
+      /usr/bin/mc anonymous set download local/ncamart-media;
+      exit 0;
+      "
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: ncamart_mailpit_dev
+    ports:
+      - "1025:1025" # SMTP port
+      - "8025:8025" # Web UI
+    environment:
+      MP_DATA_FILE: /data/mailpit.db
+    volumes:
+      - mailpitdata_dev:/data
+
+volumes:
+  pgdata_dev:
+  redisdata_dev:
+  meilidata_dev:
+  miniodata_dev:
+  mailpitdata_dev:

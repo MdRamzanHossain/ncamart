@@ -1,0 +1,39 @@
+# NCAMart — Architectural & Technical Decisions Log
+
+Format: `[Date] | [Topic] | [Selected Choice] | [Reason & Precedence Level]`
+
+## Fixed Decisions (P00 Baseline)
+
+| Date | Topic | Selected Choice | Reason & Precedence Level |
+| :--- | :--- | :--- | :--- |
+| 2026-10-21 | Database Engine | PostgreSQL 16 Normalized Relational Tables | P00 rule 4: Disregard MongoDB/Mongoose in database.md; PostgreSQL is source of truth with strict ACID and foreign keys. |
+| 2026-10-21 | Application Pattern | Next.js 15 App Router Monolith (web + worker processes) | architechture.md §2: Single shared codebase for storefront, admin, POS, runner, API, and worker without serverless/microservice overhead. |
+| 2026-10-21 | API Specification Base | api-spec.md v2.0 REST endpoints under `/api/v1/*` | P00 rule: api-spec.md v2.0 defines all routes, payload shapes, and status codes. |
+| 2026-10-21 | Monetary Representation | Integer Paisa (`bigint`, `1 BDT = 100 paisa`) | P00 rule 1: Zero float precision issues; BDT only. |
+| 2026-10-21 | Percentage Representation | Integer Basis Points (`bp`, e.g. 7.5% = 750 bp) | P00 rule 2: Avoid decimal rounding inconsistencies. |
+| 2026-10-21 | Seal Void Reasons | `PRINTER_JAM`, `RIBBON_TEAR`, `STICKER_DAMAGED` | PRD v1.4 precedence over database.md. |
+| 2026-10-21 | Module Boundaries | Service and Event types exposed only | architechture.md §2 & P00 rule 8: Repos and Drizzle schemas remain internal to each module. |
+| 2026-10-21 | Append-Only Tables | PostgreSQL trigger rejecting `UPDATE`/`DELETE` | P00 rule 7: Audit trails, journal lines, seal events, order history, stock movements cannot be mutated. |
+| 2026-10-21 | External Provider Calls | Transactional Outbox + BullMQ | P00 rule 5: External HTTP calls never execute inside DB transactions. |
+| 2026-10-21 | Package Manager Config | pnpm hoisted node-linker (`copy` method) | Google Drive virtual filesystem on Windows does not support symlinks; hoisted mode ensures full compatibility. |
+| 2026-10-21 | Test Runner Config | Vitest multi-project workspaces (`unit` & `integration`) | Enables separate unit test suites and integration test setups with Testcontainers and local mock fallbacks. |
+| 2026-10-22 | Local Infrastructure Resilience | In-memory fallback for rate limiting & idempotency | When `MOCK_EXTERNAL_SERVICES=true` or Redis is unavailable during dev/unit testing, fail-safe in-memory stores prevent test timeouts and command buffering. |
+| 2026-10-22 | Audit Hash Chain Architecture | SHA-256 with `pg_advisory_xact_lock(7429103)` | Guarantees strictly ordered, tamper-evident hash chaining without table-level serialization bottlenecks. |
+| 2026-10-22 | Gapless ID Counter Strategy | Atomic UPSERT `last_no = last_no + 1 RETURNING` | Standard Postgres sequences can skip numbers upon rollback; table counters guarantee Mushak 6.3 and order serial integrity. |
+| 2026-10-22 | Append-Only Enforcement | `forbid_mutation()` Trigger + `ncamart_app` Revoke | Multi-layer defense prevents row alteration on audit, ledger, and seal tables even under administrative application roles. |
+| 2026-10-22 | Background Worker Architecture | BullMQ Queues + Deduplicated Outbox Relay Loop | Workers poll outbox with `FOR UPDATE SKIP LOCKED` and dispatch with `jobId = outbox.id`, ensuring at-least-once delivery without duplicate executions. |
+| 2026-10-22 | Bangladesh Geo Hierarchy & Caching | Static JSON Seeds + 24-Hour Cache Headers | 8 administrative divisions, 64 districts, and Dhaka city thanas are seeded from versioned JSON files and served through HTTP cached endpoints. |
+| 2026-10-22 | Customer Phone Authentication | Sliding OTP (180s) + 30-Day Sliding Sessions | Enforces 3 attempts limit, rate limits per phone and IP, Turnstile verification, and 12-month dormancy ownership confirmation. |
+| 2026-10-23 | Store Credit Expiry Accounting | Negative EXPIRY entries with ledger reversal Dr 2020 / Cr 5400 | PRD §3.14.6 & architecture §10.3: Goodwill credit expired at 00:15 Asia/Dhaka daily reverses the customer liability (Debit 2020 Store Credit Liability) and reverses the promotional expense (Credit 5400 Goodwill & Vouchers Expense) without mutating historical rows. |
+| 2026-10-23 | Cash Overage Accounting | Credit Account 5310 (Cash Variance) | architechture.md §10.3 & PRD §3.13: Cash overages in showroom drawer or runner float sessions credit account 5310 (Cash Variance) directly, netting against shortages within operating expenses rather than segregating into miscellaneous income. |
+| 2026-10-23 | Walk-in POS Order Creation | Created directly in `DELIVERED_COUNTER` status | PRD §3.12 & architechture.md §8.3: Over-the-counter walk-in showroom sales involve immediate physical handover and payment at checkout; bypassing intermediate states (PENDING_PAYMENT, PACKED, READY_FOR_PICKUP) reflects real physical reality. |
+| 2026-10-23 | Partial Delivery Return Tracking | Transition `PARTIALLY_DELIVERED` → `RTO_IN_TRANSIT` | PRD §3.12: When couriers return unaccepted items from a partially delivered consignment, moving the order to `RTO_IN_TRANSIT` ensures returned goods are monitored until confirmed receipt at Nawabpur godown (`RTO_RECEIVED`). |
+| 2026-10-23 | Mushak 6.3 Issuance Timing | Issued at Revenue Recognition (Delivery/Handover) | PRD §3.12, arch §15.4: SYSTEM invoices are generated upon order confirmation. Mushak 6.3 VAT tax invoices with gapless fiscal-year serials are issued upon handover/delivery when revenue is recognized. (TODO-CONFIRM: a licensed Bangladesh VAT consultant must confirm tax point timing under the VAT & SD Act 2012). |
+| 2026-10-24 | Pre-Order Delay Choice Goodwill Credit | Awarded upon Physical Godown Arrival (`ARRIVED_GODOWN`) | PRD §3.14 & Flow 8: If customer chooses KEEP (or times out after 24h), the ৳1,000 goodwill store credit is credited on physical arrival (`ARRIVED_GODOWN`) rather than during in-transit delay, preserving the price lock while preventing premature unearned credit distribution if customs or shipment ultimately fails. |
+| 2026-10-24 | Pre-Order Balance COD Limit | Strict ৳30,000 Cap (3,000,000 Paisa) with 422 Rejection | PRD §3.3.4 & Flow 2: COD balance payment mode is strictly capped at ৳30,000. Any balance exceeding ৳30,000 (even by 1 paisa) is rejected with 422 `ERR_COD_NOT_ALLOWED`, requiring ONLINE payment via SSLCommerz or COUNTER payment at Nawabpur showroom. |
+| 2026-10-24 | Pre-Order Spot Repricing Invariant | Customer Acceptance Only Recalculates Net Balance | PRD §3.3.5: When spot repricing occurs due to FX change > 800 bp, customer acceptance updates only the net balance due while the deposit amount is permanently fixed and price locked. Customer rejection or 48h timeout transitions the order to `CANCELLED_REFUNDED` with a 100% deposit refund. |
+| 2026-10-24 | Runner PII Masking Architecture | Zero Customer PII in Runner Tasks DTO | PRD §3.9 & api-spec §10.1: Field runner tasks expose only order number, SKU, product title, quantity, stall name/location, and max price. Customer identity, phone number, and address are strictly omitted to protect customer privacy and prevent off-platform delivery bypass. |
+| 2026-10-24 | Runner Spot-Price Tolerance & Auto-Approval Rule | Spot Buffer <= 5% (500 bp) AND Gross Margin >= 15% (1500 bp) | architechture.md §11.1 & PRD §3.4.3: Spot quotes within 5% buffer AND meeting >= 15% margin (VAT-excluded) are auto-approved without blocking the runner. Excess quotes enter `PRICE_EXCEEDED_PENDING` with outbox SSE to Sourcing Managers and a 5-min escalation job. |
+| 2026-10-24 | Partial Stockout Delivery Fee Invariant (EC-05) | Delivery fee charged once only across partial stockout splits | PRD §3.4.4 & EC-05: When a customer chooses REFUND for an unfulfillable sourcing line while retaining other order lines, the order continues with the remaining items without re-charging or re-allocating delivery fees. |
+
+

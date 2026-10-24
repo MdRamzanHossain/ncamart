@@ -1,0 +1,10 @@
+[
+  { "id": "1", "nameEn": "Dhaka", "nameBn": "ঢাকা" },
+  { "id": "2", "nameEn": "Chattogram", "nameBn": "চট্টগ্রাম" },
+  { "id": "3", "nameEn": "Rajshahi", "nameBn": "রাজশাহী" },
+  { "id": "4", "nameEn": "Khulna", "nameBn": "খুলনা" },
+  { "id": "5", "nameEn": "Barishal", "nameBn": "বরিশাল" },
+  { "id": "6", "nameEn": "Sylhet", "nameBn": "সিলেট" },
+  { "id": "7", "nameEn": "Rangpur", "nameBn": "রংপুর" },
+  { "id": "8", "nameEn": "Mymensingh", "nameBn": "ময়মনসিংহ" }
+]

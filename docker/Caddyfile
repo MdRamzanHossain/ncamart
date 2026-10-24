@@ -1,0 +1,24 @@
+{
+    email admin@ncamart.com
+    admin off
+}
+
+# ncamart.com / api / cdn
+{$DOMAIN:localhost} {
+    encode zstd gzip
+
+    # Security headers
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+
+    # Reverse proxy to web application
+    reverse_proxy web:3000 {
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+}
