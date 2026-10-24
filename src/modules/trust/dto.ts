@@ -155,3 +155,56 @@ export function buildSealLabel(sealId: string, tierMark: string): SealLabelPaylo
     tier_mark: tierMark,
   };
 }
+
+// --------------------------------------------------------------------------
+// Verification & Clone Alert DTOs
+// --------------------------------------------------------------------------
+export const publicVerifyResponseSchema = z.object({
+  is_valid: z.boolean(),
+  seal_id: z.string().optional(),
+  product_tier: z.string().optional(),
+  tier_badge: z.string().optional(),
+  product: z
+    .object({
+      title_en: z.string(),
+      title_bn: z.string(),
+      brand_name: z.string(),
+      image_url: z.string().nullable(),
+    })
+    .optional(),
+  oem_manufacturer_serial: z.string().nullable().optional(),
+  qc_verified_at: z.string().optional(),
+  technician_code: z.string().optional(),
+  warranty: z
+    .object({
+      status: z.string(),
+      warranty_days_total: z.number(),
+      starts_at: z.string().nullable(),
+      expires_at: z.string().nullable(),
+      coverage_type: z.string(),
+    })
+    .optional(),
+  start_claim_url: z.string().optional(),
+  message: z.string().optional(),
+});
+export type PublicVerifyResponse = z.infer<typeof publicVerifyResponseSchema>;
+
+export const resolveCloneAlertSchema = z.object({
+  status: z.enum(["INVESTIGATING", "DISMISSED", "CONFIRMED_CLONE"]),
+  notes: z.string().optional(),
+});
+export type ResolveCloneAlertDto = z.infer<typeof resolveCloneAlertSchema>;
+
+export const cloneAlertDtoSchema = z.object({
+  id: z.string(),
+  seal_id: z.string(),
+  reason: z.string(),
+  distinct_devices_count: z.number(),
+  distinct_districts: z.array(z.string()),
+  total_scans_24h: z.number(),
+  status: z.string(),
+  flagged_at: z.string(),
+  resolved_by: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
+});
+export type CloneAlertDto = z.infer<typeof cloneAlertDtoSchema>;

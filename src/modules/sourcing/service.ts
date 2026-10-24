@@ -65,6 +65,8 @@ export const SUPPLIER_DEFECT_SUSPEND_BP = 300; // 3.00%
 export const SUPPLIER_MIN_UNITS_FOR_AUTO_SUSPEND = 20;
 export const STOCK_STALE_HOURS = 24;
 
+const memRunnerPurchases = new Map<string, boolean>();
+
 function toAuditActorType(actor?: Actor | null): "STAFF" | "SYSTEM" | "CUSTOMER" {
   if (!actor) return "SYSTEM";
   if (actor.type === "staff") return "STAFF";

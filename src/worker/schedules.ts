@@ -248,6 +248,33 @@ export const recurringSchedules: ScheduledTask[] = [
       await heartbeat("qc-audit-escalation");
     },
   },
+  {
+    name: "clone-detection",
+    cron: "*/5 * * * *", // every 5 minutes
+    description: "Detects cloned seals (>=5 devices and >=2 districts in 24h) and alerts SUPER_ADMIN",
+    handler: async () => {
+      await trustService.runCloneDetectionJob();
+      await heartbeat("clone-detection");
+    },
+  },
+  {
+    name: "warranty-expiry",
+    cron: "30 2 * * *", // daily at 02:30 Asia/Dhaka
+    description: "Transitions ACTIVE seals with warranty_end < now to EXPIRED status",
+    handler: async () => {
+      await trustService.runWarrantyExpiryJob();
+      await heartbeat("warranty-expiry");
+    },
+  },
+  {
+    name: "partition-maintenance",
+    cron: "0 3 25 * *", // monthly on the 25th at 03:00
+    description: "Creates next month seal_verifications partition and drops partitions older than 12 months",
+    handler: async () => {
+      await trustService.runPartitionMaintenanceJob();
+      await heartbeat("partition-maintenance");
+    },
+  },
 ];
 
 export function getLastHeartbeat(jobName: string): string | undefined {

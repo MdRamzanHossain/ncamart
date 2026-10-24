@@ -9,6 +9,7 @@ import {
   index,
   uniqueIndex,
   check,
+  bigserial,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { skus } from "@/modules/catalog/schema";
@@ -183,3 +184,77 @@ export const sealVoidRequests = pgTable(
 
 export type SealVoidRequestRow = typeof sealVoidRequests.$inferSelect;
 export type InsertSealVoidRequestRow = typeof sealVoidRequests.$inferInsert;
+
+// --------------------------------------------------------------------------
+// 5. Seal Verifications Table (Monthly Partitioned)
+// --------------------------------------------------------------------------
+export const queryTypeEnum = ["SEAL", "SERIAL"] as const;
+export type QueryType = (typeof queryTypeEnum)[number];
+
+export const sealVerifications = pgTable(
+  "seal_verifications",
+  {
+    id: bigserial("id", { mode: "bigint" }).primaryKey(),
+    sealId: text("seal_id"),
+    queryRaw: text("query_raw").notNull(),
+    queryType: text("query_type", { enum: queryTypeEnum }).notNull(),
+    found: boolean("found").notNull(),
+    deviceId: text("device_id").notNull(),
+    ip: text("ip").notNull(),
+    geoDistrict: text("geo_district"),
+    userAgent: text("user_agent").notNull(),
+    isQr: boolean("is_qr").default(false).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("idx_seal_verifications_seal_id").on(table.sealId),
+    index("idx_seal_verifications_device_id").on(table.deviceId),
+    index("idx_seal_verifications_ip").on(table.ip),
+    index("idx_seal_verifications_created_at").on(table.createdAt),
+    index("idx_seal_verifications_seal_time").on(table.sealId, table.createdAt),
+  ]
+);
+
+export type SealVerificationRow = typeof sealVerifications.$inferSelect;
+export type InsertSealVerificationRow = typeof sealVerifications.$inferInsert;
+
+// --------------------------------------------------------------------------
+// 6. Seal Clone Alerts Table
+// --------------------------------------------------------------------------
+export const cloneAlertReasonEnum = [
+  "MULTI_DEVICE_MULTI_DISTRICT",
+  "VOID_SEAL_LOOKUP",
+] as const;
+export type CloneAlertReason = (typeof cloneAlertReasonEnum)[number];
+
+export const cloneAlertStatusEnum = [
+  "OPEN",
+  "INVESTIGATING",
+  "DISMISSED",
+  "CONFIRMED_CLONE",
+] as const;
+export type CloneAlertStatus = (typeof cloneAlertStatusEnum)[number];
+
+export const sealCloneAlerts = pgTable(
+  "seal_clone_alerts",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    sealId: text("seal_id").notNull(),
+    reason: text("reason", { enum: cloneAlertReasonEnum }).notNull(),
+    distinctDevices: integer("distinct_devices").notNull(),
+    distinctDistricts: jsonb("distinct_districts").$type<string[]>().notNull(),
+    totalScans24h: integer("total_scans_24h").notNull(),
+    status: text("status", { enum: cloneAlertStatusEnum }).default("OPEN").notNull(),
+    resolvedBy: uuid("resolved_by"),
+    notes: text("notes"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("idx_seal_clone_alerts_seal_id").on(table.sealId),
+    index("idx_seal_clone_alerts_status").on(table.status),
+    index("idx_seal_clone_alerts_created_at").on(table.createdAt),
+  ]
+);
+
+export type SealCloneAlertRow = typeof sealCloneAlerts.$inferSelect;
+export type InsertSealCloneAlertRow = typeof sealCloneAlerts.$inferInsert;

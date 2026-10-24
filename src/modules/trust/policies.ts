@@ -72,3 +72,17 @@ export function assertCanAuditSampling(actor: Actor | null): void {
     );
   }
 }
+
+export function canManageCloneAlerts(actor: Actor | null): boolean {
+  if (!actor || actor.type !== "staff") return false;
+  const roles = actor.roles ?? [];
+  return roles.includes("SUPER_ADMIN");
+}
+
+export function assertCanManageCloneAlerts(actor: Actor | null): void {
+  if (!actor) throw new UnauthorizedError("Authentication required");
+  if (!canManageCloneAlerts(actor)) {
+    throw new ForbiddenError("Insufficient permissions: requires SUPER_ADMIN");
+  }
+}
+

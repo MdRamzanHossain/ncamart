@@ -32,13 +32,23 @@ import {
   SupervisorAuditDto,
   validateChecklistForQcType,
   buildSealLabel,
+  ResolveCloneAlertDto,
+  CloneAlertDto,
+  PublicVerifyResponse,
 } from "./dto";
 import {
   assertCanExecuteQc,
   assertCanPrintSeal,
   assertCanApproveSealVoid,
   assertCanAuditSampling,
+  assertCanManageCloneAlerts,
 } from "./policies";
+import {
+  checkVerifyRateLimit,
+  resolveGeoDistrict,
+  verifyTurnstileToken,
+} from "./ratelimit";
+import { RateLimitError } from "@/lib/errors";
 
 export const trustService = {
   clearMemoryForTesting(): void {
@@ -1039,4 +1049,397 @@ export const trustService = {
 
     return { active_warranties: activeWarranties };
   },
+
+  // --------------------------------------------------------------------------
+  // 11. Public Verification (GET /api/v1/verify/:sealId & GET /api/v1/verify?q=&qr=1)
+  // --------------------------------------------------------------------------
+  async verifyLookup(params: {
+    inputQuery: string;
+    deviceId: string;
+    ip: string;
+    userAgent: string;
+    geoDistrict: string | null;
+    isQr: boolean;
+    turnstileToken?: string | null;
+  }): Promise<
+    | { success: true; notFound: false; response: PublicVerifyResponse }
+    | { success: false; notFound: true; response: { is_valid: false; message: string } }
+  > {
+    const {
+      inputQuery,
+      deviceId,
+      ip,
+      userAgent,
+      geoDistrict,
+      isQr,
+      turnstileToken,
+    } = params;
+
+    // 1. Enforce CGNAT-safe Rate Limits (5/min per device, 60/min per IP)
+    const rateLimitRes = await checkVerifyRateLimit({
+      deviceId,
+      ip,
+      turnstileToken,
+    });
+
+    if (rateLimitRes.blocked) {
+      const err = new RateLimitError(
+        rateLimitRes.retryAfterSec,
+        "ERR_RATE_LIMIT_BLOCKED",
+        "Access temporarily blocked due to repeated rate limit violations. Try again in 15 minutes."
+      );
+      (err as any).challenge = "turnstile";
+      throw err;
+    }
+
+    if (!rateLimitRes.allowed && rateLimitRes.challengeRequired) {
+      const err = new RateLimitError(
+        rateLimitRes.retryAfterSec,
+        "ERR_RATE_LIMIT_EXCEEDED",
+        "Too many verification requests. Please complete Turnstile challenge."
+      );
+      (err as any).challenge = "turnstile";
+      throw err;
+    }
+
+    // 2. Normalize input and perform lookup
+    const normalized = normalizeSealInput(inputQuery);
+    let seal: SealRecordRow | null = null;
+    let queryType: "SEAL" | "SERIAL" = "SEAL";
+
+    if (normalized) {
+      seal = await trustRepo.getSealRecordBySealId(normalized);
+    }
+
+    if (!seal) {
+      // Lookup by OEM manufacturer serial
+      const trimmed = inputQuery.trim();
+      if (trimmed.length > 0) {
+        seal = await trustRepo.getSealRecordByManufacturerSerial(trimmed);
+        if (seal) {
+          queryType = "SERIAL";
+        }
+      }
+    }
+
+    // 3. Log lookup to seal_verifications (monthly partitioned)
+    await trustRepo.createVerification({
+      sealId: seal?.sealId ?? null,
+      queryRaw: inputQuery,
+      queryType: normalized ? "SEAL" : (queryType || "SERIAL"),
+      found: !!seal,
+      deviceId,
+      ip,
+      geoDistrict,
+      userAgent,
+      isQr,
+    });
+
+    // 4. Emit outbox analytics
+    await emitOutbox(undefined, {
+      aggregateType: "seal_verification",
+      aggregateId: seal?.sealId ?? deviceId,
+      type: "verify_lookup",
+      payload: {
+        queryRaw: inputQuery,
+        sealId: seal?.sealId ?? null,
+        found: !!seal,
+        deviceId,
+        ip,
+        geoDistrict,
+        isQr,
+      },
+    });
+
+    if (isQr) {
+      await emitOutbox(undefined, {
+        aggregateType: "seal_verification",
+        aggregateId: seal?.sealId ?? deviceId,
+        type: "qr_scan",
+        payload: {
+          queryRaw: inputQuery,
+          sealId: seal?.sealId ?? null,
+          found: !!seal,
+          deviceId,
+          ip,
+          geoDistrict,
+        },
+      });
+    }
+
+    // 5. If not found or invalid format: return 404 response
+    if (!seal) {
+      return {
+        success: false,
+        notFound: true,
+        response: {
+          is_valid: false,
+          message: "Invalid Seal ID. Check label or enter without spaces.",
+        },
+      };
+    }
+
+    // 6. If seal is in VOID_PRINT_ERROR status:
+    // Immediate internal alert on any lookup of a VOID_PRINT_ERROR seal
+    if (seal.status === "VOID_PRINT_ERROR") {
+      const recent = await trustRepo.getRecentCloneAlertBySealId(seal.sealId, 24);
+      if (!recent) {
+        const alert = await trustRepo.createCloneAlert({
+          sealId: seal.sealId,
+          reason: "VOID_SEAL_LOOKUP",
+          distinctDevices: 1,
+          distinctDistricts: geoDistrict ? [geoDistrict] : ["Unknown"],
+          totalScans24h: 1,
+          status: "OPEN",
+        });
+
+        await emitOutbox(undefined, {
+          aggregateType: "security_alert",
+          aggregateId: alert.id,
+          type: "security.cloned_seal_suspected",
+          payload: {
+            alertId: alert.id,
+            sealId: seal.sealId,
+            reason: "VOID_SEAL_LOOKUP",
+            distinctDevices: 1,
+            distinctDistricts: alert.distinctDistricts,
+            totalScans24h: 1,
+            notificationClass: "CLASS_A",
+          },
+        });
+      }
+
+      return {
+        success: true,
+        notFound: false,
+        response: {
+          is_valid: false,
+          seal_id: seal.sealId,
+          message: "This seal is invalid (voided print error).",
+        },
+      };
+    }
+
+    // 7. Valid seal lookup:
+    // IMPORTANT: PRD §3.2.3 wins over api-spec — the clone alert is INTERNAL ONLY.
+    // The public response never reveals clone suspicion and always shows standard info.
+    const sku = await catalogService.getSkuById(seal.skuId);
+    const product = sku ? await catalogService.getProductById(sku.productId) : null;
+    const brand = product?.brandId ? await catalogService.getBrandById(product.brandId) : null;
+    const qcRecord = await trustRepo.getQcRecordBySealId(seal.sealId);
+
+    const techCode = qcRecord
+      ? `TECH-${qcRecord.technicianId.slice(-4).toUpperCase()}`
+      : "TECH-01";
+
+    let warrantyStatus = "NOT_STARTED";
+    const now = new Date();
+    if (seal.status === "CLAIMED") {
+      warrantyStatus = "CLAIMED";
+    } else if (seal.status === "EXPIRED" || (seal.warrantyEnd && seal.warrantyEnd < now)) {
+      warrantyStatus = "EXPIRED";
+    } else if (seal.status === "ACTIVE") {
+      warrantyStatus = "ACTIVE";
+    } else {
+      warrantyStatus = "NOT_STARTED";
+    }
+
+    const coverageType =
+      sku?.warrantyType ??
+      (seal.productTier === "AUTHENTIC"
+        ? "OFFICIAL_DISTRIBUTOR_REPLACEMENT"
+        : "SHOP_REPLACEMENT");
+
+    const response: PublicVerifyResponse = {
+      is_valid: true,
+      seal_id: seal.sealId,
+      product_tier: seal.productTier,
+      tier_badge: seal.productTier,
+      product: {
+        title_en: product?.titleEn ?? "Electronics",
+        title_bn: product?.titleBn ?? "ইলেকট্রনিক্স",
+        brand_name: brand?.name ?? "Official",
+        image_url: "https://cdn.ncamart.com/products/front.webp",
+      },
+      oem_manufacturer_serial:
+        seal.productTier === "AUTHENTIC" ? seal.manufacturerSerial : null,
+      qc_verified_at: (qcRecord?.createdAt ?? seal.createdAt).toISOString(),
+      technician_code: techCode,
+      warranty: {
+        status: warrantyStatus,
+        warranty_days_total: seal.warrantyDays,
+        starts_at: seal.warrantyStart?.toISOString() ?? null,
+        expires_at: seal.warrantyEnd?.toISOString() ?? null,
+        coverage_type: coverageType,
+      },
+      start_claim_url: `https://ncamart.com/claims/new?seal_id=${seal.sealId}`,
+    };
+
+    return {
+      success: true,
+      notFound: false,
+      response,
+    };
+  },
+
+  // --------------------------------------------------------------------------
+  // 12. Clone Detection Job (Every 5 minutes)
+  // --------------------------------------------------------------------------
+  async runCloneDetectionJob(now: Date = new Date()): Promise<{
+    flagged: number;
+    alertsCreated: number;
+  }> {
+    const since = new Date(now.getTime() - 24 * 3600 * 1000);
+    // EXACT SQL threshold: >= 5 distinct devices AND >= 2 distinct districts in 24h
+    const candidates = await trustRepo.findClonedSealCandidates(since, 5, 2);
+
+    let alertsCreated = 0;
+    for (const c of candidates) {
+      // Dedupe per seal per 24h
+      const recent = await trustRepo.getRecentCloneAlertBySealId(c.sealId, 24);
+      if (!recent) {
+        const alert = await trustRepo.createCloneAlert({
+          sealId: c.sealId,
+          reason: "MULTI_DEVICE_MULTI_DISTRICT",
+          distinctDevices: c.distinctDevices,
+          distinctDistricts: c.distinctDistricts,
+          totalScans24h: c.totalScans24h,
+          status: "OPEN",
+          createdAt: now,
+        });
+
+        alertsCreated++;
+
+        // Emit security alert (Class A internal -> SUPER_ADMIN)
+        await emitOutbox(undefined, {
+          aggregateType: "security_alert",
+          aggregateId: alert.id,
+          type: "security.cloned_seal_suspected",
+          payload: {
+            alertId: alert.id,
+            sealId: c.sealId,
+            reason: "MULTI_DEVICE_MULTI_DISTRICT",
+            distinctDevices: c.distinctDevices,
+            distinctDistricts: c.distinctDistricts,
+            totalScans24h: c.totalScans24h,
+            notificationClass: "CLASS_A",
+          },
+        });
+      }
+    }
+
+    return { flagged: candidates.length, alertsCreated };
+  },
+
+  // --------------------------------------------------------------------------
+  // 13. Admin Clone Alerts Management
+  // --------------------------------------------------------------------------
+  async listCloneAlerts(
+    filter?: { status?: string },
+    actor?: Actor
+  ): Promise<{ alerts: CloneAlertDto[] }> {
+    assertCanManageCloneAlerts(actor ?? null);
+    const rows = await trustRepo.listCloneAlerts(filter);
+    const alerts: CloneAlertDto[] = rows.map((r) => ({
+      id: r.id,
+      seal_id: r.sealId,
+      reason: r.reason,
+      distinct_devices_count: r.distinctDevices,
+      distinct_districts: r.distinctDistricts,
+      total_scans_24h: r.totalScans24h,
+      status: r.status,
+      flagged_at: r.createdAt.toISOString(),
+      resolved_by: r.resolvedBy,
+      notes: r.notes,
+    }));
+    return { alerts };
+  },
+
+  async resolveCloneAlert(
+    id: string,
+    dto: ResolveCloneAlertDto,
+    actor: Actor
+  ): Promise<CloneAlertDto> {
+    assertCanManageCloneAlerts(actor);
+    const existing = await trustRepo.getCloneAlertById(id);
+    if (!existing) {
+      throw new NotFoundError(`Clone alert '${id}' not found`);
+    }
+
+    const updated = await trustRepo.updateCloneAlert(id, {
+      status: dto.status,
+      resolvedBy: actor.id,
+      notes: dto.notes ?? null,
+    });
+
+    return {
+      id: updated!.id,
+      seal_id: updated!.sealId,
+      reason: updated!.reason,
+      distinct_devices_count: updated!.distinctDevices,
+      distinct_districts: updated!.distinctDistricts,
+      total_scans_24h: updated!.totalScans24h,
+      status: updated!.status,
+      flagged_at: updated!.createdAt.toISOString(),
+      resolved_by: updated!.resolvedBy,
+      notes: updated!.notes,
+    };
+  },
+
+  // --------------------------------------------------------------------------
+  // 14. Warranty Expiry Job (Daily at 02:30)
+  // --------------------------------------------------------------------------
+  async runWarrantyExpiryJob(now: Date = new Date()): Promise<{ expiredCount: number }> {
+    const expiredSeals = await trustRepo.getActiveSealsWithExpiredWarranty(now);
+    for (const seal of expiredSeals) {
+      await trustRepo.updateSealRecord(seal.id, {
+        status: "EXPIRED",
+      });
+
+      await trustRepo.createSealEvent({
+        sealId: seal.sealId,
+        fromStatus: "ACTIVE",
+        toStatus: "EXPIRED",
+        actorId: "SYSTEM",
+        reason: "WARRANTY_EXPIRED",
+      });
+    }
+
+    return { expiredCount: expiredSeals.length };
+  },
+
+  // --------------------------------------------------------------------------
+  // 15. Partition Maintenance Job (Runs monthly on 25th)
+  // --------------------------------------------------------------------------
+  async runPartitionMaintenanceJob(targetDate: Date = new Date()): Promise<{
+    createdPartitions: string[];
+    droppedPartitions: string[];
+  }> {
+    const createdPartitions: string[] = [];
+
+    // Next month partition
+    const nextMonthDate = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 1);
+    const followingMonthDate = new Date(nextMonthDate.getFullYear(), nextMonthDate.getMonth() + 1, 1);
+    const nextYear = nextMonthDate.getFullYear();
+    const nextMonth = String(nextMonthDate.getMonth() + 1).padStart(2, "0");
+    const nextTableName = `seal_verifications_${nextYear}_${nextMonth}`;
+
+    await trustRepo.ensureMonthlyPartition(nextTableName, nextMonthDate, followingMonthDate);
+    createdPartitions.push(nextTableName);
+
+    // Current month partition
+    const curMonthDate = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
+    const curYear = curMonthDate.getFullYear();
+    const curMonth = String(curMonthDate.getMonth() + 1).padStart(2, "0");
+    const curTableName = `seal_verifications_${curYear}_${curMonth}`;
+    await trustRepo.ensureMonthlyPartition(curTableName, curMonthDate, nextMonthDate);
+    createdPartitions.push(curTableName);
+
+    // Drop partitions older than 12 months
+    const cutoffDate = new Date(targetDate.getFullYear(), targetDate.getMonth() - 12, 1);
+    const droppedPartitions = await trustRepo.dropOldPartitions(cutoffDate);
+
+    return { createdPartitions, droppedPartitions };
+  },
 };
+

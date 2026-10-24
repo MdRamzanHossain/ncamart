@@ -1,4 +1,4 @@
-import { eq, and, sql, lte, gte, inArray } from "drizzle-orm";
+import { eq, and, sql, lte, gte, inArray, desc } from "drizzle-orm";
 import { Tx, db as defaultDb } from "@/lib/db";
 import {
   orders,
@@ -1464,6 +1464,42 @@ export const ordersRepo = {
     const detail = await this.getOrderWithDetails(tx, orderId);
     if (!detail) return [];
     return detail.items.flatMap((i) => i.units ?? []);
+  },
+
+  async listOrdersByStatuses(
+    tx: Tx | undefined,
+    statuses: OrderStatus[]
+  ): Promise<OrderWithDetails[]> {
+    const client = tx ?? defaultDb;
+    try {
+      const rows = await client
+        .select({ id: orders.id })
+        .from(orders)
+        .where(inArray(orders.status, statuses))
+        .orderBy(desc(orders.createdAt));
+
+      if (rows.length > 0) {
+        const results: OrderWithDetails[] = [];
+        for (const r of rows) {
+          const detail = await this.getOrderWithDetails(tx, r.id);
+          if (detail) results.push(detail);
+        }
+        return results;
+      }
+    } catch {
+      // Memory Fallback
+    }
+
+    const matches = Array.from(memOrders.values()).filter((o) =>
+      statuses.includes(o.status)
+    );
+    matches.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    const results: OrderWithDetails[] = [];
+    for (const m of matches) {
+      const detail = await this.getOrderWithDetails(tx, m.id);
+      if (detail) results.push(detail);
+    }
+    return results;
   },
 };
 
