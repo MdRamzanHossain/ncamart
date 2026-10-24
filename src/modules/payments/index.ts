@@ -1,7 +1,8 @@
-// Public boundary for module: payments
-// ONLY export service, events, policies, and DTOs. Never export schema or repo.
-export * from './service';
-export * from './events';
-export * from './policies';
-export * from './dto';
-export * from './signature';
+// Public boundary for module: payments & refunds
+export * from "./service";
+export * from "./refunds";
+export * from "./events";
+export * from "./policies";
+export * from "./dto";
+export * from "./signature";
+export { refundsRepo, clearMemoryRefundsForTesting } from "./repo";

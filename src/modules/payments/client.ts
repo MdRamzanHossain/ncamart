@@ -62,10 +62,33 @@ export interface SslcommerzQueryResponse {
   error?: string;
 }
 
+export interface SslcommerzRefundRequest {
+  bank_tran_id: string;
+  refund_amount: string; // e.g. "250.00"
+  refund_remarks: string;
+  re_fe_id: string; // Merchant refund reference
+}
+
+export interface SslcommerzRefundResponse {
+  status: "success" | "failed";
+  refund_ref_id?: string;
+  errorReason?: string;
+  APIConnect?: string;
+}
+
+export interface SslcommerzRefundQueryResponse {
+  status: "success" | "failed";
+  refund_ref_id: string;
+  refund_status?: "PROCESSING" | "COMPLETED" | "FAILED" | "SUCCESS";
+  errorReason?: string;
+}
+
 export interface SslcommerzClient {
   initSession(req: SslcommerzSessionRequest): Promise<SslcommerzSessionResponse>;
   validateOrder(valId: string): Promise<SslcommerzValidationResponse>;
   queryTransaction(tranId: string): Promise<SslcommerzQueryResponse>;
+  initiateRefund(req: SslcommerzRefundRequest): Promise<SslcommerzRefundResponse>;
+  queryRefund(refundRefId: string): Promise<SslcommerzRefundQueryResponse>;
 }
 
 /**
@@ -167,6 +190,53 @@ export class RealSslcommerzClient implements SslcommerzClient {
 
     return (await response.json()) as SslcommerzQueryResponse;
   }
+
+  async initiateRefund(req: SslcommerzRefundRequest): Promise<SslcommerzRefundResponse> {
+    const params = new URLSearchParams();
+    params.set("store_id", env.SSLCOMMERZ_STORE_ID);
+    params.set("store_passwd", env.SSLCOMMERZ_STORE_PASS);
+    params.set("bank_tran_id", req.bank_tran_id);
+    params.set("refund_amount", req.refund_amount);
+    params.set("refund_remarks", req.refund_remarks);
+    params.set("re_fe_id", req.re_fe_id);
+    params.set("format", "json");
+
+    try {
+      const res = await fetch(
+        `${this.baseUrl}/validator/api/merchantTransIDvalidationAPI.php?${params.toString()}`,
+        { method: "GET" }
+      );
+      if (!res.ok) {
+        throw new BusinessError("ERR_GATEWAY_UNAVAILABLE", "SSLCommerz refund initiation failed", {}, 502);
+      }
+      return (await res.json()) as SslcommerzRefundResponse;
+    } catch (err: any) {
+      if (err instanceof BusinessError) throw err;
+      throw new BusinessError("ERR_GATEWAY_UNAVAILABLE", "Failed to reach SSLCommerz refund API", { originalError: String(err) }, 502);
+    }
+  }
+
+  async queryRefund(refundRefId: string): Promise<SslcommerzRefundQueryResponse> {
+    const params = new URLSearchParams();
+    params.set("store_id", env.SSLCOMMERZ_STORE_ID);
+    params.set("store_passwd", env.SSLCOMMERZ_STORE_PASS);
+    params.set("refund_ref_id", refundRefId);
+    params.set("format", "json");
+
+    try {
+      const res = await fetch(
+        `${this.baseUrl}/validator/api/merchantTransIDvalidationAPI.php?${params.toString()}`,
+        { method: "GET" }
+      );
+      if (!res.ok) {
+        throw new BusinessError("ERR_GATEWAY_UNAVAILABLE", "SSLCommerz refund query failed", {}, 502);
+      }
+      return (await res.json()) as SslcommerzRefundQueryResponse;
+    } catch (err: any) {
+      if (err instanceof BusinessError) throw err;
+      throw new BusinessError("ERR_GATEWAY_UNAVAILABLE", "Failed to reach SSLCommerz refund status API", { originalError: String(err) }, 502);
+    }
+  }
 }
 
 /**
@@ -180,12 +250,16 @@ export class MockSslcommerzClient implements SslcommerzClient {
   private customValidations = new Map<string, SslcommerzValidationResponse>();
   private customQueries = new Map<string, SslcommerzQueryResponse>();
   private activeSessions = new Map<string, SslcommerzSessionRequest>();
+  private customRefunds = new Map<string, SslcommerzRefundResponse>();
+  private customRefundQueries = new Map<string, SslcommerzRefundQueryResponse>();
+  private simulateRefundFailure = false;
+  private nextRefundStatus: "PROCESSING" | "COMPLETED" | "FAILED" = "COMPLETED";
 
   setSimulateFailure(flag: boolean): void {
     this.simulateFailure = flag;
   }
 
-  setNextRiskLevel(level: string | number, title = "High Risk"): void {
+  setNextRiskLevel(level: string | number, title = "Safe"): void {
     this.nextRiskLevel = level;
     this.nextRiskTitle = title;
   }
@@ -194,12 +268,20 @@ export class MockSslcommerzClient implements SslcommerzClient {
     this.tamperedAmount = amount;
   }
 
-  setCustomValidation(valId: string, res: SslcommerzValidationResponse): void {
-    this.customValidations.set(valId, res);
+  setSimulateRefundFailure(flag: boolean): void {
+    this.simulateRefundFailure = flag;
   }
 
-  setCustomQuery(tranId: string, res: SslcommerzQueryResponse): void {
-    this.customQueries.set(tranId, res);
+  setNextRefundStatus(status: "PROCESSING" | "COMPLETED" | "FAILED"): void {
+    this.nextRefundStatus = status;
+  }
+
+  setCustomRefund(reFeId: string, res: SslcommerzRefundResponse): void {
+    this.customRefunds.set(reFeId, res);
+  }
+
+  setCustomRefundQuery(refundRefId: string, res: SslcommerzRefundQueryResponse): void {
+    this.customRefundQueries.set(refundRefId, res);
   }
 
   clear(): void {
@@ -210,6 +292,10 @@ export class MockSslcommerzClient implements SslcommerzClient {
     this.customValidations.clear();
     this.customQueries.clear();
     this.activeSessions.clear();
+    this.customRefunds.clear();
+    this.customRefundQueries.clear();
+    this.simulateRefundFailure = false;
+    this.nextRefundStatus = "COMPLETED";
   }
 
   async initSession(req: SslcommerzSessionRequest): Promise<SslcommerzSessionResponse> {
@@ -306,6 +392,43 @@ export class MockSslcommerzClient implements SslcommerzClient {
       card_type: "BKASH-bKash",
       risk_level: this.nextRiskLevel,
       risk_title: this.nextRiskTitle,
+    };
+  }
+
+  async initiateRefund(req: SslcommerzRefundRequest): Promise<SslcommerzRefundResponse> {
+    if (this.simulateRefundFailure) {
+      return {
+        status: "failed",
+        errorReason: "Payment gateway error during refund initiation",
+      };
+    }
+
+    if (this.customRefunds.has(req.re_fe_id)) {
+      return this.customRefunds.get(req.re_fe_id)!;
+    }
+
+    const refId = `REF_SSL_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
+    const response: SslcommerzRefundResponse = {
+      status: "success",
+      refund_ref_id: refId,
+      APIConnect: "DONE",
+    };
+    return response;
+  }
+
+  async queryRefund(refundRefId: string): Promise<SslcommerzRefundQueryResponse> {
+    if (this.simulateRefundFailure) {
+      throw new BusinessError("ERR_GATEWAY_UNAVAILABLE", "Refund query failed", {}, 502);
+    }
+
+    if (this.customRefundQueries.has(refundRefId)) {
+      return this.customRefundQueries.get(refundRefId)!;
+    }
+
+    return {
+      status: "success",
+      refund_ref_id: refundRefId,
+      refund_status: this.nextRefundStatus,
     };
   }
 }
