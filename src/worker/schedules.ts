@@ -12,6 +12,7 @@ import { preorderService } from "@/modules/preorder";
 import { trustService } from "@/modules/trust";
 import { logisticsService } from "@/modules/logistics";
 import { posService } from "@/modules/pos";
+import { mediaService } from "@/modules/media";
 
 export interface ScheduledTask {
   name: string;
@@ -311,6 +312,16 @@ export const recurringSchedules: ScheduledTask[] = [
     handler: async () => {
       await posService.runUnclaimedPickupsJob();
       await heartbeat("unclaimed-pickups");
+    },
+  },
+  {
+    name: "media-retention-and-cleanup",
+    cron: "0 5 * * *", // daily at 05:00 Asia/Dhaka
+    description: "Purges expired media past retention_until and aborts abandoned uploads > 24h",
+    handler: async () => {
+      await mediaService.runRetentionCleanupJob();
+      await mediaService.runAbandonedUploadsCleanupJob();
+      await heartbeat("media-retention-and-cleanup");
     },
   },
 ];

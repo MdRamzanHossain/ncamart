@@ -35,6 +35,8 @@ export const mediaAssets = pgTable(
     ownerType: text("owner_type").notNull(), // e.g., 'PRODUCT', 'SKU', 'DISTRIBUTOR', 'RMA', 'QC'
     ownerId: text("owner_id").notNull(),
     kind: text("kind", { enum: mediaKindEnum }).notNull(),
+    fileName: text("file_name"),
+    uploadId: text("upload_id"),
     bucket: text("bucket").notNull(),
     storageKey: text("storage_key").notNull(),
     contentType: text("content_type").notNull(),
@@ -42,6 +44,8 @@ export const mediaAssets = pgTable(
     width: integer("width"),
     height: integer("height"),
     durationSeconds: integer("duration_seconds"),
+    flagged: boolean("flagged").default(false).notNull(),
+    flagReason: text("flag_reason"),
     status: text("status", { enum: mediaStatusEnum }).default("PENDING_UPLOAD").notNull(),
     isPublic: boolean("is_public").default(true).notNull(),
     sortOrder: integer("sort_order").default(0).notNull(),
@@ -55,8 +59,10 @@ export const mediaAssets = pgTable(
     index("idx_media_assets_owner").on(table.ownerType, table.ownerId),
     index("idx_media_assets_kind").on(table.kind),
     index("idx_media_assets_status").on(table.status),
+    index("idx_media_assets_retention").on(table.retentionUntil),
   ]
 );
 
 export type MediaAssetRow = typeof mediaAssets.$inferSelect;
 export type InsertMediaAssetRow = typeof mediaAssets.$inferInsert;
+
