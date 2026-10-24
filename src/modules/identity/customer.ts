@@ -587,6 +587,103 @@ export const customerService = {
     };
   },
 
+  /**
+   * P29: Increment customer's delivered order count on order delivery.
+   */
+  async incrementDeliveredCount(customerId: string): Promise<number> {
+    const customer = await authService.findCustomerById(customerId);
+    if (!customer) return 0;
+    const newCount = (customer.deliveredOrderCount || 0) + 1;
+    customer.deliveredOrderCount = newCount;
+    customer.updatedAt = new Date();
+    await authService.saveCustomer(customer);
+    return newCount;
+  },
+
+  /**
+   * P29: Recompute rolling 12m RTO count and auto-block/unblock COD.
+   */
+  async recomputeCustomerRtoCount(customerId: string): Promise<{ rtoCount12m: number; codBlocked: boolean }> {
+    const customer = await authService.findCustomerById(customerId);
+    if (!customer) return { rtoCount12m: 0, codBlocked: false };
+
+    const { logisticsRepo } = await import("@/modules/logistics/repo");
+    const count = await logisticsRepo.countCustomerRtoShipmentsInDays(customerId, 365);
+    customer.rtoCount12m = count;
+    customer.updatedAt = new Date();
+
+    const { recordAudit } = await import("@/modules/audit");
+
+    if (count >= 2) {
+      if (!customer.codBlocked) {
+        customer.codBlocked = true;
+        customer.codBlockReason = "AUTO_RTO";
+        await recordAudit(null, {
+          actorType: "SYSTEM",
+          action: "customer.cod_blocked",
+          entityType: "CUSTOMER",
+          entityId: customer.id,
+          afterState: { rtoCount12m: count, reason: "AUTO_RTO" },
+        });
+      }
+    } else if (customer.codBlocked && customer.codBlockReason === "AUTO_RTO") {
+      customer.codBlocked = false;
+      customer.codBlockReason = null;
+      await recordAudit(null, {
+        actorType: "SYSTEM",
+        action: "customer.cod_unblocked_auto",
+        entityType: "CUSTOMER",
+        entityId: customer.id,
+        afterState: { rtoCount12m: count, unblocked: true },
+      });
+    }
+
+    await authService.saveCustomer(customer);
+    return { rtoCount12m: customer.rtoCount12m, codBlocked: customer.codBlocked };
+  },
+
+  /**
+   * P29: Customer support manual COD block/unblock override.
+   */
+  async overrideCodBlock(
+    customerId: string,
+    blocked: boolean,
+    reason: string,
+    actor: { id: string; type: string; roles?: string[] }
+  ): Promise<{ customerId: string; codBlocked: boolean; reason: string | null }> {
+    const customer = await authService.findCustomerById(customerId);
+    if (!customer) {
+      throw new NotFoundError("Customer");
+    }
+
+    customer.codBlocked = blocked;
+    customer.codBlockReason = blocked ? reason : null;
+    customer.codBlockLiftedBy = blocked ? null : actor.id;
+    customer.updatedAt = new Date();
+
+    await authService.saveCustomer(customer);
+
+    const { recordAudit } = await import("@/modules/audit");
+    await recordAudit(null, {
+      staffId: actor.id,
+      actorType: "STAFF",
+      action: blocked ? "customer.cod_blocked_override" : "customer.cod_unblocked_override",
+      entityType: "CUSTOMER",
+      entityId: customer.id,
+      afterState: {
+        codBlocked: blocked,
+        reason,
+        staffId: actor.id,
+      },
+    });
+
+    return {
+      customerId: customer.id,
+      codBlocked: customer.codBlocked,
+      reason: customer.codBlockReason,
+    };
+  },
+
   clearMemoryCustomerDataForTesting(): void {
     memAddressStore.clear();
     memEmailVerifyStore.clear();

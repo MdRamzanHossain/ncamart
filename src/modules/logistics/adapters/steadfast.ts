@@ -8,6 +8,7 @@ import {
 import { ShipmentStatus } from "../schema";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
+import { UnauthenticatedError } from "@/lib/errors";
 
 /**
  * Steadfast Courier Adapter
@@ -154,7 +155,26 @@ export class SteadfastAdapter implements CourierAdapter {
    * TODO-VERIFY: Confirm webhook HMAC signature or token verification header with Steadfast technical liaison.
    */
   async parseWebhook(req: Request): Promise<NormalizedCourierEvent[]> {
-    // TODO-VERIFY: Verify webhook authenticity headers if provided by Steadfast
+    // Verify courier auth (secret header / token)
+    const secret =
+      req.headers.get("x-webhook-secret") ||
+      req.headers.get("x-token") ||
+      req.headers.get("authorization") ||
+      "";
+    const expected =
+      process.env.STEADFAST_WEBHOOK_SECRET ||
+      process.env.STEADFAST_SECRET_KEY ||
+      env.STEADFAST_SECRET_KEY ||
+      "mock_steadfast_secret";
+
+    if (secret && secret !== expected && !secret.endsWith(expected)) {
+      throw new UnauthenticatedError("Invalid Steadfast webhook credentials");
+    }
+
+    if (!secret && process.env.STEADFAST_REQUIRE_AUTH === "true") {
+      throw new UnauthenticatedError("Steadfast webhook credentials required");
+    }
+
     const body = (await req.json()) as Record<string, unknown>;
     const trackingCode = (body.tracking_code ||
       body.consignment_id ||

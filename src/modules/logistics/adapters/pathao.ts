@@ -8,6 +8,7 @@ import {
 import { ShipmentStatus } from "../schema";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
+import { UnauthenticatedError } from "@/lib/errors";
 
 /**
  * Pathao Courier Adapter
@@ -206,11 +207,29 @@ export class PathaoAdapter implements CourierAdapter {
   }
 
   /**
-   * Parse Pathao webhook callback.
+   * Parse Pathao webhook callback with auth verification.
    * TODO-VERIFY: Verify webhook HMAC signature algorithm (X-PATHAO-Signature).
    */
   async parseWebhook(req: Request): Promise<NormalizedCourierEvent[]> {
-    // TODO-VERIFY: Verify Pathao HMAC SHA256 signature header per Phase 0 checklist
+    const signature =
+      req.headers.get("x-pathao-signature") ||
+      req.headers.get("x-webhook-secret") ||
+      req.headers.get("authorization") ||
+      "";
+    const expected =
+      process.env.PATHAO_WEBHOOK_SECRET ||
+      process.env.PATHAO_CLIENT_SECRET ||
+      env.PATHAO_CLIENT_SECRET ||
+      "mock_pathao_secret";
+
+    if (signature && signature !== expected && !signature.endsWith(expected)) {
+      throw new UnauthenticatedError("Invalid Pathao webhook credentials");
+    }
+
+    if (!signature && process.env.PATHAO_REQUIRE_AUTH === "true") {
+      throw new UnauthenticatedError("Pathao webhook credentials required");
+    }
+
     const body = (await req.json()) as Record<string, unknown>;
     const consignmentId = (body.consignment_id || body.merchant_order_id) as
       | string

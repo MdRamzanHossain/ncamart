@@ -145,3 +145,47 @@ export interface ShippingLabelDto {
   label_svg?: string;
   printable_html?: string;
 }
+
+// --------------------------------------------------------------------------
+// 9. P29 — Webhook, RTO & COD Block DTOs
+// --------------------------------------------------------------------------
+export const STATUS_RANK: Record<ShipmentStatus, number> = {
+  PENDING_BOOKING: 0,
+  BOOKED: 1,
+  PICKED_UP: 2,
+  IN_TRANSIT: 3,
+  OUT_FOR_DELIVERY: 4,
+  DELIVERED: 5,
+  PARTIALLY_DELIVERED: 5,
+  RTO_IN_TRANSIT: 5,
+  RETURNED: 6,
+  LOST: 6,
+  BOOKING_FAILED: 6,
+  CANCELLED: 6,
+};
+
+export const TERMINAL_STATUSES: Set<ShipmentStatus> = new Set([
+  "DELIVERED",
+  "RETURNED",
+  "LOST",
+  "CANCELLED",
+]);
+
+export const rtoUnitReceiveSchema = z.object({
+  order_item_unit_id: z.string().uuid("order_item_unit_id must be a valid UUID"),
+  seal_intact: z.boolean(),
+  notes: z.string().optional(),
+  photos: z.array(z.string()).optional(),
+});
+export type RtoUnitReceiveDto = z.infer<typeof rtoUnitReceiveSchema>;
+
+export const rtoReceiveSchema = z.object({
+  units: z.array(rtoUnitReceiveSchema).min(1, "At least one unit must be specified"),
+});
+export type RtoReceiveDto = z.infer<typeof rtoReceiveSchema>;
+
+export const codBlockOverrideSchema = z.object({
+  blocked: z.boolean(),
+  reason: z.string().min(1, "Reason is required"),
+});
+export type CodBlockOverrideDto = z.infer<typeof codBlockOverrideSchema>;

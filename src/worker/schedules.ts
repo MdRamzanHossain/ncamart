@@ -10,6 +10,7 @@ import { ordersService } from "@/modules/orders";
 import { paymentsService } from "@/modules/payments";
 import { preorderService } from "@/modules/preorder";
 import { trustService } from "@/modules/trust";
+import { logisticsService } from "@/modules/logistics";
 
 export interface ScheduledTask {
   name: string;
@@ -273,6 +274,33 @@ export const recurringSchedules: ScheduledTask[] = [
     handler: async () => {
       await trustService.runPartitionMaintenanceJob();
       await heartbeat("partition-maintenance");
+    },
+  },
+  {
+    name: "courier-status-polling",
+    cron: "*/30 * * * *", // every 30 minutes
+    description: "Polls courier status for non-terminal shipments with no event in 24h",
+    handler: async () => {
+      await logisticsService.runCourierPollingJob();
+      await heartbeat("courier-status-polling");
+    },
+  },
+  {
+    name: "warranty-start-fallback",
+    cron: "0 2 * * *", // daily at 02:00 Asia/Dhaka
+    description: "Applies warranty start fallback date (+3d Dhaka / +5d outside) for handed-over shipments without delivery event",
+    handler: async () => {
+      await logisticsService.runWarrantyFallbackJob();
+      await heartbeat("warranty-start-fallback");
+    },
+  },
+  {
+    name: "rto-count-12m-recompute",
+    cron: "0 3 * * *", // daily at 03:00 Asia/Dhaka
+    description: "Recomputes rolling 12m RTO count and auto-unblocks COD if dropped below 2 (AUTO_RTO)",
+    handler: async () => {
+      await logisticsService.runRtoRecomputeJob();
+      await heartbeat("rto-count-12m-recompute");
     },
   },
 ];

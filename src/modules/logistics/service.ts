@@ -3,11 +3,14 @@ import { BusinessError, NotFoundError, ValidationError } from "@/lib/errors";
 import { emitOutbox } from "@/lib/outbox";
 import { enqueueJob } from "@/lib/queues";
 import { recordAudit } from "@/modules/audit";
-import { piiSerializers, CustomerRawData } from "@/modules/identity";
+import { piiSerializers, CustomerRawData, customerService } from "@/modules/identity";
 import { ordersService, OrderStatus } from "@/modules/orders";
 import { ordersRepo } from "@/modules/orders/repo";
 import { trustService } from "@/modules/trust";
 import { trustRepo } from "@/modules/trust/repo";
+import { ledgerService, postingRules } from "@/modules/ledger";
+import { inventoryRepo } from "@/modules/inventory/repo";
+import { logger } from "@/lib/logger";
 import {
   courierEnum,
   CourierCode,
@@ -16,6 +19,7 @@ import {
 } from "./schema";
 import { logisticsRepo, clearMemoryLogisticsForTesting } from "./repo";
 import { getCourierAdapter, MockCourierAdapter } from "./adapters";
+import { NormalizedCourierEvent } from "./adapters/types";
 import {
   PackOrderDto,
   packOrderSchema,
@@ -31,12 +35,20 @@ import {
   ManualConsoleResponseDto,
   ManualConsoleItemDto,
   ShippingLabelDto,
+  STATUS_RANK,
+  TERMINAL_STATUSES,
+  RtoReceiveDto,
+  rtoReceiveSchema,
+  CodBlockOverrideDto,
+  codBlockOverrideSchema,
 } from "./dto";
 import {
   assertCanViewDispatchQueue,
   assertCanPackOrder,
   assertCanBookCourier,
   assertCanHandover,
+  assertCanReceiveRto,
+  assertCanOverrideCodBlock,
 } from "./policies";
 
 export const logisticsService = {
@@ -929,5 +941,685 @@ export const logisticsService = {
     }
 
     return shipment ?? (updatedMock as unknown as CourierShipmentRow);
+  },
+
+  // --------------------------------------------------------------------------
+  // 10. Courier Webhook Ingestion & Event Deduplication (P29)
+  // --------------------------------------------------------------------------
+  async applyCourierEvent(
+    event: NormalizedCourierEvent,
+    courierName?: string
+  ): Promise<{
+    success: boolean;
+    unknownConsignment?: boolean;
+    deduplicated?: boolean;
+    status: ShipmentStatus;
+    terminal?: boolean;
+    outOfOrder?: boolean;
+  }> {
+    const consignmentNo = event.consignmentNo;
+    let shipment = await logisticsRepo.getShipmentByConsignmentNo(consignmentNo);
+
+    if (!shipment) {
+      logger.warn(
+        { consignmentNo, courier: courierName, rawStatus: event.rawStatus },
+        "Courier webhook received for unknown consignment"
+      );
+      return {
+        success: true,
+        unknownConsignment: true,
+        status: "PENDING_BOOKING",
+      };
+    }
+
+    const dedupeKey =
+      event.dedupeKey ||
+      `${courierName || shipment.courier}_${consignmentNo}_${event.normalizedStatus}_${event.occurredAt.getTime()}`;
+
+    const existingEvent = await logisticsRepo.findCourierEventByDedupeKey(dedupeKey);
+    if (existingEvent) {
+      logger.info(
+        { consignmentNo, dedupeKey, status: shipment.status },
+        "Duplicate courier event ignored (idempotent)"
+      );
+      return {
+        success: true,
+        deduplicated: true,
+        status: shipment.status,
+      };
+    }
+
+    // Append to courier_events
+    await logisticsRepo.createCourierEvent({
+      shipmentId: shipment.id,
+      rawStatus: event.rawStatus,
+      normalizedStatus: event.normalizedStatus,
+      payload: event.payload ?? {},
+      occurredAt: event.occurredAt,
+      dedupeKey,
+    });
+
+    // Check terminal statuses
+    if (TERMINAL_STATUSES.has(shipment.status)) {
+      logger.info(
+        {
+          shipmentId: shipment.id,
+          currentStatus: shipment.status,
+          eventStatus: event.normalizedStatus,
+        },
+        "Shipment already in terminal status, ignoring transition"
+      );
+      return {
+        success: true,
+        terminal: true,
+        status: shipment.status,
+      };
+    }
+
+    // Check status rank: never move backwards
+    const currentRank = STATUS_RANK[shipment.status] ?? 0;
+    const nextRank = STATUS_RANK[event.normalizedStatus] ?? 0;
+    if (nextRank < currentRank) {
+      logger.warn(
+        {
+          shipmentId: shipment.id,
+          currentRank,
+          nextRank,
+          currentStatus: shipment.status,
+          eventStatus: event.normalizedStatus,
+        },
+        "Out-of-order courier event received, ignoring backwards status transition"
+      );
+      return {
+        success: true,
+        outOfOrder: true,
+        status: shipment.status,
+      };
+    }
+
+    // Forward status transition
+    const updates: Partial<CourierShipmentRow> = {
+      status: event.normalizedStatus,
+      lastEventAt: event.occurredAt,
+      updatedAt: new Date(),
+    };
+
+    if (event.collectedCodPaisa !== undefined && event.collectedCodPaisa !== null) {
+      updates.collectedCodPaisa = event.collectedCodPaisa;
+    }
+    if (event.deliveryChargePaisa !== undefined && event.deliveryChargePaisa !== null) {
+      updates.deliveryChargePaisa = event.deliveryChargePaisa;
+    }
+    if (event.codChargePaisa !== undefined && event.codChargePaisa !== null) {
+      updates.codChargePaisa = event.codChargePaisa;
+    }
+    if (event.returnChargePaisa !== undefined && event.returnChargePaisa !== null) {
+      updates.returnChargePaisa = event.returnChargePaisa;
+    }
+    if (event.normalizedStatus === "DELIVERED") {
+      updates.deliveredAt = event.occurredAt;
+      if (updates.collectedCodPaisa === undefined || updates.collectedCodPaisa === null) {
+        updates.collectedCodPaisa = shipment.expectedCodPaisa;
+      }
+    }
+
+    shipment = await logisticsRepo.updateShipment(shipment.id, updates);
+
+    // Apply domain side-effects per outcome
+    if (event.normalizedStatus === "DELIVERED") {
+      await this.handleDeliveredOutcome(shipment, event);
+    } else if (event.normalizedStatus === "PARTIALLY_DELIVERED") {
+      await this.handlePartialDeliveryOutcome(shipment, event);
+    } else if (event.normalizedStatus === "RTO_IN_TRANSIT") {
+      await this.handleRtoInTransitOutcome(shipment, event);
+    }
+
+    return {
+      success: true,
+      status: shipment.status,
+    };
+  },
+
+  // --------------------------------------------------------------------------
+  // 11. Delivery Outcome Handler (DELIVERED)
+  // --------------------------------------------------------------------------
+  async handleDeliveredOutcome(
+    shipment: CourierShipmentRow,
+    event: NormalizedCourierEvent
+  ): Promise<void> {
+    const systemActor: Actor = {
+      id: "system-courier-webhook",
+      type: "system",
+      roles: ["SUPER_ADMIN"],
+    };
+
+    const order = await ordersRepo.getOrderWithDetails(undefined, shipment.orderId);
+    if (!order) {
+      logger.error({ orderId: shipment.orderId }, "Order not found for delivered shipment");
+      return;
+    }
+
+    // 1. Transition order to DELIVERED
+    try {
+      await ordersService.transitionOrder(
+        undefined as any,
+        order.id,
+        "DELIVERED",
+        systemActor,
+        `Delivered via ${shipment.courier} (consignment ${shipment.consignmentNo})`
+      );
+    } catch (err) {
+      await ordersRepo.updateOrder(undefined, order.id, { status: "DELIVERED" });
+      logger.warn(
+        { err, orderId: order.id },
+        "Order transition to DELIVERED handled with fallback update"
+      );
+    }
+
+    // 2. Increment customer delivered order count
+    await customerService.incrementDeliveredCount(order.customerId);
+
+    // 3. Ledger revenue recognition
+    const prepaidAdvancesPaisa = order.advanceFeePaid
+      ? order.advanceFeePaisa
+      : Math.min(order.paidAmountPaisa || 0, order.totalPaisa);
+    const courierCodPaisa =
+      event.collectedCodPaisa !== undefined && event.collectedCodPaisa !== null
+        ? event.collectedCodPaisa
+        : order.codAmountPaisa;
+    const discountPaisa = order.couponDiscountPaisa || 0;
+    const vatPaisa = order.taxPaisa || 0;
+    const deliveryFeePaisa = order.deliveryFeePaisa || 0;
+    // Cr 4000 net ex-VAT merchandise
+    const revenueExVatPaisa = Math.max(0, (order.subtotalPaisa || 0) - vatPaisa);
+
+    const revenueLines = postingRules.REVENUE_RECOGNIZED_DELIVERY({
+      orderId: order.id,
+      prepaidAdvancesPaisa,
+      courierCodPaisa,
+      courierId: shipment.courier,
+      discountPaisa,
+      revenueExVatPaisa,
+      vatPaisa,
+      deliveryFeePaisa,
+    });
+
+    await ledgerService.post(undefined, {
+      eventType: "REVENUE_RECOGNIZED_DELIVERY",
+      sourceType: "ORDER",
+      sourceId: order.id,
+      description: `Revenue recognized on delivery of order ${order.orderNumber}`,
+      lines: revenueLines,
+    });
+
+    // 4. Ledger COGS recognition at unit purchase cost
+    let totalCostPaisa = 0;
+    for (const item of order.items) {
+      totalCostPaisa += (item.unitCostPaisa || 0) * item.qty;
+    }
+
+    if (totalCostPaisa > 0) {
+      const cogsLines = postingRules.COGS_RECOGNIZED({ costPaisa: totalCostPaisa });
+      await ledgerService.post(undefined, {
+        eventType: "COGS_RECOGNIZED",
+        sourceType: "ORDER",
+        sourceId: order.id,
+        description: `COGS recognized for order ${order.orderNumber}`,
+        lines: cogsLines,
+      });
+    }
+
+    // 5. Warranty start for every unit seal
+    const start = event.occurredAt;
+    for (const item of order.items) {
+      for (const unit of item.units) {
+        if (unit.sealId) {
+          const seal = await trustRepo.getSealRecordBySealId(unit.sealId);
+          if (seal) {
+            const end = new Date(
+              start.getTime() + (seal.warrantyDays || 365) * 24 * 60 * 60 * 1000
+            );
+            await trustRepo.updateSealRecord(seal.id, {
+              status: "ACTIVE",
+              warrantyStart: start,
+              warrantyEnd: end,
+            });
+            await trustRepo.createSealEvent({
+              sealId: seal.sealId,
+              fromStatus: seal.status,
+              toStatus: "ACTIVE",
+              actorId: "system",
+              reason: `Order delivered; warranty activated starting ${start.toISOString()}`,
+            });
+          }
+        }
+      }
+    }
+
+    // 6. Issue Mushak 6.3 invoice if requested (P22)
+    if (order.mushakRequested) {
+      try {
+        await ordersService.requestMushakInvoice(order.id, {
+          companyName: order.buyerCompanyName || order.addressSnapshot?.name || "",
+          bin: order.buyerBin || "",
+          address: order.addressSnapshot?.address || "",
+        });
+      } catch (err) {
+        logger.warn({ err, orderId: order.id }, "Failed to generate Mushak 6.3 on delivery");
+      }
+    }
+
+    // 7. Outbox events: notification, analytics, review invitation at +3 days (P38)
+    await emitOutbox(undefined, {
+      type: "order.delivered",
+      aggregateType: "order",
+      aggregateId: order.id,
+      payload: {
+        orderId: order.id,
+        customerId: order.customerId,
+        deliveredAt: event.occurredAt.toISOString(),
+      },
+    });
+
+    await emitOutbox(undefined, {
+      type: "analytics.order_delivered",
+      aggregateType: "order",
+      aggregateId: order.id,
+      payload: {
+        orderId: order.id,
+        customerId: order.customerId,
+        totalPaisa: order.totalPaisa,
+      },
+    });
+
+    const reviewInviteDate = new Date(
+      event.occurredAt.getTime() + 3 * 24 * 60 * 60 * 1000
+    );
+    await emitOutbox(undefined, {
+      type: "customer.review_invitation_due",
+      aggregateType: "customer",
+      aggregateId: order.customerId,
+      payload: {
+        orderId: order.id,
+        customerId: order.customerId,
+        dueAt: reviewInviteDate.toISOString(),
+      },
+    });
+  },
+
+  // --------------------------------------------------------------------------
+  // 12. Partial Delivery Outcome Handler (PARTIALLY_DELIVERED)
+  // --------------------------------------------------------------------------
+  async handlePartialDeliveryOutcome(
+    shipment: CourierShipmentRow,
+    event: NormalizedCourierEvent
+  ): Promise<void> {
+    const systemActor: Actor = {
+      id: "system-courier-webhook",
+      type: "system",
+      roles: ["SUPER_ADMIN"],
+    };
+
+    const order = await ordersRepo.getOrderWithDetails(undefined, shipment.orderId);
+    if (!order) return;
+
+    try {
+      await ordersService.transitionOrder(
+        undefined as any,
+        order.id,
+        "PARTIALLY_DELIVERED",
+        systemActor,
+        "Courier reported partial delivery"
+      );
+    } catch {
+      await ordersRepo.updateOrder(undefined, order.id, { status: "PARTIALLY_DELIVERED" });
+    }
+
+    const payload = event.payload || {};
+    const deliveredUnitIds: string[] = Array.isArray(payload.delivered_unit_ids)
+      ? payload.delivered_unit_ids
+      : [];
+
+    let deliveredCostPaisa = 0;
+    let deliveredPricePaisa = 0;
+
+    for (const item of order.items) {
+      for (const unit of item.units) {
+        const isDelivered =
+          deliveredUnitIds.length > 0
+            ? deliveredUnitIds.includes(unit.id)
+            : unit.unitIndex === 1;
+
+        if (isDelivered) {
+          deliveredCostPaisa += item.unitCostPaisa || 0;
+          deliveredPricePaisa += item.unitPricePaisa || 0;
+
+          if (unit.sealId) {
+            const seal = await trustRepo.getSealRecordBySealId(unit.sealId);
+            if (seal) {
+              const start = event.occurredAt;
+              const end = new Date(
+                start.getTime() + (seal.warrantyDays || 365) * 24 * 60 * 60 * 1000
+              );
+              await trustRepo.updateSealRecord(seal.id, {
+                status: "ACTIVE",
+                warrantyStart: start,
+                warrantyEnd: end,
+              });
+            }
+          }
+        } else {
+          await ordersRepo.updateOrderItemUnit(undefined, unit.id, {
+            status: "RETURNED_RTO",
+          });
+        }
+      }
+    }
+
+    const courierCodPaisa = event.collectedCodPaisa ?? deliveredPricePaisa;
+    const vatPaisa = Math.round((deliveredPricePaisa * 0.15) / 1.15);
+    const revenueExVatPaisa = deliveredPricePaisa - vatPaisa;
+
+    if (courierCodPaisa > 0) {
+      const revenueLines = postingRules.REVENUE_RECOGNIZED_DELIVERY({
+        orderId: order.id,
+        prepaidAdvancesPaisa: 0,
+        courierCodPaisa,
+        courierId: shipment.courier,
+        revenueExVatPaisa,
+        vatPaisa,
+      });
+
+      await ledgerService.post(undefined, {
+        eventType: "REVENUE_RECOGNIZED_PARTIAL_DELIVERY",
+        sourceType: "ORDER",
+        sourceId: order.id,
+        description: `Revenue recognized for partial delivery of order ${order.orderNumber}`,
+        lines: revenueLines,
+      });
+    }
+
+    if (deliveredCostPaisa > 0) {
+      const cogsLines = postingRules.COGS_RECOGNIZED({ costPaisa: deliveredCostPaisa });
+      await ledgerService.post(undefined, {
+        eventType: "COGS_RECOGNIZED_PARTIAL_DELIVERY",
+        sourceType: "ORDER",
+        sourceId: order.id,
+        description: `COGS recognized for partial delivery of order ${order.orderNumber}`,
+        lines: cogsLines,
+      });
+    }
+  },
+
+  // --------------------------------------------------------------------------
+  // 13. RTO in Transit Outcome Handler (RTO_IN_TRANSIT)
+  // --------------------------------------------------------------------------
+  async handleRtoInTransitOutcome(
+    shipment: CourierShipmentRow,
+    event: NormalizedCourierEvent
+  ): Promise<void> {
+    const systemActor: Actor = {
+      id: "system-courier-webhook",
+      type: "system",
+      roles: ["SUPER_ADMIN"],
+    };
+
+    const order = await ordersRepo.getOrderWithDetails(undefined, shipment.orderId);
+    if (!order) return;
+
+    try {
+      await ordersService.transitionOrder(
+        undefined as any,
+        order.id,
+        "RTO_IN_TRANSIT",
+        systemActor,
+        `Courier marked shipment as returning to merchant: ${shipment.courier}`
+      );
+    } catch {
+      await ordersRepo.updateOrder(undefined, order.id, { status: "RTO_IN_TRANSIT" });
+    }
+
+    // Recompute customer's 12m RTO count and auto-block if >= 2
+    await customerService.recomputeCustomerRtoCount(order.customerId);
+  },
+
+  // --------------------------------------------------------------------------
+  // 14. RTO Receipt & Physical Inspection (POST /api/v1/logistics/rto/:shipmentId/receive)
+  // --------------------------------------------------------------------------
+  async receiveRto(
+    shipmentId: string,
+    input: RtoReceiveDto,
+    actor: Actor
+  ): Promise<{ success: boolean; shipment_status: string; claims_created: number }> {
+    assertCanReceiveRto(actor);
+
+    const validated = rtoReceiveSchema.parse(input);
+    const shipment = await logisticsRepo.getShipmentById(shipmentId);
+    if (!shipment) {
+      throw new NotFoundError("Courier shipment");
+    }
+
+    const order = await ordersRepo.getOrderWithDetails(undefined, shipment.orderId);
+    if (!order) {
+      throw new NotFoundError("Order");
+    }
+
+    // Transition shipment and order status
+    await logisticsRepo.updateShipment(shipment.id, {
+      status: "RETURNED",
+      updatedAt: new Date(),
+    });
+
+    try {
+      await ordersService.transitionOrder(
+        undefined as any,
+        order.id,
+        "RETURNED",
+        actor,
+        "RTO shipment received and inspected at godown"
+      );
+    } catch {
+      // Ignored if already returned
+    }
+
+    let claimsCreated = 0;
+    for (const unitInspection of validated.units) {
+      let unitCostPaisa = 50000;
+      let skuId = "unknown";
+
+      for (const item of order.items) {
+        const foundUnit = item.units.find(
+          (u) => u.id === unitInspection.order_item_unit_id
+        );
+        if (foundUnit) {
+          unitCostPaisa = item.unitPricePaisa || item.unitCostPaisa || 50000;
+          skuId = item.skuId;
+          break;
+        }
+      }
+
+      if (unitInspection.seal_intact) {
+        // Restock to GODOWN_NAWABPUR
+        await inventoryRepo.createStockMovement({
+          skuId,
+          fromLocationId: null,
+          toLocationId: "GODOWN_NAWABPUR",
+          qty: 1,
+          reason: "RTO_RETURN",
+          refType: "ORDER",
+          refId: order.id,
+          unitCostPaisa,
+          staffId: actor.id,
+        });
+      } else {
+        // Damaged: Move to DAMAGED location and create claim
+        await inventoryRepo.createStockMovement({
+          skuId,
+          fromLocationId: null,
+          toLocationId: "DAMAGED",
+          qty: 1,
+          reason: "DAMAGE",
+          refType: "ORDER",
+          refId: order.id,
+          unitCostPaisa,
+          staffId: actor.id,
+        });
+
+        await logisticsRepo.createCourierClaim({
+          shipmentId: shipment.id,
+          amountPaisa: unitCostPaisa,
+          status: "PENDING",
+          notes: unitInspection.notes || "Damaged upon RTO return inspection",
+        });
+        claimsCreated++;
+      }
+    }
+
+    // Ledger RTO_ADVANCE_FEE_RETAINED (Dr 2000 / Cr 4020) if advance fee was paid
+    if (order.advanceFeePaid && order.advanceFeePaisa && order.advanceFeePaisa > 0) {
+      const lines = postingRules.RTO_ADVANCE_FEE_RETAINED({
+        amountPaisa: order.advanceFeePaisa,
+        orderId: order.id,
+      });
+      await ledgerService.post(undefined, {
+        eventType: "RTO_ADVANCE_FEE_RETAINED",
+        sourceType: "ORDER",
+        sourceId: order.id,
+        description: `RTO advance fee retained for order ${order.orderNumber}`,
+        lines,
+      });
+    }
+
+    // Refund any other prepaid amounts beyond the advance fee (P33)
+    const paidAmount = order.paidAmountPaisa || 0;
+    const advanceFee = order.advanceFeePaisa || 0;
+    if (paidAmount > advanceFee) {
+      const refundPaisa = paidAmount - advanceFee;
+      await emitOutbox(undefined, {
+        type: "refund.requested",
+        aggregateType: "order",
+        aggregateId: order.id,
+        payload: {
+          orderId: order.id,
+          customerId: order.customerId,
+          amountPaisa: refundPaisa,
+          reason: "RTO_PREPAID_BALANCE_REFUND",
+        },
+      });
+    }
+
+    return {
+      success: true,
+      shipment_status: "RETURNED",
+      claims_created: claimsCreated,
+    };
+  },
+
+  // --------------------------------------------------------------------------
+  // 15. Customer Support COD Block Override (POST /api/v1/admin/customers/:id/cod-block)
+  // --------------------------------------------------------------------------
+  async overrideCodBlock(
+    customerId: string,
+    input: CodBlockOverrideDto,
+    actor: Actor
+  ): Promise<{ customerId: string; codBlocked: boolean; reason: string | null }> {
+    assertCanOverrideCodBlock(actor);
+    const validated = codBlockOverrideSchema.parse(input);
+    return customerService.overrideCodBlock(
+      customerId,
+      validated.blocked,
+      validated.reason,
+      actor
+    );
+  },
+
+  // --------------------------------------------------------------------------
+  // 16. Fallback Polling Job (every 30 min)
+  // --------------------------------------------------------------------------
+  async runCourierPollingJob(): Promise<{ polledCount: number; updatedCount: number }> {
+    const stale = await logisticsRepo.listNonTerminalStaleShipments(24);
+    let updatedCount = 0;
+
+    for (const shipment of stale) {
+      if (!shipment.consignmentNo) continue;
+      try {
+        const adapter = getCourierAdapter(shipment.courier);
+        const event = await adapter.getStatus(shipment.consignmentNo);
+        if (event && event.normalizedStatus !== shipment.status) {
+          await this.applyCourierEvent(event, shipment.courier);
+          updatedCount++;
+        }
+      } catch (err) {
+        logger.warn(
+          { err, consignmentNo: shipment.consignmentNo },
+          "Error polling courier status"
+        );
+      }
+    }
+
+    return { polledCount: stale.length, updatedCount };
+  },
+
+  // --------------------------------------------------------------------------
+  // 17. Warranty Start Fallback Job (daily at 02:00 Asia/Dhaka)
+  // --------------------------------------------------------------------------
+  async runWarrantyFallbackJob(): Promise<{ eligibleCount: number }> {
+    const list = await logisticsRepo.listHandedOverShipmentsWithoutDelivery(3, 5);
+
+    for (const item of list) {
+      const order = await ordersRepo.getOrderWithDetails(undefined, item.shipment.orderId);
+      if (!order) continue;
+
+      for (const orderItem of order.items) {
+        for (const unit of orderItem.units) {
+          if (unit.sealId) {
+            const seal = await trustRepo.getSealRecordBySealId(unit.sealId);
+            if (seal && !seal.warrantyStart) {
+              const start = item.fallbackDate;
+              const end = new Date(
+                start.getTime() + (seal.warrantyDays || 365) * 24 * 60 * 60 * 1000
+              );
+              await trustRepo.updateSealRecord(seal.id, {
+                status: "ACTIVE",
+                warrantyStart: start,
+                warrantyEnd: end,
+              });
+            }
+          }
+        }
+      }
+
+      await recordAudit(undefined, {
+        actorType: "SYSTEM",
+        action: "warranty.fallback_started",
+        entityType: "ORDER",
+        entityId: order.id,
+        afterState: {
+          fallbackDate: item.fallbackDate.toISOString(),
+          isInsideDhaka: item.isInsideDhaka,
+        },
+      });
+    }
+
+    return { eligibleCount: list.length };
+  },
+
+  // --------------------------------------------------------------------------
+  // 18. Rolling 12m RTO Recompute Job (daily at 03:00 Asia/Dhaka)
+  // --------------------------------------------------------------------------
+  async runRtoRecomputeJob(): Promise<{ recomputedCount: number }> {
+    const { shipments } = await logisticsRepo.listShipments({ limit: 1000 });
+    const customerIds = new Set<string>();
+
+    for (const s of shipments) {
+      const order = await ordersRepo.getOrderWithDetails(undefined, s.orderId);
+      if (order?.customerId) customerIds.add(order.customerId);
+    }
+
+    for (const customerId of customerIds) {
+      await customerService.recomputeCustomerRtoCount(customerId);
+    }
+
+    return { recomputedCount: customerIds.size };
   },
 };

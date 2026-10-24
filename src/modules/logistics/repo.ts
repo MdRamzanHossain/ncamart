@@ -4,16 +4,21 @@ import {
   courierShipments,
   courierEvents,
   courierLocationMap,
+  courierClaims,
   CourierShipmentRow,
   InsertCourierShipmentRow,
   CourierEventRow,
   InsertCourierEventRow,
   CourierLocationMapRow,
   InsertCourierLocationMapRow,
+  CourierClaimRow,
+  InsertCourierClaimRow,
   ShipmentStatus,
   ShipmentDirection,
   CourierCode,
 } from "./schema";
+import { orders } from "@/modules/orders/schema";
+import { ordersRepo } from "@/modules/orders/repo";
 
 // --------------------------------------------------------------------------
 // In-Memory Fallback Stores for test isolation & offline dev
@@ -21,11 +26,13 @@ import {
 const memShipments = new Map<string, CourierShipmentRow>();
 const memEvents = new Map<string, CourierEventRow>();
 const memLocationMap = new Map<string, CourierLocationMapRow>();
+const memCourierClaims = new Map<string, CourierClaimRow>();
 
 export function clearMemoryLogisticsForTesting(): void {
   memShipments.clear();
   memEvents.clear();
   memLocationMap.clear();
+  memCourierClaims.clear();
 }
 
 export interface ListShipmentsFilter {
@@ -390,5 +397,212 @@ export const logisticsRepo = {
     };
     memLocationMap.set(id, mapRow);
     return mapRow;
+  },
+
+  // --------------------------------------------------------------------------
+  // 4. Courier Event Deduplication Lookup
+  // --------------------------------------------------------------------------
+  async findCourierEventByDedupeKey(
+    dedupeKey: string,
+    tx?: Tx
+  ): Promise<CourierEventRow | null> {
+    const client = tx ?? defaultDb;
+    try {
+      const [found] = await client
+        .select()
+        .from(courierEvents)
+        .where(eq(courierEvents.dedupeKey, dedupeKey))
+        .limit(1);
+      if (found) return found;
+    } catch {
+      // Memory Fallback
+    }
+
+    for (const e of memEvents.values()) {
+      if (e.dedupeKey === dedupeKey) return e;
+    }
+    return null;
+  },
+
+  // --------------------------------------------------------------------------
+  // 5. Courier Claims
+  // --------------------------------------------------------------------------
+  async createCourierClaim(
+    row: InsertCourierClaimRow,
+    tx?: Tx
+  ): Promise<CourierClaimRow> {
+    const client = tx ?? defaultDb;
+    const id = row.id ?? crypto.randomUUID();
+    const toInsert = {
+      ...row,
+      id,
+    };
+
+    try {
+      const [created] = await client
+        .insert(courierClaims)
+        .values(toInsert)
+        .returning();
+      if (created) {
+        memCourierClaims.set(id, created);
+        return created;
+      }
+    } catch {
+      // Memory Fallback
+    }
+
+    const claimRow: CourierClaimRow = {
+      ...toInsert,
+      id,
+      notes: toInsert.notes ?? null,
+      status: toInsert.status ?? "PENDING",
+      createdAt: toInsert.createdAt ?? new Date(),
+      updatedAt: toInsert.updatedAt ?? new Date(),
+    };
+    memCourierClaims.set(id, claimRow);
+    return claimRow;
+  },
+
+  async listClaimsByShipmentId(
+    shipmentId: string,
+    tx?: Tx
+  ): Promise<CourierClaimRow[]> {
+    const client = tx ?? defaultDb;
+    try {
+      const rows = await client
+        .select()
+        .from(courierClaims)
+        .where(eq(courierClaims.shipmentId, shipmentId));
+      if (rows.length > 0) return rows;
+    } catch {
+      // Memory Fallback
+    }
+
+    return Array.from(memCourierClaims.values()).filter(
+      (c) => c.shipmentId === shipmentId
+    );
+  },
+
+  // --------------------------------------------------------------------------
+  // 6. RTO Count in Rolling Days (e.g. 365 days / 12 months)
+  // --------------------------------------------------------------------------
+  async countCustomerRtoShipmentsInDays(
+    customerId: string,
+    days = 365,
+    tx?: Tx
+  ): Promise<number> {
+    const client = tx ?? defaultDb;
+    const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+    try {
+      const result = await client.execute<{ count: string | number }>(
+        sql`
+          SELECT count(DISTINCT cs.id) as count
+          FROM courier_shipments cs
+          JOIN orders o ON cs.order_id = o.id
+          WHERE o.customer_id = ${customerId}
+            AND cs.status IN ('RTO_IN_TRANSIT', 'RETURNED')
+            AND cs.created_at >= ${cutoff}
+        `
+      );
+      const countVal = result.rows[0]?.count;
+      if (countVal !== undefined && countVal !== null) {
+        return Number(countVal);
+      }
+    } catch {
+      // Memory Fallback
+    }
+
+    let count = 0;
+    for (const s of memShipments.values()) {
+      if (s.createdAt >= cutoff && (s.status === "RTO_IN_TRANSIT" || s.status === "RETURNED")) {
+        const order = await ordersRepo.getOrderWithDetails(undefined, s.orderId);
+        if (order && order.customerId === customerId) {
+          count++;
+        }
+      }
+    }
+    return count;
+  },
+
+  // --------------------------------------------------------------------------
+  // 7. Polling Fallback Query (Shipments not terminal with no event in 24h)
+  // --------------------------------------------------------------------------
+  async listNonTerminalStaleShipments(
+    staleHours = 24,
+    tx?: Tx
+  ): Promise<CourierShipmentRow[]> {
+    const client = tx ?? defaultDb;
+    const cutoff = new Date(Date.now() - staleHours * 60 * 60 * 1000);
+
+    try {
+      const rows = await client
+        .select()
+        .from(courierShipments)
+        .where(
+          and(
+            sql`${courierShipments.consignmentNo} IS NOT NULL`,
+            sql`${courierShipments.status} NOT IN ('DELIVERED', 'RETURNED', 'LOST', 'CANCELLED', 'BOOKING_FAILED')`,
+            sql`COALESCE(${courierShipments.lastEventAt}, ${courierShipments.bookedAt}, ${courierShipments.createdAt}) <= ${cutoff}`
+          )
+        );
+      if (rows.length > 0) return rows;
+    } catch {
+      // Memory Fallback
+    }
+
+    const nonTerminalStatuses = new Set([
+      "BOOKED",
+      "PICKED_UP",
+      "IN_TRANSIT",
+      "OUT_FOR_DELIVERY",
+      "PARTIALLY_DELIVERED",
+      "RTO_IN_TRANSIT",
+    ]);
+
+    return Array.from(memShipments.values()).filter((s) => {
+      if (!s.consignmentNo || !nonTerminalStatuses.has(s.status)) return false;
+      const refTime = s.lastEventAt || s.bookedAt || s.createdAt;
+      return refTime.getTime() <= cutoff.getTime();
+    });
+  },
+
+  // --------------------------------------------------------------------------
+  // 8. Warranty Start Fallback Query (+3d Dhaka / +5d outside)
+  // --------------------------------------------------------------------------
+  async listHandedOverShipmentsWithoutDelivery(
+    dhakaDays = 3,
+    outsideDhakaDays = 5,
+    tx?: Tx
+  ): Promise<Array<{ shipment: CourierShipmentRow; isInsideDhaka: boolean; fallbackDate: Date }>> {
+    const now = Date.now();
+    const dhakaCutoff = new Date(now - dhakaDays * 24 * 60 * 60 * 1000);
+    const outsideCutoff = new Date(now - outsideDhakaDays * 24 * 60 * 60 * 1000);
+
+    const candidates = Array.from(memShipments.values()).filter((s) => {
+      if (!s.handedOverAt) return false;
+      if (s.status === "DELIVERED" || s.status === "RETURNED" || s.status === "RTO_IN_TRANSIT" || s.status === "CANCELLED") {
+        return false;
+      }
+      return true;
+    });
+
+    const results: Array<{ shipment: CourierShipmentRow; isInsideDhaka: boolean; fallbackDate: Date }> = [];
+    for (const s of candidates) {
+      const order = await ordersRepo.getOrderWithDetails(tx, s.orderId);
+      const isInsideDhaka = order?.deliveryZone === "INSIDE_DHAKA";
+      const thresholdDays = isInsideDhaka ? dhakaDays : outsideDhakaDays;
+      const cutoff = isInsideDhaka ? dhakaCutoff : outsideCutoff;
+
+      if (s.handedOverAt && s.handedOverAt.getTime() <= cutoff.getTime()) {
+        const fallbackDate = new Date(s.handedOverAt.getTime() + thresholdDays * 24 * 60 * 60 * 1000);
+        results.push({
+          shipment: s,
+          isInsideDhaka,
+          fallbackDate,
+        });
+      }
+    }
+    return results;
   },
 };

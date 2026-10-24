@@ -152,7 +152,11 @@ export async function transitionOrder(
   }
 
   // 2. Validate transition against TRANSITIONS matrix
-  const allowed = TRANSITIONS[order.orderType]?.[order.status] ?? [];
+  const orderTypeKey =
+    order.orderType === ("REGULAR" as any)
+      ? "REGULAR_DROP_PACK"
+      : order.orderType;
+  const allowed = (TRANSITIONS as any)[orderTypeKey]?.[order.status] ?? [];
   if (!allowed.includes(to)) {
     throw new BusinessError(
       "ERR_ILLEGAL_TRANSITION",

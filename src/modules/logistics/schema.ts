@@ -149,3 +149,37 @@ export const courierLocationMap = pgTable(
 
 export type CourierLocationMapRow = typeof courierLocationMap.$inferSelect;
 export type InsertCourierLocationMapRow = typeof courierLocationMap.$inferInsert;
+
+// --------------------------------------------------------------------------
+// 4. Courier Claims Table
+// --------------------------------------------------------------------------
+export const claimStatusEnum = ["PENDING", "APPROVED", "REJECTED", "SETTLED"] as const;
+export type ClaimStatus = (typeof claimStatusEnum)[number];
+
+export const courierClaims = pgTable(
+  "courier_claims",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    shipmentId: uuid("shipment_id")
+      .notNull()
+      .references(() => courierShipments.id, { onDelete: "cascade" }),
+    amountPaisa: bigint("amount_paisa", { mode: "number" }).notNull(),
+    status: text("status", { enum: claimStatusEnum })
+      .default("PENDING")
+      .notNull(),
+    notes: text("notes"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    index("idx_courier_claims_shipment_id").on(table.shipmentId),
+    index("idx_courier_claims_status").on(table.status),
+  ]
+);
+
+export type CourierClaimRow = typeof courierClaims.$inferSelect;
+export type InsertCourierClaimRow = typeof courierClaims.$inferInsert;

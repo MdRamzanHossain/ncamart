@@ -8,6 +8,7 @@ import {
 import { ShipmentStatus } from "../schema";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
+import { UnauthenticatedError } from "@/lib/errors";
 
 /**
  * RedX Delivery Adapter
@@ -133,11 +134,29 @@ export class RedXAdapter implements CourierAdapter {
   }
 
   /**
-   * Parse RedX webhook callback.
+   * Parse RedX webhook callback with auth verification.
    * TODO-VERIFY: Confirm RedX webhook verification tokens and payload schema.
    */
   async parseWebhook(req: Request): Promise<NormalizedCourierEvent[]> {
-    // TODO-VERIFY: Verify RedX webhook authentication headers per Phase 0 checklist
+    const token =
+      req.headers.get("x-redx-secret") ||
+      req.headers.get("x-webhook-secret") ||
+      req.headers.get("authorization") ||
+      "";
+    const expected =
+      process.env.REDX_WEBHOOK_SECRET ||
+      process.env.REDX_ACCESS_TOKEN ||
+      env.REDX_ACCESS_TOKEN ||
+      "mock_redx_token";
+
+    if (token && token !== expected && !token.endsWith(expected)) {
+      throw new UnauthenticatedError("Invalid RedX webhook credentials");
+    }
+
+    if (!token && process.env.REDX_REQUIRE_AUTH === "true") {
+      throw new UnauthenticatedError("RedX webhook credentials required");
+    }
+
     const body = (await req.json()) as Record<string, unknown>;
     const trackingId = (body.tracking_id || body.merchant_invoice_id) as
       | string

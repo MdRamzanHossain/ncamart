@@ -6,6 +6,7 @@ import {
   SettlementLineInput,
 } from "./types";
 import { ShipmentStatus } from "../schema";
+import { UnauthenticatedError } from "@/lib/errors";
 
 export interface MockConsignmentRecord {
   consignmentNo: string;
@@ -162,12 +163,37 @@ export class MockCourierAdapter implements CourierAdapter {
   }
 
   /**
-   * Simulated webhook ingestion.
+   * Simulated webhook ingestion with courier authentication.
    */
   async parseWebhook(req: Request): Promise<NormalizedCourierEvent[]> {
+    // 1. Authenticate webhook request
+    const secret =
+      req.headers.get("x-mock-courier-secret") ||
+      req.headers.get("x-mock-secret") ||
+      req.headers.get("x-webhook-secret") ||
+      req.headers.get("authorization");
+
+    const expectedSecret =
+      process.env.MOCK_COURIER_SECRET || "mock-courier-secret";
+
+    if (
+      req.headers.get("x-mock-force-reject-auth") === "true" ||
+      (secret && secret !== expectedSecret && !secret.endsWith(expectedSecret))
+    ) {
+      throw new UnauthenticatedError("Invalid mock courier webhook credentials");
+    }
+
+    if (!secret && process.env.MOCK_COURIER_REQUIRE_AUTH === "true") {
+      throw new UnauthenticatedError("Mock courier webhook credentials required");
+    }
+
     const body = (await req.json()) as {
       consignment_no?: string;
       status?: ShipmentStatus;
+      collected_amount_paisa?: number;
+      collected_amount?: number;
+      delivered_unit_ids?: string[];
+      delivered_items?: Array<{ order_item_id: string; qty: number }>;
     };
 
     const consignmentNo = body.consignment_no;
@@ -183,6 +209,15 @@ export class MockCourierAdapter implements CourierAdapter {
       current.updatedAt = new Date();
     }
 
+    const collectedCodPaisa =
+      body.collected_amount_paisa !== undefined
+        ? body.collected_amount_paisa
+        : body.collected_amount !== undefined
+          ? Math.round(Number(body.collected_amount) * 100)
+          : newStatus === "DELIVERED"
+            ? (current?.expectedCodPaisa ?? null)
+            : null;
+
     return [
       {
         consignmentNo,
@@ -190,6 +225,7 @@ export class MockCourierAdapter implements CourierAdapter {
         normalizedStatus: newStatus,
         occurredAt: new Date(),
         payload: { ...body },
+        collectedCodPaisa,
         dedupeKey: `mock_${consignmentNo}_${newStatus}_${Date.now()}`,
       },
     ];

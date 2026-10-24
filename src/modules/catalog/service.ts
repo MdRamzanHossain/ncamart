@@ -194,6 +194,72 @@ export const catalogService = {
     }
   },
 
+  setSkuForTesting(
+    sku: Partial<SkuRow> & { id: string },
+    product?: Partial<ProductRow> & { id: string }
+  ) {
+    const productId = sku.productId ?? product?.id ?? `prod-${sku.id}`;
+    const fullSku: SkuRow = {
+      id: sku.id,
+      productId,
+      skuCode: sku.skuCode ?? `SKU-${sku.id}`,
+      barcodeEan13: sku.barcodeEan13 ?? null,
+      attributes: sku.attributes ?? {},
+      specs: sku.specs ?? {},
+      pricePaisa: sku.pricePaisa ?? 100_000,
+      compareAtPricePaisa: sku.compareAtPricePaisa ?? null,
+      baseCostPaisa: sku.baseCostPaisa ?? 80_000,
+      spotBufferBp: sku.spotBufferBp ?? 600,
+      maxUnitPurchasePaisa: sku.maxUnitPurchasePaisa ?? 84_800,
+      warrantyDays: sku.warrantyDays ?? 365,
+      warrantyType: sku.warrantyType ?? "OFFICIAL_DISTRIBUTOR",
+      warrantyPolicyEn: sku.warrantyPolicyEn ?? null,
+      warrantyPolicyBn: sku.warrantyPolicyBn ?? null,
+      published: sku.published ?? true,
+      publishedAt: sku.publishedAt ?? new Date(),
+      unpublishedAt: sku.unpublishedAt ?? null,
+      weightGrams: sku.weightGrams ?? 500,
+      requiresSerialScan: sku.requiresSerialScan ?? false,
+      isBundle: sku.isBundle ?? false,
+      bundleItems: sku.bundleItems ?? null,
+      deletedAt: sku.deletedAt ?? null,
+      createdAt: sku.createdAt ?? new Date(),
+      updatedAt: sku.updatedAt ?? new Date(),
+    };
+    memSkus.set(fullSku.id, fullSku);
+
+    const fullProd: ProductRow = {
+      id: productId,
+      categoryId: product?.categoryId ?? "cat-default",
+      brandId: product?.brandId ?? null,
+      titleEn: product?.titleEn ?? "Test Product",
+      titleBn: product?.titleBn ?? "টেস্ট প্রোডাক্ট",
+      slug: product?.slug ?? `prod-${productId}`,
+      productTier: product?.productTier ?? "BUDGET_SMART",
+      fulfillmentType: product?.fulfillmentType ?? "DROP_AND_PACK",
+      vatRateBp: product?.vatRateBp ?? 0,
+      status: product?.status ?? "PUBLISHED",
+      statusReason: null,
+      statusChangedAt: new Date(),
+      statusChangedBy: null,
+      reviewNotes: null,
+      primaryImageId: null,
+      galleryImageIds: [],
+      descriptionEn: null,
+      descriptionBn: null,
+      packageWeightGrams: 500,
+      packageDimensions: null,
+      hscode: null,
+      countryOfOrigin: null,
+      customAttributes: {},
+      searchKeywords: [],
+      deletedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    memProducts.set(fullProd.id, fullProd);
+  },
+
   // ----------------------------------------------------
   // Seed Catalog Templates
   // ----------------------------------------------------

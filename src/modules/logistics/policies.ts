@@ -72,3 +72,43 @@ export function assertCanHandover(actor: Actor | null): void {
     throw new ForbiddenError("Insufficient permissions to confirm courier handover");
   }
 }
+
+export function canReceiveRto(actor: Actor | null): boolean {
+  if (!actor) return false;
+  if (actor.type.toLowerCase() === "system") return true;
+  const roles = getActorRoles(actor);
+  if (roles.includes("SUPER_ADMIN")) return true;
+  if (actor.permissions?.includes("logistics.rto_receive")) return true;
+  return (
+    roles.includes("QC_TECHNICIAN") ||
+    roles.includes("GODOWN_MANAGER") ||
+    roles.includes("DISPATCH_STAFF")
+  );
+}
+
+export function assertCanReceiveRto(actor: Actor | null): void {
+  if (!actor) throw new UnauthorizedError("Authentication required");
+  if (!canReceiveRto(actor)) {
+    throw new ForbiddenError(
+      "Insufficient permissions: requires QC_TECHNICIAN, GODOWN_MANAGER, DISPATCH_STAFF, or SUPER_ADMIN"
+    );
+  }
+}
+
+export function canOverrideCodBlock(actor: Actor | null): boolean {
+  if (!actor) return false;
+  if (actor.type.toLowerCase() === "system") return true;
+  const roles = getActorRoles(actor);
+  if (roles.includes("SUPER_ADMIN")) return true;
+  if (actor.permissions?.includes("customer.cod_override")) return true;
+  return roles.includes("CUSTOMER_SUPPORT");
+}
+
+export function assertCanOverrideCodBlock(actor: Actor | null): void {
+  if (!actor) throw new UnauthorizedError("Authentication required");
+  if (!canOverrideCodBlock(actor)) {
+    throw new ForbiddenError(
+      "Insufficient permissions: requires CUSTOMER_SUPPORT or SUPER_ADMIN"
+    );
+  }
+}

@@ -268,6 +268,19 @@ export const ledgerService = {
     return ledgerRepo.listEntries(undefined, filter);
   },
 
+  async listJournalEntries(
+    filter: ListJournalEntriesFilterDto
+  ): Promise<{ entries: (JournalEntryRow & { lines: (JournalLineRow & { accountCode: string; accountName: string })[] })[]; total: number }> {
+    const res = await ledgerRepo.listEntries(undefined, filter);
+    const entries = await Promise.all(
+      res.items.map(async (item) => {
+        const full = await ledgerRepo.getEntryById(undefined, item.id);
+        return full!;
+      })
+    );
+    return { entries: entries.filter(Boolean), total: res.total };
+  },
+
   async getEntryById(
     id: string
   ): Promise<(JournalEntryRow & { lines: (JournalLineRow & { accountCode: string; accountName: string })[] }) | null> {
