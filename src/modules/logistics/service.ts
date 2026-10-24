@@ -1622,4 +1622,95 @@ export const logisticsService = {
 
     return { recomputedCount: customerIds.size };
   },
+
+  // --------------------------------------------------------------------------
+  // 19. Reverse Logistics & RMA Helpers
+  // --------------------------------------------------------------------------
+  async bookReversePickup(input: {
+    orderId: string;
+    orderNumber: string;
+    pickupName: string;
+    pickupPhone: string;
+    pickupAddress: string;
+    pickupDistrict?: string | null;
+    pickupThana?: string | null;
+    weightGrams?: number;
+    itemDescription?: string;
+    reason?: string;
+  }): Promise<CourierShipmentRow> {
+    const adapter = getCourierAdapter("mock");
+    if (!adapter.createReturnPickup) {
+      throw new Error("Courier does not support reverse pickup");
+    }
+
+    const res = await adapter.createReturnPickup({
+      orderId: input.orderId,
+      orderNumber: input.orderNumber,
+      pickupName: input.pickupName,
+      pickupPhone: input.pickupPhone,
+      pickupAddress: input.pickupAddress,
+      pickupDistrict: input.pickupDistrict,
+      pickupThana: input.pickupThana,
+      weightGrams: input.weightGrams ?? 500,
+      itemDescription: input.itemDescription,
+      reason: input.reason,
+    });
+
+    const shipment = await logisticsRepo.createShipment({
+      orderId: input.orderId,
+      courier: "MOCK",
+      direction: "REVERSE",
+      consignmentNo: res.consignmentNo,
+      status: "BOOKED",
+      weightGrams: input.weightGrams ?? 500,
+      expectedCodPaisa: 0,
+      bookedAt: new Date(),
+    });
+
+    return shipment;
+  },
+
+  async createManualReverseShipment(
+    orderId: string,
+    notes?: string
+  ): Promise<CourierShipmentRow> {
+    const consignmentNo = `MAN-REV-${Date.now()}`;
+    return logisticsRepo.createShipment({
+      orderId,
+      courier: "MANUAL",
+      direction: "REVERSE",
+      consignmentNo,
+      status: "PENDING_BOOKING",
+      weightGrams: 500,
+      expectedCodPaisa: 0,
+    });
+  },
+
+  async createManualForwardShipment(
+    orderId: string,
+    notes?: string
+  ): Promise<CourierShipmentRow> {
+    const consignmentNo = `MAN-FWD-${Date.now()}`;
+    return logisticsRepo.createShipment({
+      orderId,
+      courier: "MANUAL",
+      direction: "FORWARD",
+      consignmentNo,
+      status: "BOOKED",
+      weightGrams: 500,
+      expectedCodPaisa: 0,
+      bookedAt: new Date(),
+    });
+  },
+
+  async createCourierClaim(
+    data: InsertCourierClaimRow
+  ): Promise<CourierClaimRow> {
+    return logisticsRepo.createCourierClaim(data);
+  },
+
+  async listShipmentsByOrderId(orderId: string): Promise<CourierShipmentRow[]> {
+    const { shipments } = await logisticsRepo.listShipments({ orderId, limit: 10 });
+    return shipments;
+  },
 };

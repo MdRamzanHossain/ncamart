@@ -88,6 +88,12 @@ export class ValidationError extends AppError {
   }
 }
 
+export class BadRequestError extends AppError {
+  constructor(message = "Bad request", details: ErrorDetails = {}) {
+    super("ERR_VALIDATION", message, details, 400);
+  }
+}
+
 export class UnauthenticatedError extends AppError {
   constructor(message = "Authentication required", details: ErrorDetails = {}) {
     super("ERR_UNAUTHENTICATED", message, details);

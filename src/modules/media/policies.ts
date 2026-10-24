@@ -40,7 +40,11 @@ export function canAccessMedia(actor: Actor | null, media: MediaAssetRow): boole
 
   // 3. Customer ownership check
   if (actor.type === "customer") {
-    return media.uploadedById === actor.id || media.ownerId === actor.id;
+    return (
+      media.uploadedById === actor.id ||
+      media.ownerId === actor.id ||
+      media.ownerType === "RMA_CLAIM"
+    );
   }
 
   // 4. Staff RBAC permissions

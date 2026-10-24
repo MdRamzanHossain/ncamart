@@ -1149,6 +1149,87 @@ export const ordersService = {
   },
 
   /**
+   * Create a zero-price replacement order for DOA fast-track or verified RMA claims.
+   */
+  async createReplacementOrder(input: {
+    customerId: string;
+    originalOrderId: string;
+    claimId: string;
+    skuId: string;
+    skuTitle: string;
+    shippingAddress: string;
+    shippingDistrict: string;
+    shippingThana: string;
+    customerPhone: string;
+    customerName: string;
+  }): Promise<OrderWithDetails> {
+    const orderNumber = await generateOrderNumber(undefined);
+    const orderId = crypto.randomUUID();
+    const itemId = crypto.randomUUID();
+    const unitId = crypto.randomUUID();
+
+    const created = await ordersRepo.createOrder(undefined, {
+      order: {
+        id: orderId,
+        orderNumber,
+        customerId: input.customerId,
+        channel: "ONLINE",
+        orderType: "REGULAR",
+        fulfillmentChannel: "REGULAR_DROP_PACK",
+        deliveryZone: input.shippingDistrict.toLowerCase().includes("dhaka")
+          ? "DHAKA_INSIDE"
+          : "DHAKA_OUTSIDE",
+        status: "CONFIRMED",
+        paymentStatus: "PAID",
+        paymentMode: "ONLINE",
+        addressSnapshot: {
+          address: input.shippingAddress,
+          district: input.shippingDistrict,
+          thana: input.shippingThana,
+          customerName: input.customerName,
+          customerPhone: input.customerPhone,
+        },
+        subtotalPaisa: 0,
+        discountPaisa: 0,
+        deliveryFeePaisa: 0,
+        vatTotalPaisa: 0,
+        totalPayablePaisa: 0,
+        storeCreditAppliedPaisa: 0,
+        advanceRequiredPaisa: 0,
+        advancePaidPaisa: 0,
+        advancePurpose: null,
+        codAmountPaisa: 0,
+        paidTotalPaisa: 0,
+        refundedTotalPaisa: 0,
+        notes: `RMA Replacement for claim: ${input.claimId} (Original: ${input.originalOrderId})`,
+      },
+      items: [
+        {
+          id: itemId,
+          skuId: input.skuId,
+          skuTitle: input.skuTitle,
+          quantity: 1,
+          unitPricePaisa: 0,
+          subtotalPaisa: 0,
+          discountPaisa: 0,
+          totalPaisa: 0,
+          status: "CONFIRMED",
+        },
+      ],
+      units: [
+        {
+          id: unitId,
+          orderItemId: itemId,
+          unitIndex: 1,
+          status: "ALLOCATED",
+        },
+      ],
+    });
+
+    return created;
+  },
+
+  /**
    * Reset in-memory state for clean test isolation.
    */
   clearMemoryForTesting(): void {
