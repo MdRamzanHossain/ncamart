@@ -27,4 +27,38 @@ export const financePolicies = {
     }
     return false;
   },
+
+  canReconcileSettlements(actor: Actor | null): boolean {
+    if (!actor || actor.type !== "staff") return false;
+    const roles = actor.roles ?? [];
+    const permissions = actor.permissions ?? [];
+    return (
+      roles.includes("FINANCE_OFFICER") ||
+      roles.includes("SUPER_ADMIN") ||
+      permissions.includes("settlement.reconcile")
+    );
+  },
+
+  canResolveExceptions(actor: Actor | null): boolean {
+    if (!actor || actor.type !== "staff") return false;
+    const roles = actor.roles ?? [];
+    const permissions = actor.permissions ?? [];
+    return (
+      roles.includes("FINANCE_OFFICER") ||
+      roles.includes("SUPER_ADMIN") ||
+      permissions.includes("settlement.reconcile")
+    );
+  },
+
+  canViewFinanceDashboard(actor: Actor | null): boolean {
+    if (!actor || actor.type !== "staff") return false;
+    const roles = actor.roles ?? [];
+    const permissions = actor.permissions ?? [];
+    return (
+      roles.includes("FINANCE_OFFICER") ||
+      roles.includes("SUPER_ADMIN") ||
+      permissions.includes("settlement.reconcile") ||
+      permissions.includes("ledger.read")
+    );
+  },
 };

@@ -782,5 +782,30 @@ export const postingRules = {
       { accountCode: "1200", debitPaisa: 0, creditPaisa: input.amountPaisa },
     ];
   },
+
+  /**
+   * 26. Settlement exception written off
+   * Dr 5310 (Cash Variance) / Cr 1110 (Courier COD Receivable) or 1100 (Gateway Clearing)
+   */
+  SETTLEMENT_EXCEPTION_WRITTEN_OFF(input: {
+    amountPaisa: number;
+    kind: "COURIER" | "GATEWAY";
+    courierId?: string;
+  }): JournalLineInput[] {
+    const creditAccount = input.kind === "COURIER" ? "1110" : "1100";
+    const creditLine: JournalLineInput = {
+      accountCode: creditAccount,
+      debitPaisa: 0,
+      creditPaisa: input.amountPaisa,
+    };
+    if (input.kind === "COURIER" && input.courierId) {
+      creditLine.subLedgerType = "COURIER";
+      creditLine.subLedgerRef = input.courierId;
+    }
+    return [
+      { accountCode: "5310", debitPaisa: input.amountPaisa, creditPaisa: 0 },
+      creditLine,
+    ];
+  },
 };
 
