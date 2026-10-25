@@ -1,5 +1,5 @@
 # NCAMart — Implementation Progress Tracker**Current Stage:** Stage 6 — Finance, Realtime & Customer Engagement  
-**Active Prompt:** P38 — Customer Reviews, Ratings & Verified Badges  
+**Active Prompt:** P39 — Analytics Events & Marketing Feeds  
 **Last Updated:** 2026-10-25  
 
 ---
@@ -46,8 +46,8 @@
 | **P35** | Finance | Financial Reporting & Mushak VAT Returns | **DONE** | 49 test suites (505 tests), 10 streaming financial report endpoints under `/api/v1/finance/reports/*` (trial-balance, profit-and-loss, courier-receivable-aging, customer-deposits, store-credit-liability, runner-float-status, supplier-payables, vat-sales-register, refunds-register, kpi-operations), json/csv/xlsx streaming formats, UTF-8 BOM, heavy (>90 days) background export jobs with R2 storage & signed URLs | None (Proceed to P36) |
 | **P36** | Notifications | Multi-Channel Notifications (SMS, WhatsApp, Email) | **DONE** | 50 test suites (518 tests), multi-channel router (Class A immediate 24/7, Class B 08:00–22:00 quiet hours, Class C opt-in required with HMAC signed opt-out token), SMS primary BD gateway HTTP + secondary failover route + mock, WhatsApp Cloud API templates, Email SMTP/nodemailer, SMS circuit breaker (sliding 5-min window, >10% failure on min 20 sends, 10m trip), Bangla numerals (০-৯), dead-letter queue & retry API | None (Proceed to P37) |
 | **P37** | Realtime | Server-Sent Events (SSE) & Realtime Staff Alerts | **DONE** | 51 test suites (531 tests), `GET /api/v1/events/stream` staff SSE, channel computation (`all-staff`, `staff:{id}`, `role:{role}`), shared Redis subscriber fanout, monotonic IDs & Redis Stream replay (`XADD` ~1000 maxlen, 24h), heartbeat comment (: keep-alive every 25s), `POST /api/v1/events/:eventId/ack` (5m sourcing escalation cancel), max 3 concurrent streams per staff, 60s session revocation checker | None (Proceed to P38) |
-| **P38** | Engagement | Customer Reviews, Ratings & Verified Badges | PENDING | Authenticated reviews | - |
-| **P39** | Engagement | Wishlists, Abandoned Cart & Abandonment Recovery | PENDING | Wishlist, reminder job | - |
+| **P38** | Engagement | Customer Reviews, Ratings, Wishlist, Back-in-Stock & Abandoned Cart | **DONE** | 52 test suites (548 tests), `reviews`, `wishlist_items`, `stock_alert_subscriptions`, `carts`, POST `/api/v1/reviews` (DELIVERED/DELIVERED_COUNTER guard, duplicate 409, 3-day invitation Class B delayed job), GET `/api/v1/catalog/products/:slug/reviews` (approved only, tier badge, rating summary), GET `/api/v1/admin/reviews` & POST `/api/v1/admin/reviews/:id/moderate` (CUSTOMER_SUPPORT, rating cache & search doc outbox), GET/POST/DELETE `/api/v1/customer/wishlist`, POST `/api/v1/catalog/skus/:skuId/notify-me` (fires once, Class C, quiet hours 08:00–22:00 Dhaka, marketing opt-in), GET/PUT `/api/v1/cart`, hourly abandoned cart recovery job (2–24h ago, no order since, 7d reminder throttle, Class C opt-in & quiet hours) | None (Proceed to P39) |
+| **P39** | Analytics | Analytics Events & Marketing Feeds (PostHog, GA4, Meta CAPI, Google Merchant XML, Meta Catalog CSV) | PENDING | Server-side event pipeline, consent filtering, feed jobs | - |
 | **P40** | Admin | Staff Administration, Compliance & Data Retention | PENDING | User management, data anonymization | - |
 | **P41** | Quality | Comprehensive Database Seeds & Fixtures | PENDING | Demo products, staff, suppliers | - |
 | **P42** | Quality | OpenAPI / Swagger Documentation Generator | PENDING | OpenAPI v3.1 export | - |
