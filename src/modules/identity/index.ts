@@ -59,6 +59,8 @@ export * from "./service";
 export * from "./auth";
 export * from "./staffAuth";
 export * from "./customer";
+export * from "./adminCustomerService";
+export * from "./supportTasksService";
 export * from "./permissions";
 export * from "./policies";
 export * from "./pii";

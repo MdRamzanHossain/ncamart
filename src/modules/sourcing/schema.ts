@@ -272,6 +272,7 @@ export const runnerPurchaseSyncStatusEnum = [
   "OK",
   "CONFLICT",
   "QUARANTINED",
+  "REJECTED",
 ] as const;
 export type RunnerPurchaseSyncStatus = (typeof runnerPurchaseSyncStatusEnum)[number];
 

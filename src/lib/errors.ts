@@ -46,6 +46,7 @@ export const ERROR_CODES = {
   ERR_PRODUCT_IMMUTABLE: 422,
   ERR_CHECKLIST_FAILED: 422,
   ERR_UNBALANCED_JOURNAL_ENTRY: 422,
+  ERR_LAST_SUPER_ADMIN: 422,
   // 423 is not in the P00 status map; locked PINs use 429 semantics ("too many attempts").
   ERR_PIN_LOCKED: 429,
   // 429

@@ -276,7 +276,143 @@ export function clearMemoryAuditChainForTesting(): void {
   memAuditIdCounter = 1n;
 }
 
+/**
+ * Query audit log rows with filtering by staff, action, entity, and date range.
+ */
+export async function queryAuditLogs(filters: {
+  staffId?: string;
+  action?: string;
+  entityType?: string;
+  entityId?: string;
+  from?: Date | string;
+  to?: Date | string;
+  page?: number;
+  limit?: number;
+} = {}): Promise<{
+  data: AuditLogRow[];
+  total: number;
+  page: number;
+  limit: number;
+}> {
+  const page = filters.page ?? 1;
+  const limit = filters.limit ?? 50;
+  const offset = (page - 1) * limit;
+
+  const fromDate = filters.from ? new Date(filters.from) : undefined;
+  const toDate = filters.to ? new Date(filters.to) : undefined;
+
+  try {
+    const conditions = [];
+    if (filters.staffId) conditions.push(eq(auditLogs.staffId, filters.staffId));
+    if (filters.action) conditions.push(eq(auditLogs.action, filters.action));
+    if (filters.entityType) conditions.push(eq(auditLogs.entityType, filters.entityType));
+    if (filters.entityId) conditions.push(eq(auditLogs.entityId, filters.entityId));
+    if (fromDate) conditions.push(gte(auditLogs.createdAt, fromDate));
+    if (toDate) conditions.push(lte(auditLogs.createdAt, toDate));
+
+    const totalRows = await defaultDb
+      .select({ count: sql<number>`count(*)::int` })
+      .from(auditLogs)
+      .where(conditions.length > 0 ? and(...conditions) : undefined);
+    const total = totalRows[0]?.count ?? 0;
+
+    const rows = await defaultDb
+      .select()
+      .from(auditLogs)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(auditLogs.id))
+      .limit(limit)
+      .offset(offset);
+
+    return { data: rows, total, page, limit };
+  } catch {
+    // Memory fallback
+    let items = [...memAuditChain];
+    if (filters.staffId) items = items.filter((r) => r.staffId === filters.staffId);
+    if (filters.action) items = items.filter((r) => r.action === filters.action);
+    if (filters.entityType) items = items.filter((r) => r.entityType === filters.entityType);
+    if (filters.entityId) items = items.filter((r) => r.entityId === filters.entityId);
+    if (fromDate) items = items.filter((r) => new Date(r.createdAt) >= fromDate);
+    if (toDate) items = items.filter((r) => new Date(r.createdAt) <= toDate);
+
+    const total = items.length;
+    // newest first
+    const sorted = items.sort((a, b) => Number(b.id - a.id));
+    const data = sorted.slice(offset, offset + limit);
+
+    return { data, total, page, limit };
+  }
+}
+
+/**
+ * Nightly export job: Exports the day's audit rows + final hash as JSONL to S3_BUCKET_AUDIT.
+ * Dev MinIO & Cloudflare R2 / AWS S3 compliant.
+ */
+export async function exportAuditLogsToJsonl(
+  fromDate: Date,
+  toDate: Date,
+  retentionDays = 2190
+): Promise<{ key: string; count: number; finalHash: string; bucket: string }> {
+  const { putObject } = await import("@/lib/storage");
+  const { env } = await import("@/lib/env");
+
+  let rows: AuditLogRow[] = [];
+  try {
+    rows = await defaultDb
+      .select()
+      .from(auditLogs)
+      .where(and(gte(auditLogs.createdAt, fromDate), lte(auditLogs.createdAt, toDate)))
+      .orderBy(asc(auditLogs.id));
+  } catch {
+    rows = memAuditChain.filter((r) => {
+      const d = new Date(r.createdAt);
+      return d >= fromDate && d <= toDate;
+    });
+  }
+
+  const finalHash = rows.length > 0 ? rows[rows.length - 1].hash : GENESIS_HASH;
+  const manifest = JSON.stringify({
+    type: "AUDIT_EXPORT_MANIFEST",
+    fromDate: fromDate.toISOString(),
+    toDate: toDate.toISOString(),
+    rowCount: rows.length,
+    finalHash,
+    retentionDays,
+    exportedAt: new Date().toISOString(),
+  });
+
+  const lines = rows.map((r) =>
+    canonicalJson({
+      id: r.id.toString(),
+      staffId: r.staffId,
+      actorType: r.actorType,
+      action: r.action,
+      entityType: r.entityType,
+      entityId: r.entityId,
+      beforeState: r.beforeState,
+      afterState: r.afterState,
+      ip: r.ip,
+      userAgent: r.userAgent,
+      requestId: r.requestId,
+      createdAt: r.createdAt instanceof Date ? r.createdAt.toISOString() : r.createdAt,
+      prevHash: r.prevHash,
+      hash: r.hash,
+    })
+  );
+
+  const fileBody = manifest + "\n" + lines.join("\n") + "\n";
+  const dateStr = fromDate.toISOString().slice(0, 10);
+  const key = `audit/exports/${dateStr}/audit-${dateStr}.jsonl`;
+  const bucket = env.S3_BUCKET_AUDIT;
+
+  await putObject(bucket, key, fileBody, "application/x-ndjson");
+
+  return { key, count: rows.length, finalHash, bucket };
+}
+
 export const auditService = {
   record: recordAudit,
   verify: verifyAuditChain,
+  query: queryAuditLogs,
+  exportDailyJsonl: exportAuditLogsToJsonl,
 };

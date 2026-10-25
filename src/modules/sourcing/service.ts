@@ -2594,6 +2594,102 @@ export const sourcingService = {
     return sourcingRepo.getRunnerPurchaseById(id);
   },
 
+  /**
+   * P40: List quarantined runner purchases for manager review.
+   */
+  async listQuarantinedPurchases(
+    actor?: Actor
+  ): Promise<{ items: RunnerPurchaseRow[]; total: number }> {
+    return sourcingRepo.listRunnerPurchases({ syncStatus: "QUARANTINED" });
+  },
+
+  /**
+   * P40: Sourcing Manager accepts quarantined runner purchase.
+   */
+  async acceptQuarantinedPurchase(
+    id: string,
+    actor: Actor
+  ): Promise<RunnerPurchaseRow> {
+    const purchase = await sourcingRepo.getRunnerPurchaseById(id);
+    if (!purchase) {
+      throw new BusinessError("ERR_NOT_FOUND", "Quarantined purchase not found", {}, 404);
+    }
+    if (purchase.syncStatus !== "QUARANTINED") {
+      throw new BusinessError(
+        "ERR_BUSINESS_RULE",
+        `Cannot accept purchase with status ${purchase.syncStatus}`,
+        { status: purchase.syncStatus },
+        422
+      );
+    }
+
+    const updated = await sourcingRepo.updateRunnerPurchase(id, {
+      syncStatus: "OK",
+      approvedBy: actor.id,
+      requiresApproval: false,
+    });
+
+    if (purchase.taskId) {
+      const task = await sourcingRepo.getRunnerTaskById(purchase.taskId);
+      if (task && task.status !== "PURCHASED" && task.status !== "RECEIVED_AT_GODOWN") {
+        await sourcingRepo.updateRunnerTask(purchase.taskId, {
+          status: "PURCHASED",
+          actualUnitCostPaisa: purchase.unitCostPaisa,
+        });
+      }
+    }
+
+    const { recordAudit } = await import("@/modules/audit");
+    await recordAudit(null, {
+      staffId: actor.id,
+      actorType: "STAFF",
+      action: "sourcing.quarantine.accepted",
+      entityType: "RUNNER_PURCHASE",
+      entityId: id,
+      afterState: { syncStatus: "OK", approvedBy: actor.id },
+    });
+
+    return updated!;
+  },
+
+  /**
+   * P40: Sourcing Manager rejects quarantined runner purchase.
+   */
+  async rejectQuarantinedPurchase(
+    id: string,
+    reason: string,
+    actor: Actor
+  ): Promise<RunnerPurchaseRow> {
+    const purchase = await sourcingRepo.getRunnerPurchaseById(id);
+    if (!purchase) {
+      throw new BusinessError("ERR_NOT_FOUND", "Quarantined purchase not found", {}, 404);
+    }
+    if (purchase.syncStatus !== "QUARANTINED") {
+      throw new BusinessError(
+        "ERR_BUSINESS_RULE",
+        `Cannot reject purchase with status ${purchase.syncStatus}`,
+        { status: purchase.syncStatus },
+        422
+      );
+    }
+
+    const updated = await sourcingRepo.updateRunnerPurchase(id, {
+      syncStatus: "REJECTED",
+    });
+
+    const { recordAudit } = await import("@/modules/audit");
+    await recordAudit(null, {
+      staffId: actor.id,
+      actorType: "STAFF",
+      action: "sourcing.quarantine.rejected",
+      entityType: "RUNNER_PURCHASE",
+      entityId: id,
+      afterState: { syncStatus: "REJECTED", reason },
+    });
+
+    return updated!;
+  },
+
   clearMemoryForTesting(): void {
     memSyncBatchCache.clear();
     sourcingRepo.clearMemoryForTesting();

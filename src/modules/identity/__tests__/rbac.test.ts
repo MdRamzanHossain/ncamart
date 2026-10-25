@@ -29,6 +29,7 @@ describe("RBAC Permissions, Matrix Snapshot, and PII Serialization (P07)", () =>
           "rma.adjudicate",
           "refund.approve",
           "store_credit.issue",
+          "support.manage",
         ],
         "DISPATCH_STAFF": [
           "catalog.read",
@@ -89,6 +90,7 @@ describe("RBAC Permissions, Matrix Snapshot, and PII Serialization (P07)", () =>
           "spot.override.approve",
           "seal.void.approve",
           "float.read",
+          "sourcing.quarantine.review",
         ],
         "SUPER_ADMIN": [
           "catalog.read",
@@ -134,6 +136,9 @@ describe("RBAC Permissions, Matrix Snapshot, and PII Serialization (P07)", () =>
           "settings.manage",
           "security.alerts.read",
           "queues.admin",
+          "support.manage",
+          "sourcing.quarantine.review",
+          "data_protection.anonymize",
         ],
       }
     `);

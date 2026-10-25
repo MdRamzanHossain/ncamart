@@ -23,6 +23,7 @@ export const SETTINGS_SCHEMAS = {
   BUSINESS_HOLIDAYS: z.array(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)),
   MARKETING_QUIET_START: z.string().regex(/^\d{2}:\d{2}$/),
   MARKETING_QUIET_END: z.string().regex(/^\d{2}:\d{2}$/),
+  AUDIT_RETENTION_DAYS: z.number().int().positive(),
 } as const;
 
 export type SettingKey = keyof typeof SETTINGS_SCHEMAS;
@@ -52,4 +53,5 @@ export const DEFAULT_SETTINGS: { [K in SettingKey]: SettingValue<K> } = {
   BUSINESS_HOLIDAYS: [],
   MARKETING_QUIET_START: "22:00",
   MARKETING_QUIET_END: "08:00",
+  AUDIT_RETENTION_DAYS: 2190,
 };

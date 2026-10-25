@@ -318,11 +318,21 @@ export const recurringSchedules: ScheduledTask[] = [
   {
     name: "media-retention-and-cleanup",
     cron: "0 5 * * *", // daily at 05:00 Asia/Dhaka
-    description: "Purges expired media past retention_until and aborts abandoned uploads > 24h",
+    description: "Extended retention: purges media past retention_until, abandoned uploads >24h, notification logs >12m, analytics >13m, sessions >30d",
     handler: async () => {
       await mediaService.runRetentionCleanupJob();
       await mediaService.runAbandonedUploadsCleanupJob();
+      await runDailyRetentionJob();
       await heartbeat("media-retention-and-cleanup");
+    },
+  },
+  {
+    name: "audit-nightly-export",
+    cron: "0 4 * * *", // daily at 04:00 Asia/Dhaka
+    description: "Exports the previous day's audit log rows + final hash as JSONL to audit bucket with Object Lock",
+    handler: async () => {
+      await runAuditNightlyExportJob();
+      await heartbeat("audit-nightly-export");
     },
   },
   {
@@ -335,6 +345,96 @@ export const recurringSchedules: ScheduledTask[] = [
     },
   },
 ];
+
+/**
+ * P40: Extended daily retention job running at 05:00 Asia/Dhaka.
+ * Purges sessions expired > 30 days, notification logs > 12 months, and analytics > 13 months.
+ */
+export async function runDailyRetentionJob(): Promise<{
+  purgedSessions: number;
+  purgedNotificationLogs: number;
+  purgedAnalytics: number;
+}> {
+  const now = new Date();
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 3600 * 1000);
+  const twelveMonthsAgo = new Date(now.getTime() - 365 * 24 * 3600 * 1000);
+  const thirteenMonthsAgo = new Date(now.getTime() - 395 * 24 * 3600 * 1000);
+
+  let purgedSessions = 0;
+  let purgedNotificationLogs = 0;
+  let purgedAnalytics = 0;
+
+  try {
+    const sessRes = await db.execute(
+      sql`DELETE FROM sessions WHERE expires_at < ${thirtyDaysAgo} OR (revoked_at IS NOT NULL AND revoked_at < ${thirtyDaysAgo});`
+    );
+    purgedSessions = Number((sessRes as any).rowCount ?? 0);
+  } catch {
+    // Memory fallback
+  }
+
+  try {
+    const notifRes = await db.execute(
+      sql`DELETE FROM notification_logs WHERE created_at < ${twelveMonthsAgo};`
+    );
+    purgedNotificationLogs = Number((notifRes as any).rowCount ?? 0);
+  } catch {
+    // Memory fallback
+  }
+
+  try {
+    const analyticsRes = await db.execute(
+      sql`DELETE FROM analytics_events WHERE timestamp < ${thirteenMonthsAgo};`
+    );
+    purgedAnalytics = Number((analyticsRes as any).rowCount ?? 0);
+  } catch {
+    // Memory fallback
+  }
+
+  return { purgedSessions, purgedNotificationLogs, purgedAnalytics };
+}
+
+/**
+ * P40: 04:00 Nightly audit export job to S3_BUCKET_AUDIT with Object Lock retention.
+ */
+export async function runAuditNightlyExportJob(): Promise<{
+  key: string;
+  count: number;
+  finalHash: string;
+  bucket: string;
+}> {
+  const now = new Date();
+  const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  const fromDate = new Date(
+    yesterday.getFullYear(),
+    yesterday.getMonth(),
+    yesterday.getDate(),
+    0,
+    0,
+    0
+  );
+  const toDate = new Date(
+    yesterday.getFullYear(),
+    yesterday.getMonth(),
+    yesterday.getDate(),
+    23,
+    59,
+    59,
+    999
+  );
+
+  const { auditService } = await import("@/modules/audit");
+  const { settingsService } = await import("@/modules/settings");
+  let retentionDays = 2190; // Default 6 years
+  try {
+    const settingVal = await settingsService.get("audit_retention_days" as any);
+    if (typeof settingVal === "number") retentionDays = settingVal;
+  } catch {
+    // Ignored
+  }
+
+  return await auditService.exportDailyJsonl(fromDate, toDate, retentionDays);
+}
 
 export function getLastHeartbeat(jobName: string): string | undefined {
   return memHeartbeats.get(jobName);

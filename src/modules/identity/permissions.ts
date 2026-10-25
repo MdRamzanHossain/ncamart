@@ -57,6 +57,9 @@ export const ALL_PERMISSIONS = [
   "settings.manage",
   "security.alerts.read",
   "queues.admin",
+  "support.manage",
+  "sourcing.quarantine.review",
+  "data_protection.anonymize",
 ] as const;
 
 export type Permission = (typeof ALL_PERMISSIONS)[number];
@@ -114,6 +117,7 @@ export const ROLE_PERMISSION_MATRIX: Record<StaffRole, readonly Permission[]> = 
     "spot.override.approve",
     "seal.void.approve",
     "float.read",
+    "sourcing.quarantine.review",
   ],
 
   CATALOG_MANAGER: [
@@ -128,6 +132,7 @@ export const ROLE_PERMISSION_MATRIX: Record<StaffRole, readonly Permission[]> = 
     "rma.adjudicate",
     "refund.approve",
     "store_credit.issue",
+    "support.manage",
   ],
 
   FINANCE_OFFICER: [

@@ -52,8 +52,13 @@ export const preorderRepo = {
     const row: SupportTaskRow = {
       ...toInsert,
       id,
+      orderId: toInsert.orderId ?? null,
+      customerId: toInsert.customerId ?? null,
       status: toInsert.status ?? "PENDING",
       assignedTo: toInsert.assignedTo ?? null,
+      resolutionNotes: toInsert.resolutionNotes ?? null,
+      completedAt: toInsert.completedAt ?? null,
+      completedBy: toInsert.completedBy ?? null,
       metadata: toInsert.metadata ?? {},
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -63,11 +68,13 @@ export const preorderRepo = {
   },
 
   /**
-   * List support tasks with optional status and order filters.
+   * List support tasks with optional status, customer, and order filters.
    */
   async listSupportTasks(
     filter?: {
       orderId?: string;
+      customerId?: string;
+      assignedTo?: string;
       status?: SupportTaskStatus;
       type?: SupportTaskType;
     },
@@ -77,6 +84,8 @@ export const preorderRepo = {
     try {
       const conditions = [];
       if (filter?.orderId) conditions.push(eq(supportTasks.orderId, filter.orderId));
+      if (filter?.customerId) conditions.push(eq(supportTasks.customerId, filter.customerId));
+      if (filter?.assignedTo) conditions.push(eq(supportTasks.assignedTo, filter.assignedTo));
       if (filter?.status) conditions.push(eq(supportTasks.status, filter.status));
       if (filter?.type) conditions.push(eq(supportTasks.type, filter.type));
 
@@ -92,6 +101,8 @@ export const preorderRepo = {
 
     let all = Array.from(memSupportTasks.values());
     if (filter?.orderId) all = all.filter((t) => t.orderId === filter.orderId);
+    if (filter?.customerId) all = all.filter((t) => t.customerId === filter.customerId);
+    if (filter?.assignedTo) all = all.filter((t) => t.assignedTo === filter.assignedTo);
     if (filter?.status) all = all.filter((t) => t.status === filter.status);
     if (filter?.type) all = all.filter((t) => t.type === filter.type);
 

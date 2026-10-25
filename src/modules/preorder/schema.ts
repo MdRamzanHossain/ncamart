@@ -10,11 +10,22 @@ import {
 } from "drizzle-orm/pg-core";
 import { orders } from "@/modules/orders/schema";
 import { skus } from "@/modules/catalog/schema";
+import { customers } from "@/modules/identity/schema";
 
-export const supportTaskTypeEnum = ["PREORDER_BALANCE_CALL"] as const;
+export const supportTaskTypeEnum = [
+  "PREORDER_BALANCE_CALL",
+  "DELETION_REQUEST",
+  "DORMANT_PHONE_REVIEW",
+  "GENERAL",
+] as const;
 export type SupportTaskType = (typeof supportTaskTypeEnum)[number];
 
-export const supportTaskStatusEnum = ["PENDING", "COMPLETED", "CANCELLED"] as const;
+export const supportTaskStatusEnum = [
+  "PENDING",
+  "ASSIGNED",
+  "COMPLETED",
+  "CANCELLED",
+] as const;
 export type SupportTaskStatus = (typeof supportTaskStatusEnum)[number];
 
 export const supportTasks = pgTable(
@@ -22,14 +33,16 @@ export const supportTasks = pgTable(
   {
     id: uuid("id").defaultRandom().primaryKey(),
     type: text("type", { enum: supportTaskTypeEnum }).notNull(),
-    orderId: uuid("order_id")
-      .notNull()
-      .references(() => orders.id, { onDelete: "cascade" }),
+    orderId: uuid("order_id").references(() => orders.id, { onDelete: "cascade" }),
+    customerId: uuid("customer_id").references(() => customers.id, { onDelete: "cascade" }),
     dueAt: timestamp("due_at", { withTimezone: true }).notNull(),
     status: text("status", { enum: supportTaskStatusEnum })
       .default("PENDING")
       .notNull(),
     assignedTo: uuid("assigned_to"),
+    resolutionNotes: text("resolution_notes"),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    completedBy: uuid("completed_by"),
     metadata: jsonb("metadata").$type<Record<string, unknown>>().default({}).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
@@ -40,6 +53,7 @@ export const supportTasks = pgTable(
   },
   (table) => [
     index("idx_support_tasks_order_id").on(table.orderId),
+    index("idx_support_tasks_customer_id").on(table.customerId),
     index("idx_support_tasks_status_due").on(table.status, table.dueAt),
   ]
 );

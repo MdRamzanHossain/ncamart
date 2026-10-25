@@ -718,6 +718,58 @@ export const authService = {
     return memoryCustomer;
   },
 
+  async createCustomer(input: {
+    phone: string;
+    fullName?: string | null;
+    email?: string | null;
+    previousCustomerId?: string | null;
+  }): Promise<CustomerRow> {
+    const normalized = normalizeBdPhone(input.phone);
+    const now = new Date();
+    const newCustomer: typeof customers.$inferInsert = {
+      phone: normalized,
+      fullName: input.fullName ?? null,
+      email: input.email ? input.email.toLowerCase() : null,
+      previousCustomerId: (input.previousCustomerId as any) ?? null,
+      status: "ACTIVE",
+      preferredLocale: "bn",
+      lastActiveAt: now,
+    };
+
+    try {
+      const [inserted] = await db.insert(customers).values(newCustomer).returning();
+      if (inserted) {
+        memCustomerStore.set(normalized, inserted);
+        return inserted;
+      }
+    } catch {
+      // Memory fallback
+    }
+
+    const memoryCustomer: CustomerRow = {
+      id: crypto.randomUUID() as Uuid,
+      phone: normalized,
+      fullName: input.fullName ?? null,
+      email: input.email ? input.email.toLowerCase() : null,
+      emailVerified: false,
+      status: "ACTIVE",
+      deliveredOrderCount: 0,
+      rtoCount12m: 0,
+      codBlocked: false,
+      codBlockReason: null,
+      codBlockLiftedBy: null,
+      marketingOptIn: false,
+      marketingOptInAt: null,
+      preferredLocale: "bn",
+      lastActiveAt: now,
+      previousCustomerId: (input.previousCustomerId as any) ?? null,
+      createdAt: now,
+      updatedAt: now,
+    };
+    memCustomerStore.set(normalized, memoryCustomer);
+    return memoryCustomer;
+  },
+
   async saveCustomer(customer: CustomerRow): Promise<void> {
     try {
       await db.update(customers).set(customer).where(eq(customers.id, customer.id));

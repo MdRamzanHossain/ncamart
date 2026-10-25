@@ -611,6 +611,407 @@ export const staffAuthService = {
     }
   },
 
+  async listStaff(filter?: {
+    role?: StaffRole;
+    status?: "ACTIVE" | "SUSPENDED";
+    page?: number;
+    limit?: number;
+  }): Promise<{ data: Array<{
+    id: string;
+    full_name: string;
+    email: string;
+    phone: string;
+    status: string;
+    roles: string[];
+    totp_enabled: boolean;
+    must_change_password: boolean;
+    last_login_at: string | null;
+    created_at: string;
+    updated_at: string;
+  }>; total: number; page: number; limit: number }> {
+    const page = filter?.page ?? 1;
+    const limit = filter?.limit ?? 50;
+    const offset = (page - 1) * limit;
+
+    try {
+      const allRows = await db.select().from(staff).orderBy(staff.createdAt);
+      const rolesRows = await db.select().from(staffRoles);
+      const roleMap = new Map<string, string[]>();
+      for (const r of rolesRows) {
+        const cur = roleMap.get(r.staffId) ?? [];
+        cur.push(r.role);
+        roleMap.set(r.staffId, cur);
+      }
+
+      let filtered = allRows.map((s) => ({
+        id: s.id,
+        full_name: s.fullName,
+        email: s.email,
+        phone: s.phone,
+        status: s.status,
+        roles: roleMap.get(s.id) ?? [],
+        totp_enabled: s.totpEnabled,
+        must_change_password: s.mustChangePassword,
+        last_login_at: s.lastLoginAt ? new Date(s.lastLoginAt).toISOString() : null,
+        created_at: new Date(s.createdAt).toISOString(),
+        updated_at: new Date(s.updatedAt).toISOString(),
+      }));
+
+      if (filter?.status) {
+        filtered = filtered.filter((s) => s.status === filter.status);
+      }
+      if (filter?.role) {
+        filtered = filtered.filter((s) => s.roles.includes(filter.role!));
+      }
+
+      const total = filtered.length;
+      const data = filtered.slice(offset, offset + limit);
+      return { data, total, page, limit };
+    } catch {
+      // Memory fallback
+      let memList = Array.from(memStaffStore.values()).map((s) => ({
+        id: s.id,
+        full_name: s.fullName,
+        email: s.email,
+        phone: s.phone,
+        status: s.status,
+        roles: memStaffRolesStore.get(s.id) ?? [],
+        totp_enabled: s.totpEnabled,
+        must_change_password: s.mustChangePassword,
+        last_login_at: s.lastLoginAt ? new Date(s.lastLoginAt).toISOString() : null,
+        created_at: new Date(s.createdAt).toISOString(),
+        updated_at: new Date(s.updatedAt).toISOString(),
+      }));
+
+      if (filter?.status) {
+        memList = memList.filter((s) => s.status === filter.status);
+      }
+      if (filter?.role) {
+        memList = memList.filter((s) => s.roles.includes(filter.role!));
+      }
+
+      const total = memList.length;
+      const data = memList.slice(offset, offset + limit);
+      return { data, total, page, limit };
+    }
+  },
+
+  async getStaffById(id: string): Promise<{
+    id: string;
+    full_name: string;
+    email: string;
+    phone: string;
+    status: string;
+    roles: string[];
+    totp_enabled: boolean;
+    must_change_password: boolean;
+    last_login_at: string | null;
+    created_at: string;
+    updated_at: string;
+  } | null> {
+    try {
+      const rows = await db.select().from(staff).where(eq(staff.id, id as Uuid)).limit(1);
+      if (rows[0]) {
+        const roles = await this.getStaffRoles(id);
+        const s = rows[0];
+        return {
+          id: s.id,
+          full_name: s.fullName,
+          email: s.email,
+          phone: s.phone,
+          status: s.status,
+          roles,
+          totp_enabled: s.totpEnabled,
+          must_change_password: s.mustChangePassword,
+          last_login_at: s.lastLoginAt ? new Date(s.lastLoginAt).toISOString() : null,
+          created_at: new Date(s.createdAt).toISOString(),
+          updated_at: new Date(s.updatedAt).toISOString(),
+        };
+      }
+    } catch {
+      // fallback
+    }
+
+    const mem = memStaffStore.get(id);
+    if (!mem) return null;
+    const roles = memStaffRolesStore.get(id) ?? [];
+    return {
+      id: mem.id,
+      full_name: mem.fullName,
+      email: mem.email,
+      phone: mem.phone,
+      status: mem.status,
+      roles,
+      totp_enabled: mem.totpEnabled,
+      must_change_password: mem.mustChangePassword,
+      last_login_at: mem.lastLoginAt ? new Date(mem.lastLoginAt).toISOString() : null,
+      created_at: new Date(mem.createdAt).toISOString(),
+      updated_at: new Date(mem.updatedAt).toISOString(),
+    };
+  },
+
+  async countOtherActiveSuperAdmins(excludeStaffId: string): Promise<number> {
+    let count = 0;
+    try {
+      const rows = await db.select().from(staff).where(eq(staff.status, "ACTIVE"));
+      for (const s of rows) {
+        if (s.id !== excludeStaffId) {
+          const roles = await this.getStaffRoles(s.id);
+          if (roles.includes("SUPER_ADMIN")) {
+            count++;
+          }
+        }
+      }
+      return count;
+    } catch {
+      for (const [id, s] of memStaffStore.entries()) {
+        if (id !== excludeStaffId && s.status === "ACTIVE") {
+          const roles = memStaffRolesStore.get(id) ?? [];
+          if (roles.includes("SUPER_ADMIN")) {
+            count++;
+          }
+        }
+      }
+      return count;
+    }
+  },
+
+  async updateStaff(
+    id: string,
+    updates: {
+      fullName?: string;
+      email?: string;
+      phone?: string;
+      roles?: StaffRole[];
+      status?: "ACTIVE" | "SUSPENDED";
+    },
+    actor: { id: string; type?: string }
+  ): Promise<{
+    id: string;
+    full_name: string;
+    email: string;
+    phone: string;
+    status: string;
+    roles: string[];
+    totp_enabled: boolean;
+    must_change_password: boolean;
+    updated_at: string;
+  }> {
+    const existing = await this.getStaffById(id);
+    if (!existing) {
+      throw new BusinessError("ERR_NOT_FOUND", "Staff member not found", {}, 404);
+    }
+
+    const currentRoles = existing.roles;
+    const isCurrentlySuperAdmin = currentRoles.includes("SUPER_ADMIN") && existing.status === "ACTIVE";
+
+    // Enforce Last SUPER_ADMIN protection
+    if (isCurrentlySuperAdmin) {
+      const willDemote = updates.roles !== undefined && !updates.roles.includes("SUPER_ADMIN");
+      const willSuspend = updates.status !== undefined && updates.status !== "ACTIVE";
+
+      if (willDemote || willSuspend) {
+        const otherAdmins = await this.countOtherActiveSuperAdmins(id);
+        if (otherAdmins === 0) {
+          throw new BusinessError(
+            "ERR_LAST_SUPER_ADMIN",
+            "Cannot remove or suspend the last active SUPER_ADMIN",
+            { staffId: id },
+            422
+          );
+        }
+      }
+    }
+
+    const now = new Date();
+    const updatedStatus = updates.status ?? (existing.status as "ACTIVE" | "SUSPENDED");
+    const updatedFullName = updates.fullName ?? existing.full_name;
+    const updatedEmail = updates.email ? updates.email.toLowerCase() : existing.email;
+    const updatedPhone = updates.phone ? normalizeBdPhone(updates.phone) : existing.phone;
+    const updatedRoles = updates.roles ?? (existing.roles as StaffRole[]);
+
+    try {
+      await db
+        .update(staff)
+        .set({
+          fullName: updatedFullName,
+          email: updatedEmail,
+          phone: updatedPhone,
+          status: updatedStatus,
+          updatedAt: now,
+        })
+        .where(eq(staff.id, id as Uuid));
+
+      if (updates.roles) {
+        await db.delete(staffRoles).where(eq(staffRoles.staffId, id as Uuid));
+        for (const role of updates.roles) {
+          await db.insert(staffRoles).values({ staffId: id as Uuid, role });
+        }
+      }
+    } catch {
+      // Memory fallback
+      const mem = memStaffStore.get(id);
+      if (mem) {
+        mem.fullName = updatedFullName;
+        mem.email = updatedEmail;
+        mem.phone = updatedPhone;
+        mem.status = updatedStatus;
+        mem.updatedAt = now;
+      }
+      if (updates.roles) {
+        memStaffRolesStore.set(id, updates.roles);
+      }
+    }
+
+    await recordAudit(null, {
+      staffId: actor.id,
+      actorType: "STAFF",
+      action: "staff.updated",
+      entityType: "STAFF",
+      entityId: id,
+      beforeState: {
+        fullName: existing.full_name,
+        email: existing.email,
+        phone: existing.phone,
+        status: existing.status,
+        roles: existing.roles,
+      },
+      afterState: {
+        fullName: updatedFullName,
+        email: updatedEmail,
+        phone: updatedPhone,
+        status: updatedStatus,
+        roles: updatedRoles,
+      },
+    });
+
+    return {
+      id,
+      full_name: updatedFullName,
+      email: updatedEmail,
+      phone: updatedPhone,
+      status: updatedStatus,
+      roles: updatedRoles,
+      totp_enabled: existing.totp_enabled,
+      must_change_password: existing.must_change_password,
+      updated_at: now.toISOString(),
+    };
+  },
+
+  async resetStaffPassword(
+    id: string,
+    actor: { id: string }
+  ): Promise<{ temporaryPassword: string }> {
+    const existing = await this.getStaffById(id);
+    if (!existing) {
+      throw new BusinessError("ERR_NOT_FOUND", "Staff member not found", {}, 404);
+    }
+
+    const tempPassword = `Nca#${crypto.randomBytes(6).toString("hex")}!`;
+    const passwordHash = await argon2.hash(tempPassword);
+    const now = new Date();
+
+    try {
+      await db
+        .update(staff)
+        .set({
+          passwordHash,
+          mustChangePassword: true,
+          updatedAt: now,
+        })
+        .where(eq(staff.id, id as Uuid));
+    } catch {
+      const mem = memStaffStore.get(id);
+      if (mem) {
+        mem.passwordHash = passwordHash;
+        mem.mustChangePassword = true;
+        mem.updatedAt = now;
+      }
+    }
+
+    // Revoke all existing sessions
+    await this.revokeAllStaffSessions(id, actor.id);
+
+    await recordAudit(null, {
+      staffId: actor.id,
+      actorType: "STAFF",
+      action: "staff.password_reset",
+      entityType: "STAFF",
+      entityId: id,
+      afterState: { mustChangePassword: true },
+    });
+
+    return { temporaryPassword: tempPassword };
+  },
+
+  async resetStaffTotp(
+    id: string,
+    actor: { id: string }
+  ): Promise<{ success: boolean; message: string }> {
+    const existing = await this.getStaffById(id);
+    if (!existing) {
+      throw new BusinessError("ERR_NOT_FOUND", "Staff member not found", {}, 404);
+    }
+
+    const now = new Date();
+    try {
+      await db
+        .update(staff)
+        .set({
+          totpSecretEnc: null,
+          totpEnabled: false,
+          updatedAt: now,
+        })
+        .where(eq(staff.id, id as Uuid));
+    } catch {
+      const mem = memStaffStore.get(id);
+      if (mem) {
+        mem.totpSecretEnc = null;
+        mem.totpEnabled = false;
+        mem.updatedAt = now;
+      }
+    }
+
+    // Revoke all existing sessions
+    await this.revokeAllStaffSessions(id, actor.id);
+
+    await recordAudit(null, {
+      staffId: actor.id,
+      actorType: "STAFF",
+      action: "staff.totp_reset",
+      entityType: "STAFF",
+      entityId: id,
+      afterState: { totpEnabled: false },
+    });
+
+    return { success: true, message: "TOTP credentials reset successfully" };
+  },
+
+  createMockStaffSession(staffId: string, token: string, roles: StaffRole[]): SessionRow {
+    const tokenHash = sha256Hex(token);
+    const now = new Date();
+    const expiresAt = new Date(Date.now() + TWELVE_HOURS_MS);
+    const sess: SessionRow = {
+      id: crypto.randomUUID() as Uuid,
+      tokenHash,
+      subjectType: "STAFF",
+      subjectId: staffId as Uuid,
+      deviceId: "dev-test",
+      deviceLabel: "Test Device",
+      ip: "127.0.0.1",
+      userAgent: "Vitest",
+      ownershipUnconfirmed: false,
+      createdAt: now,
+      lastSeenAt: now,
+      expiresAt,
+      revokedAt: null,
+      revokedBy: null,
+    };
+    memStaffSessionStore.set(tokenHash, sess);
+    memStaffRolesStore.set(staffId, roles);
+    return sess;
+  },
+
   clearMemoryStaffForTesting(): void {
     memStaffStore.clear();
     memStaffRolesStore.clear();
