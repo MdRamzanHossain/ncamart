@@ -587,6 +587,30 @@ export const staffAuthService = {
     return sess;
   },
 
+  async isStaffSessionActive(sessionId: string): Promise<boolean> {
+    const now = new Date();
+    // 1. Check in-memory store
+    for (const sess of memStaffSessionStore.values()) {
+      if (sess.id === sessionId) {
+        if (sess.revokedAt || sess.expiresAt < now) return false;
+        return true;
+      }
+    }
+
+    // 2. Query database if available
+    try {
+      const rows = await db
+        .select({ revokedAt: sessions.revokedAt, expiresAt: sessions.expiresAt })
+        .from(sessions)
+        .where(eq(sessions.id, sessionId as Uuid))
+        .limit(1);
+      if (!rows[0]) return false;
+      return !rows[0].revokedAt && rows[0].expiresAt > now;
+    } catch {
+      return false;
+    }
+  },
+
   clearMemoryStaffForTesting(): void {
     memStaffStore.clear();
     memStaffRolesStore.clear();

@@ -39,6 +39,8 @@ export function getRedis(): Redis {
   return globalForRedis.mainRedis;
 }
 
+export const getRedisClient = getRedis;
+
 /** Dedicated Redis subscriber connection for Pub/Sub */
 export function getSubscriber(): Redis {
   if (!globalForRedis.subscriberRedis) {

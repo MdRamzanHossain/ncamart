@@ -1,5 +1,13 @@
 import { getRedisClient } from "@/lib/redis";
+import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
+
+function isRedisEnabled(): boolean {
+  if (env.MOCK_EXTERNAL_SERVICES || process.env.NODE_ENV === "test") {
+    return false;
+  }
+  return true;
+}
 
 export type CircuitBreakerState = "CLOSED" | "OPEN" | "HALF_OPEN";
 
@@ -55,9 +63,10 @@ export class SmsCircuitBreaker {
    * Determine current circuit state (CLOSED, OPEN, HALF_OPEN).
    */
   async getState(now = Date.now()): Promise<CircuitBreakerState> {
-    try {
-      const redis = getRedisClient();
-      if (redis) {
+    if (isRedisEnabled()) {
+      try {
+        const redis = getRedisClient();
+        if (redis) {
         const stateVal = await redis.get(`${this.redisKeyPrefix}:state`);
         if (stateVal === "OPEN") {
           const openUntil = Number(await redis.get(`${this.redisKeyPrefix}:open_until`));
@@ -75,6 +84,7 @@ export class SmsCircuitBreaker {
     } catch {
       // Memory fallback
     }
+  }
 
     if (memStore.state === "OPEN") {
       if (now >= memStore.openUntil) {
@@ -129,9 +139,10 @@ export class SmsCircuitBreaker {
     }
 
     // Normal Closed State evaluation
-    try {
-      const redis = getRedisClient();
-      if (redis) {
+    if (isRedisEnabled()) {
+      try {
+        const redis = getRedisClient();
+        if (redis) {
         const listKey = `${this.redisKeyPrefix}:window`;
         await redis.rpush(listKey, JSON.stringify({ t: now, s: success ? 1 : 0 }));
         // Trim old items
@@ -163,8 +174,9 @@ export class SmsCircuitBreaker {
     } catch {
       // Memory fallback
     }
+  }
 
-    // In-Memory store
+  // In-Memory store
     memStore.calls.push({ timestamp: now, success });
     const windowStart = now - this.config.windowMs;
     memStore.calls = memStore.calls.filter((c) => c.timestamp >= windowStart);
@@ -192,14 +204,16 @@ export class SmsCircuitBreaker {
     const duration = durationMs ?? this.config.openDurationMs;
     const openUntil = now + duration;
 
-    try {
-      const redis = getRedisClient();
-      if (redis) {
-        await redis.set(`${this.redisKeyPrefix}:state`, "OPEN");
-        await redis.set(`${this.redisKeyPrefix}:open_until`, String(openUntil));
+    if (isRedisEnabled()) {
+      try {
+        const redis = getRedisClient();
+        if (redis) {
+          await redis.set(`${this.redisKeyPrefix}:state`, "OPEN");
+          await redis.set(`${this.redisKeyPrefix}:open_until`, String(openUntil));
+        }
+      } catch {
+        // Memory fallback
       }
-    } catch {
-      // Memory fallback
     }
 
     memStore.state = "OPEN";
@@ -211,15 +225,17 @@ export class SmsCircuitBreaker {
    * Reset the breaker to CLOSED state.
    */
   async reset(): Promise<void> {
-    try {
-      const redis = getRedisClient();
-      if (redis) {
-        await redis.del(`${this.redisKeyPrefix}:state`);
-        await redis.del(`${this.redisKeyPrefix}:open_until`);
-        await redis.del(`${this.redisKeyPrefix}:window`);
+    if (isRedisEnabled()) {
+      try {
+        const redis = getRedisClient();
+        if (redis) {
+          await redis.del(`${this.redisKeyPrefix}:state`);
+          await redis.del(`${this.redisKeyPrefix}:open_until`);
+          await redis.del(`${this.redisKeyPrefix}:window`);
+        }
+      } catch {
+        // Memory fallback
       }
-    } catch {
-      // Memory fallback
     }
 
     memStore.clear();
