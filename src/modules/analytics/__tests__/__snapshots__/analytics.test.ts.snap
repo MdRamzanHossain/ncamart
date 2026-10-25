@@ -1,0 +1,58 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`P39 — Analytics Events & Marketing Feeds > 1. Marketing Feeds Generation > generates Google Merchant XML complying with RSS 2.0 g: namespace specification 1`] = `
+"<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">
+  <channel>
+    <title>NCAMart Products</title>
+    <link>https://ncamart.com</link>
+    <description>NCAMart Verified Accessories &amp; Hardware</description>
+    <item>
+      <g:id>ANK-65W-GAN</g:id>
+      <g:title>Anker 65W GaN Fast Charger</g:title>
+      <g:description>Ultra-fast compact GaN charger certified with holographic seal.</g:description>
+      <g:link>https://ncamart.com/catalog/products/anker-65w-gan-fast-charger</g:link>
+      <g:image_link>https://cdn.ncamart.com/products/anker-65w-gan/main.webp</g:image_link>
+      <g:price>3850.00 BDT</g:price>
+      <g:availability>in_stock</g:availability>
+      <g:brand>Anker</g:brand>
+      <g:gtin>848061000011</g:gtin>
+      <g:condition>new</g:condition>
+      <g:custom_label_0>AUTHENTIC</g:custom_label_0>
+    </item>
+    <item>
+      <g:id>BASE-20W-CBL</g:id>
+      <g:title>Baseus 20W Type-C to Lightning Cable</g:title>
+      <g:description>Durable braided fast charging cable for iOS devices.</g:description>
+      <g:link>https://ncamart.com/catalog/products/baseus-20w-type-c-lightning-cable</g:link>
+      <g:image_link>https://cdn.ncamart.com/products/baseus-20w-cable/main.webp</g:image_link>
+      <g:price>650.00 BDT</g:price>
+      <g:availability>in_stock</g:availability>
+      <g:brand>Baseus</g:brand>
+      <g:gtin>695315620002</g:gtin>
+      <g:condition>new</g:condition>
+      <g:custom_label_0>BUDGET_SMART</g:custom_label_0>
+    </item>
+    <item>
+      <g:id>ORAI-ANC-PRE</g:id>
+      <g:title>Oraimo SpacePods Pro ANC</g:title>
+      <g:description>Pre-order authentic active noise cancelling earbuds.</g:description>
+      <g:link>https://ncamart.com/catalog/products/oraimo-spacepods-pro-anc</g:link>
+      <g:image_link>https://cdn.ncamart.com/products/oraimo-spacepods/main.webp</g:image_link>
+      <g:price>5200.00 BDT</g:price>
+      <g:availability>preorder</g:availability>
+      <g:brand>Oraimo</g:brand>
+      <g:identifier_exists>no</g:identifier_exists>
+      <g:condition>new</g:condition>
+      <g:custom_label_0>AUTHENTIC</g:custom_label_0>
+    </item>
+  </channel>
+</rss>"
+`;
+
+exports[`P39 — Analytics Events & Marketing Feeds > 1. Marketing Feeds Generation > generates Meta Catalog CSV complying with Meta product feed specification 1`] = `
+"id,title,description,availability,condition,price,link,image_link,brand,custom_label_0
+"ANK-65W-GAN","Anker 65W GaN Fast Charger","Ultra-fast compact GaN charger certified with holographic seal.","in stock","new","3850.00 BDT","https://ncamart.com/catalog/products/anker-65w-gan-fast-charger","https://cdn.ncamart.com/products/anker-65w-gan/main.webp","Anker","AUTHENTIC"
+"BASE-20W-CBL","Baseus 20W Type-C to Lightning Cable","Durable braided fast charging cable for iOS devices.","in stock","new","650.00 BDT","https://ncamart.com/catalog/products/baseus-20w-type-c-lightning-cable","https://cdn.ncamart.com/products/baseus-20w-cable/main.webp","Baseus","BUDGET_SMART"
+"ORAI-ANC-PRE","Oraimo SpacePods Pro ANC","Pre-order authentic active noise cancelling earbuds.","preorder","new","5200.00 BDT","https://ncamart.com/catalog/products/oraimo-spacepods-pro-anc","https://cdn.ncamart.com/products/oraimo-spacepods/main.webp","Oraimo","AUTHENTIC""
+`;

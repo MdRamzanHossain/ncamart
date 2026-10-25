@@ -13,6 +13,7 @@ import { trustService } from "@/modules/trust";
 import { logisticsService } from "@/modules/logistics";
 import { posService } from "@/modules/pos";
 import { mediaService } from "@/modules/media";
+import { analyticsService } from "@/modules/analytics";
 
 export interface ScheduledTask {
   name: string;
@@ -322,6 +323,15 @@ export const recurringSchedules: ScheduledTask[] = [
       await mediaService.runRetentionCleanupJob();
       await mediaService.runAbandonedUploadsCleanupJob();
       await heartbeat("media-retention-and-cleanup");
+    },
+  },
+  {
+    name: "marketing-feeds-generation",
+    cron: "0 * * * *", // hourly
+    description: "Generates Google Merchant XML and Meta Catalog CSV feeds from published products and uploads to R2",
+    handler: async () => {
+      await analyticsService.generateAndUploadFeeds();
+      await heartbeat("marketing-feeds-generation");
     },
   },
 ];

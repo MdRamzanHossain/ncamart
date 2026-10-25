@@ -214,15 +214,16 @@ export async function putObject(
   body: Buffer | Uint8Array | string,
   contentType: string
 ): Promise<void> {
-  const length = Buffer.isBuffer(body)
-    ? body.length
+  const buf = Buffer.isBuffer(body)
+    ? body
     : typeof body === "string"
-      ? Buffer.byteLength(body)
-      : body.byteLength;
+      ? Buffer.from(body, "utf-8")
+      : Buffer.from(body);
   memStorage.set(`${bucket}/${key}`, {
     bucket,
     key,
-    contentLength: length,
+    body: buf,
+    contentLength: buf.length,
     contentType,
   });
 
@@ -238,6 +239,38 @@ export async function putObject(
   } catch {
     // Memory fallback when MinIO offline
   }
+}
+
+export async function getObject(
+  bucket: string,
+  key: string
+): Promise<{ body: Buffer; contentType: string } | null> {
+  try {
+    const client = getS3Client();
+    const command = new GetObjectCommand({
+      Bucket: bucket,
+      Key: key,
+    });
+    const res = await client.send(command);
+    if (res.Body) {
+      const bytes = await res.Body.transformToByteArray();
+      return {
+        body: Buffer.from(bytes),
+        contentType: res.ContentType || "application/octet-stream",
+      };
+    }
+  } catch {
+    // Memory fallback
+  }
+
+  const mem = memStorage.get(`${bucket}/${key}`);
+  if (mem && mem.body) {
+    return {
+      body: mem.body,
+      contentType: mem.contentType,
+    };
+  }
+  return null;
 }
 
 export async function headObject(
