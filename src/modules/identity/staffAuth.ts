@@ -579,6 +579,31 @@ export const staffAuthService = {
     return memStaffRolesStore.get(staffId) ?? [];
   },
 
+  setMemoryStaff(staffId: string, roles: StaffRole[]): void {
+    memStaffRolesStore.set(staffId, roles);
+  },
+
+  setMemoryStaffSession(token: string, staffId: string): void {
+    const tokenHash = sha256Hex(token);
+    const now = new Date();
+    memStaffSessionStore.set(tokenHash, {
+      id: crypto.randomUUID() as Uuid,
+      tokenHash,
+      subjectType: "STAFF",
+      subjectId: staffId as Uuid,
+      deviceId: null,
+      deviceLabel: null,
+      ip: null,
+      userAgent: null,
+      ownershipUnconfirmed: false,
+      createdAt: now,
+      lastSeenAt: now,
+      expiresAt: new Date(now.getTime() + 12 * 60 * 60 * 1000),
+      revokedAt: null,
+      revokedBy: null,
+    });
+  },
+
   resolveMemoryStaffSession(token: string): SessionRow | null {
     const tokenHash = sha256Hex(token);
     const sess = memStaffSessionStore.get(tokenHash);

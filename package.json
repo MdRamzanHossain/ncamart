@@ -20,7 +20,9 @@
     "db:studio": "drizzle-kit studio",
     "search:reindex": "tsx src/modules/search/reindex.ts",
     "openapi:generate": "tsx src/lib/openapi.ts",
-    "staff:create-admin": "tsx src/modules/identity/scripts/createAdmin.ts"
+    "openapi:check": "tsx src/lib/openapi/check.ts",
+    "staff:create-admin": "tsx src/modules/identity/scripts/createAdmin.ts",
+    "dev:scenario": "tsx src/db/scenarios/runner.ts"
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^7.3.0",

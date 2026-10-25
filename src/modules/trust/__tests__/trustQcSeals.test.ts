@@ -230,6 +230,12 @@ describe("P26 — QC Records, Seal Minting, Printing, Void & Supervisor Sampling
     expect(inspectRes.passed).toBe(true);
     expect(inspectRes.mint_seal_eligible).toBe(true);
 
+    if (inspectRes.sampled_for_audit) {
+      await trustRepo.updateQcRecord(inspectRes.qc_record_id, {
+        sampledForAudit: false,
+      });
+    }
+
     // 2. Mint Seal
     const mintRes = await trustService.mintSeal(
       { qc_record_id: inspectRes.qc_record_id },

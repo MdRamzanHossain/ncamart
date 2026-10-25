@@ -401,7 +401,7 @@ export const posService = {
     const customerRaw = {
       id: fullOrder.customerId,
       fullName: fullOrder.addressSnapshot?.name ?? "Customer",
-      phone: fullOrder.addressSnapshot?.phone ?? "",
+      phone: fullOrder.addressSnapshot?.phone || "+8801700000000",
       email: null,
     };
     const counterCustomer = piiSerializers.toCounter(customerRaw);
@@ -534,35 +534,52 @@ export const posService = {
     const counterBankPaisa =
       dto.payment?.method === "CARD_TERMINAL" ? dto.payment.amount_paisa : 0;
 
-    const prepaidAdvancesPaisa = order.advanceFeePaid
-      ? order.advanceFeePaisa
-      : Math.max(0, (order.paidAmountPaisa || 0) - (dto.payment?.amount_paisa || 0));
+    const paidPaisa =
+      order.paidTotalPaisa && order.paidTotalPaisa > 0
+        ? order.paidTotalPaisa
+        : (order as any).paidAmountPaisa ?? 0;
+    const advancePaid =
+      order.advancePaidPaisa && order.advancePaidPaisa > 0
+        ? order.advancePaidPaisa
+        : (order as any).advanceFeePaisa ?? 0;
+    const prepaidAdvancesPaisa =
+      advancePaid > 0
+        ? advancePaid
+        : Math.max(0, paidPaisa - (dto.payment?.amount_paisa || 0));
 
-    const discountPaisa = order.couponDiscountPaisa || 0;
-    const vatPaisa = order.taxPaisa || 0;
+    const discountPaisa =
+      order.discountPaisa && order.discountPaisa > 0
+        ? order.discountPaisa
+        : (order as any).couponDiscountPaisa ?? 0;
+    const vatPaisa =
+      order.vatTotalPaisa && order.vatTotalPaisa > 0
+        ? order.vatTotalPaisa
+        : (order as any).taxPaisa ?? 0;
     const revenueExVatPaisa = Math.max(0, (order.subtotalPaisa || 0) - vatPaisa);
     const deliveryFeePaisa = order.deliveryFeePaisa || 0;
 
-    const revenueLines = postingRules.REVENUE_RECOGNIZED_DELIVERY({
-      orderId: order.id,
-      counterCashPaisa,
-      counterWalletPaisa,
-      counterBankPaisa,
-      drawerId: openDrawer?.id,
-      prepaidAdvancesPaisa,
-      discountPaisa,
-      revenueExVatPaisa,
-      vatPaisa,
-      deliveryFeePaisa,
-    });
+    if (prepaidAdvancesPaisa > 0 || counterCashPaisa > 0 || counterWalletPaisa > 0 || counterBankPaisa > 0) {
+      const revenueLines = postingRules.REVENUE_RECOGNIZED_DELIVERY({
+        orderId: order.id,
+        counterCashPaisa,
+        counterWalletPaisa,
+        counterBankPaisa,
+        drawerId: openDrawer?.id,
+        prepaidAdvancesPaisa,
+        discountPaisa,
+        revenueExVatPaisa,
+        vatPaisa,
+        deliveryFeePaisa,
+      });
 
-    await ledgerService.post(undefined, {
-      eventType: "REVENUE_RECOGNIZED_DELIVERY",
-      sourceType: "ORDER",
-      sourceId: order.id,
-      description: `Revenue recognized for counter pickup of order ${order.orderNumber}`,
-      lines: revenueLines,
-    });
+      await ledgerService.post(undefined, {
+        eventType: "REVENUE_RECOGNIZED_DELIVERY",
+        sourceType: "ORDER",
+        sourceId: order.id,
+        description: `Revenue recognized for counter pickup of order ${order.orderNumber}`,
+        lines: revenueLines,
+      });
+    }
 
     // 4. COGS Recognition
     let totalCostPaisa = 0;

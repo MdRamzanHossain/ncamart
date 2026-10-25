@@ -1,5 +1,5 @@
 import { Actor } from "@/lib/http/route";
-import { ForbiddenError, UnauthorizedError } from "@/lib/errors";
+import { ForbiddenError, UnauthenticatedError as UnauthorizedError } from "@/lib/errors";
 import { WarrantyClaimRow } from "./schema";
 
 /**

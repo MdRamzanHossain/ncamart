@@ -21,7 +21,7 @@ import {
   deleteObject,
   clearMemoryStorageForTesting,
 } from "@/lib/storage";
-import { mediaRepo } from "./repo";
+import { mediaRepo, clearMemoryMediaForTesting } from "./repo";
 import {
   MediaAssetRow,
   InsertMediaAssetRow,
@@ -661,5 +661,9 @@ export const mediaService = {
   },
   async listMediaByOwner(ownerType: string, ownerId: string) {
     return mediaRepo.listMediaByOwner(ownerType, ownerId);
+  },
+  clearMemoryMediaForTesting(): void {
+    clearMemoryMediaForTesting();
+    clearMemoryStorageForTesting();
   },
 };
