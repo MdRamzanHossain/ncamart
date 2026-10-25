@@ -156,6 +156,96 @@ describe("RBAC Permissions, Matrix Snapshot, and PII Serialization (P07)", () =>
     expect(perms.has("staff.manage")).toBe(false);
   });
 
+  it("verifies the PRD §3.9 RBAC matrix role boundaries across all 10 staff roles", () => {
+    const matrixChecks: Record<string, { shouldHave: string[]; shouldNotHave: string[] }> = {
+      FIELD_RUNNER: {
+        shouldHave: ["runner.task.own", "sourcing.price.input", "float.own", "catalog.read"],
+        shouldNotHave: ["runner.task.assign", "sourcing.price.override", "dispatch.pack", "staff.manage"],
+      },
+      QC_TECHNICIAN: {
+        shouldHave: ["qc.execute", "seal.print", "returns.receive", "catalog.read"],
+        shouldNotHave: ["qc.sampling.audit", "seal.void.approve", "dispatch.book"],
+      },
+      GODOWN_MANAGER: {
+        shouldHave: [
+          "qc.execute",
+          "seal.print",
+          "qc.sampling.audit",
+          "seal.void.approve",
+          "dispatch.pack",
+          "dispatch.book",
+          "returns.receive",
+          "stock.adjust.request",
+        ],
+        shouldNotHave: ["stock.adjust.approve", "spot.override.approve"],
+      },
+      DISPATCH_STAFF: {
+        shouldHave: ["dispatch.pack", "dispatch.book", "returns.receive", "pii.read.shipping"],
+        shouldNotHave: ["qc.execute", "refund.approve", "pii.read.billing"],
+      },
+      SHOWROOM_POS_STAFF: {
+        shouldHave: ["pos.operate", "drawer.count", "pii.read.counter"],
+        shouldNotHave: ["drawer.reconcile", "pii.read.full"],
+      },
+      SOURCING_MANAGER: {
+        shouldHave: [
+          "runner.task.assign",
+          "sourcing.price.override",
+          "spot.override.approve",
+          "seal.void.approve",
+          "sourcing.quarantine.review",
+        ],
+        shouldNotHave: ["refund.approve", "dispatch.pack"],
+      },
+      CATALOG_MANAGER: {
+        shouldHave: ["catalog.draft", "coupon.draft"],
+        shouldNotHave: ["catalog.publish", "coupon.activate"],
+      },
+      CUSTOMER_SUPPORT: {
+        shouldHave: ["pii.read.full", "rma.adjudicate", "refund.approve", "store_credit.issue", "support.manage"],
+        shouldNotHave: ["refund.execute", "settlement.reconcile"],
+      },
+      FINANCE_OFFICER: {
+        shouldHave: [
+          "refund.approve",
+          "refund.execute",
+          "store_credit.issue",
+          "drawer.reconcile",
+          "settlement.reconcile",
+          "ledger.read",
+          "reports.export",
+          "pii.read.billing",
+          "stock.adjust.approve",
+          "float.manage",
+        ],
+        shouldNotHave: ["rma.adjudicate", "pos.operate"],
+      },
+      SUPER_ADMIN: {
+        shouldHave: [
+          "catalog.publish",
+          "coupon.activate",
+          "staff.manage",
+          "audit.read",
+          "settings.manage",
+          "security.alerts.read",
+          "queues.admin",
+          "data_protection.anonymize",
+        ],
+        shouldNotHave: [],
+      },
+    };
+
+    for (const [role, { shouldHave, shouldNotHave }] of Object.entries(matrixChecks)) {
+      const perms = permissionsForRoles([role]);
+      for (const p of shouldHave) {
+        expect(perms.has(p as any), `Role ${role} MUST have permission ${p}`).toBe(true);
+      }
+      for (const p of shouldNotHave) {
+        expect(perms.has(p as any), `Role ${role} MUST NOT have permission ${p}`).toBe(false);
+      }
+    }
+  });
+
   describe("assertCan & amount-limited permission checks", () => {
     const supportActor: Actor = {
       id: "stf_support_1",
