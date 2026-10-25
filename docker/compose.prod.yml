@@ -1,0 +1,238 @@
+name: ncamart-prod
+
+services:
+  # Caddy Reverse Proxy with TLS, Load Balancing, and Strict Security Headers
+  caddy:
+    image: caddy:2-alpine
+    container_name: ncamart_caddy_prod
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:-ncamart.com}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      web_1:
+        condition: service_healthy
+      web_2:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "caddy", "version"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+  # Next.js Web Replica 1
+  web_1:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.web
+    image: ncamart-web:${NEXT_DEPLOYMENT_ID:-latest}
+    container_name: ncamart_web_1_prod
+    restart: unless-stopped
+    expose:
+      - "3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      APP_BASE_URL: ${APP_BASE_URL:-https://ncamart.com}
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      MEILI_HOST: http://meilisearch:7700
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
+      NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: ${NEXT_SERVER_ACTIONS_ENCRYPTION_KEY}
+      NEXT_DEPLOYMENT_ID: ${NEXT_DEPLOYMENT_ID:-ncamart-prod-v1}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      SENTRY_RELEASE: ${NEXT_DEPLOYMENT_ID:-ncamart-prod-v1}
+      APP_ENCRYPTION_KEY: ${APP_ENCRYPTION_KEY}
+      SESSION_SECRET: ${SESSION_SECRET}
+      S3_ENDPOINT: ${S3_ENDPOINT}
+      S3_REGION: ${S3_REGION:-auto}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY}
+      S3_BUCKET_MEDIA: ${S3_BUCKET_MEDIA:-ncamart-media}
+      S3_BUCKET_PRIVATE: ${S3_BUCKET_PRIVATE:-ncamart-private}
+      S3_BUCKET_AUDIT: ${S3_BUCKET_AUDIT:-ncamart-audit}
+      MOCK_EXTERNAL_SERVICES: "false"
+    depends_on:
+      redis:
+        condition: service_healthy
+      meilisearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  # Next.js Web Replica 2
+  web_2:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.web
+    image: ncamart-web:${NEXT_DEPLOYMENT_ID:-latest}
+    container_name: ncamart_web_2_prod
+    restart: unless-stopped
+    expose:
+      - "3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      APP_BASE_URL: ${APP_BASE_URL:-https://ncamart.com}
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      MEILI_HOST: http://meilisearch:7700
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
+      NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: ${NEXT_SERVER_ACTIONS_ENCRYPTION_KEY}
+      NEXT_DEPLOYMENT_ID: ${NEXT_DEPLOYMENT_ID:-ncamart-prod-v1}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      SENTRY_RELEASE: ${NEXT_DEPLOYMENT_ID:-ncamart-prod-v1}
+      APP_ENCRYPTION_KEY: ${APP_ENCRYPTION_KEY}
+      SESSION_SECRET: ${SESSION_SECRET}
+      S3_ENDPOINT: ${S3_ENDPOINT}
+      S3_REGION: ${S3_REGION:-auto}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY}
+      S3_BUCKET_MEDIA: ${S3_BUCKET_MEDIA:-ncamart-media}
+      S3_BUCKET_PRIVATE: ${S3_BUCKET_PRIVATE:-ncamart-private}
+      S3_BUCKET_AUDIT: ${S3_BUCKET_AUDIT:-ncamart-audit}
+      MOCK_EXTERNAL_SERVICES: "false"
+    depends_on:
+      redis:
+        condition: service_healthy
+      meilisearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  # Background Worker (BullMQ consumers, cron schedules, outbox relay)
+  worker:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.worker
+    image: ncamart-worker:${NEXT_DEPLOYMENT_ID:-latest}
+    container_name: ncamart_worker_prod
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PROCESS_TYPE: worker
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      MEILI_HOST: http://meilisearch:7700
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      SENTRY_RELEASE: ${NEXT_DEPLOYMENT_ID:-ncamart-prod-v1}
+      APP_ENCRYPTION_KEY: ${APP_ENCRYPTION_KEY}
+      S3_ENDPOINT: ${S3_ENDPOINT}
+      S3_REGION: ${S3_REGION:-auto}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY}
+      S3_BUCKET_MEDIA: ${S3_BUCKET_MEDIA:-ncamart-media}
+      S3_BUCKET_PRIVATE: ${S3_BUCKET_PRIVATE:-ncamart-private}
+      S3_BUCKET_AUDIT: ${S3_BUCKET_AUDIT:-ncamart-audit}
+      MOCK_EXTERNAL_SERVICES: "false"
+      BETTER_STACK_HEARTBEAT_URL: ${BETTER_STACK_HEARTBEAT_URL:-}
+    depends_on:
+      redis:
+        condition: service_healthy
+      meilisearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "process.exit(0)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  # Redis Cache & BullMQ Queue Store (AOF enabled + password protected)
+  redis:
+    image: redis:7-alpine
+    container_name: ncamart_redis_prod
+    restart: unless-stopped
+    command: >
+      sh -c 'redis-server --appendonly yes --requirepass "$$REDIS_PASSWORD" --maxmemory 1gb --maxmemory-policy noeviction'
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    volumes:
+      - redisdata_prod:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a $$REDIS_PASSWORD ping | grep PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "3"
+
+  # Meilisearch Full-Text Search Engine
+  meilisearch:
+    image: getmeili/meilisearch:v1.12
+    container_name: ncamart_meilisearch_prod
+    restart: unless-stopped
+    environment:
+      MEILI_ENV: production
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
+      MEILI_NO_ANALYTICS: "true"
+      MEILI_MAX_INDEXING_MEMORY: "512Mb"
+    volumes:
+      - meilidata_prod:/meili_data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7700/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "3"
+
+  # One-Off Migration Runner (Run explicitly before rolling restart; never on web boot)
+  migration:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.migrate
+    image: ncamart-migration:${NEXT_DEPLOYMENT_ID:-latest}
+    container_name: ncamart_migration_prod
+    profiles:
+      - tools
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
+    restart: "no"
+
+volumes:
+  redisdata_prod:
+  meilidata_prod:
+  caddy_data:
+  caddy_config:

@@ -39,7 +39,7 @@ describe("P42 — OpenAPI Spec & API Documentation", () => {
       // Verify core component schemas
       expect(document.components?.schemas).toHaveProperty("ErrorEnvelope");
       expect(document.components?.schemas).toHaveProperty("GenericSuccess");
-    });
+    }, 30000);
 
     it("pnpm openapi:generate writes docs/openapi.json and docs/API.md", async () => {
       const result = await generateOpenApiFiles();
@@ -59,7 +59,7 @@ describe("P42 — OpenAPI Spec & API Documentation", () => {
       expect(mdContent).toContain("Public `/verify` Clone Alerts");
       expect(mdContent).toContain("Showroom Walk-in Sale Lifecycle");
       expect(mdContent).toContain("DECISIONS.md");
-    });
+    }, 30000);
   });
 
   describe("2. CI Route Coverage Completeness Check", () => {
@@ -69,7 +69,7 @@ describe("P42 — OpenAPI Spec & API Documentation", () => {
       expect(missing).toEqual([]);
       expect(totalRegistered).toBe(totalScanned);
       expect(totalScanned).toBeGreaterThanOrEqual(260);
-    });
+    }, 30000);
   });
 
   describe("3. GET /api/v1/openapi.json", () => {

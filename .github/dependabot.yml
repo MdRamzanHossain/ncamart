@@ -1,0 +1,31 @@
+version: 2
+updates:
+  # Maintain npm dependencies in package.json
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      time: "03:00"
+      timezone: "Asia/Dhaka"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "MdRamzanHossain"
+    labels:
+      - "dependencies"
+      - "security"
+    ignore:
+      # Major upgrades to Next.js or React require deliberate architectural review
+      - dependency-name: "next"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+
+  # Maintain GitHub Actions dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels:
+      - "ci/cd"
+      - "actions"

@@ -26,10 +26,15 @@ RUN adduser --system --uid 1001 nextjs
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+# Ensure multi-replica shared Redis cacheHandler is available to standalone server
+COPY --from=builder --chown=nextjs:nodejs /app/src/lib/cache/redisCacheHandler.cjs ./src/lib/cache/redisCacheHandler.cjs
 
 USER nextjs
 EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
+
+HEALTHCHECK --interval=15s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/v1/health || exit 1
 
 CMD ["node", "server.js"]

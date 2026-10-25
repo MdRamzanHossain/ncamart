@@ -1,0 +1,295 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # 1. Static Analysis & Linting
+  lint-and-typecheck:
+    name: Lint & Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js & pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "pnpm"
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run ESLint
+        run: pnpm lint
+
+      - name: Run TypeScript Typecheck
+        run: pnpm typecheck
+
+  # 2. Unit Test Suite
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js & pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "pnpm"
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run Unit Tests
+        run: pnpm test:unit
+
+  # 3. Integration Tests (Testcontainers)
+  integration-tests:
+    name: Integration Tests (Testcontainers)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js & pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "pnpm"
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run Integration Tests
+        run: pnpm test:int
+
+  # 4. Security Scanning (Gitleaks Secret Scan & Dependency Audit)
+  security-scan:
+    name: Security & Secret Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks Secret Scanner
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js & pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "pnpm"
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Audit Dependencies
+        run: pnpm audit --audit-level=high
+
+  # 5. Build Docker Images & Push to GHCR
+  build-and-push:
+    name: Build & Push Docker Images
+    needs: [lint-and-typecheck, unit-tests, integration-tests, security-scan]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image_tag: ${{ steps.meta.outputs.version }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set image tags
+        id: meta
+        run: |
+          SHA_SHORT=$(git rev-parse --short HEAD)
+          echo "version=${SHA_SHORT}" >> "$GITHUB_OUTPUT"
+
+      # Build Web Image
+      - name: Build and Push Web Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/Dockerfile.web
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/web:${{ steps.meta.outputs.version }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/web:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Build Worker Image
+      - name: Build and Push Worker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/Dockerfile.worker
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/worker:${{ steps.meta.outputs.version }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/worker:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Build Migration Image
+      - name: Build and Push Migration Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/Dockerfile.migrate
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/migration:${{ steps.meta.outputs.version }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/migration:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # 6. Deploy to Staging (SSH + One-off Migration + Compose Pull & Up)
+  deploy-staging:
+    name: Deploy to Staging
+    needs: [build-and-push]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: https://staging.ncamart.com
+    steps:
+      - name: Execute Remote Staging Deployment via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_SSH_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          envs: IMAGE_TAG
+          script: |
+            export NEXT_DEPLOYMENT_ID=${{ needs.build-and-push.outputs.image_tag }}
+            cd /opt/ncamart
+
+            # 1. Pull latest published images from GHCR
+            docker compose -f docker/compose.prod.yml pull
+
+            # 2. Execute isolated pre-deploy migration container (never on web boot)
+            docker compose -f docker/compose.prod.yml run --rm migration
+
+            # 3. Rolling restart of staging services
+            docker compose -f docker/compose.prod.yml up -d --remove-orphans web_1 web_2 worker
+            docker compose -f docker/compose.prod.yml restart caddy
+
+  # 7. End-to-End API Test Suite against Staging
+  e2e-staging:
+    name: E2E API Verification on Staging
+    needs: [deploy-staging]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Verify Staging Health Endpoint
+        run: |
+          for i in {1..30}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://staging.ncamart.com/api/v1/health || true)
+            if [ "$STATUS" = "200" ]; then
+              echo "Staging healthcheck passed (HTTP 200)"
+              exit 0
+            fi
+            echo "Waiting for staging health endpoint... (attempt $i/30)"
+            sleep 5
+          done
+          echo "Staging health check timed out!"
+          exit 1
+
+  # 8. Deploy to Production (Manual Approval Gate + Rolling Zero-Downtime Restart)
+  deploy-production:
+    name: Deploy to Production
+    needs: [e2e-staging]
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://ncamart.com
+    steps:
+      - name: Execute Zero-Downtime Production Rolling Restart via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_SSH_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          script: |
+            export NEXT_DEPLOYMENT_ID=${{ needs.build-and-push.outputs.image_tag }}
+            cd /opt/ncamart
+
+            # 1. Pull latest images
+            docker compose -f docker/compose.prod.yml pull
+
+            # 2. Run one-off database migration container (expand/contract migrations)
+            echo "Running database schema migrations..."
+            docker compose -f docker/compose.prod.yml run --rm migration
+
+            # 3. Zero-downtime rolling restart:
+            # Restart web_1 first
+            echo "Restarting web_1..."
+            docker compose -f docker/compose.prod.yml up -d --no-deps web_1
+            # Wait for web_1 health check to pass before touching web_2
+            until docker inspect --format='{{json .State.Health.Status}}' ncamart_web_1_prod | grep -q "healthy"; do
+              echo "Waiting for web_1 to become healthy..."
+              sleep 3
+            done
+
+            # Restart web_2 second
+            echo "Restarting web_2..."
+            docker compose -f docker/compose.prod.yml up -d --no-deps web_2
+            until docker inspect --format='{{json .State.Health.Status}}' ncamart_web_2_prod | grep -q "healthy"; do
+              echo "Waiting for web_2 to become healthy..."
+              sleep 3
+            done
+
+            # Restart background worker
+            echo "Restarting worker..."
+            docker compose -f docker/compose.prod.yml up -d --no-deps worker
+
+            # Reload Caddy reverse proxy
+            docker compose -f docker/compose.prod.yml exec -T caddy caddy reload --config /etc/caddy/Caddyfile
+
+            echo "Production deployment and rolling restart completed successfully!"

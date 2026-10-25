@@ -3,20 +3,40 @@
     admin off
 }
 
-# ncamart.com / api / cdn
-{$DOMAIN:localhost} {
+# Production Reverse Proxy with TLS, Security Headers, and Multi-Replica Load Balancing
+{$DOMAIN:ncamart.com} {
     encode zstd gzip
 
-    # Security headers
+    # Strict Production Security Headers
     header {
         Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
         X-Content-Type-Options "nosniff"
         X-Frame-Options "DENY"
         Referrer-Policy "strict-origin-when-cross-origin"
+        Content-Security-Policy "frame-ancestors 'none';"
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+        -Server
     }
 
-    # Reverse proxy to web application
-    reverse_proxy web:3000 {
+    # Static assets caching optimization
+    @static {
+        path /_next/static/* /static/* /favicon.ico /robots.txt
+    }
+    header @static Cache-Control "public, max-age=31536000, immutable"
+
+    # Reverse proxy load balancing between web_1 and web_2 with active healthchecks
+    reverse_proxy web_1:3000 web_2:3000 {
+        lb_policy round_robin
+        lb_try_duration 5s
+
+        # Active health checks against Next.js health endpoint
+        health_uri /api/v1/health
+        health_interval 10s
+        health_timeout 3s
+        health_status 200
+
+        # Proxy headers
+        header_up Host {host}
         header_up X-Real-IP {remote_host}
         header_up X-Forwarded-For {remote_host}
         header_up X-Forwarded-Proto {scheme}

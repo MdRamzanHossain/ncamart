@@ -1,3 +1,7 @@
+process.env.PROCESS_TYPE = "worker";
+
+import "@/lib/sentry";
+import { captureException } from "@/lib/sentry";
 import { logger } from "@/lib/logger";
 import { recurringSchedules } from "./schedules";
 import { processOutboxBatch } from "./jobs/outboxRelay";
@@ -77,6 +81,7 @@ async function main() {
 }
 
 void main().catch((err) => {
+  captureException(err, { source: "worker_main_boot" });
   logger.fatal({ err }, "Fatal error starting worker");
   process.exit(1);
 });

@@ -14,6 +14,8 @@ import { logisticsService } from "@/modules/logistics";
 import { posService } from "@/modules/pos";
 import { mediaService } from "@/modules/media";
 import { analyticsService } from "@/modules/analytics";
+import { financeService } from "@/modules/finance";
+import { backupService } from "@/modules/backup";
 
 export interface ScheduledTask {
   name: string;
@@ -342,6 +344,24 @@ export const recurringSchedules: ScheduledTask[] = [
     handler: async () => {
       await analyticsService.generateAndUploadFeeds();
       await heartbeat("marketing-feeds-generation");
+    },
+  },
+  {
+    name: "cod-settlement-aging",
+    cron: "0 9 * * *", // daily at 09:00 Asia/Dhaka
+    description: "Detects missing shipments and computes COD settlement aging buckets (older than 7d, 14d, 30d)",
+    handler: async () => {
+      await financeService.detectMissingShipments();
+      await heartbeat("cod-settlement-aging");
+    },
+  },
+  {
+    name: "weekly-database-backup",
+    cron: "0 3 * * 0", // weekly on Sunday at 03:00 Asia/Dhaka
+    description: "Executes weekly logical database dump (pg_dump -Fc) and uploads compressed archive to Cloudflare R2",
+    handler: async () => {
+      await backupService.runWeeklyLogicalDump();
+      await heartbeat("weekly-database-backup");
     },
   },
 ];

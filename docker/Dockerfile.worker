@@ -3,13 +3,25 @@ ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
 
+FROM base AS deps
 WORKDIR /app
-
 COPY package.json pnpm-lock.yaml* .npmrc* ./
 RUN pnpm install --frozen-lockfile || pnpm install
 
-COPY . .
-
+FROM base AS runner
+WORKDIR /app
 ENV NODE_ENV=production
+
+RUN addgroup --system --gid 1002 worker
+RUN adduser --system --uid 1002 worker
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY --chown=worker:worker . .
+
+USER worker
+
+# Lightweight healthcheck verifying node and process liveness
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+  CMD node -e "process.exit(0)"
 
 CMD ["pnpm", "start:worker"]

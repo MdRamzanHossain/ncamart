@@ -1,7 +1,7 @@
 # NCAMart REST API Specification & Endpoint Reference
 
 **Document Version:** 2.0.0 (OpenAPI 3.1 Synchronized)  
-**Last Generated:** 2026-10-25T13:11:08.143Z  
+**Last Generated:** 2026-10-25T15:39:32.302Z  
 **Total Active Endpoints:** 266  
 **Source of Truth:** `docs/openapi.json` (Generated via `pnpm openapi:generate`)  
 
