@@ -61,4 +61,27 @@ export const financePolicies = {
       permissions.includes("ledger.read")
     );
   },
+
+  canReadReports(actor: Actor | null): boolean {
+    if (!actor || actor.type !== "staff") return false;
+    const roles = actor.roles ?? [];
+    const permissions = actor.permissions ?? [];
+    return (
+      roles.includes("FINANCE_OFFICER") ||
+      roles.includes("SUPER_ADMIN") ||
+      permissions.includes("ledger.read") ||
+      permissions.includes("reports.export")
+    );
+  },
+
+  canExportReports(actor: Actor | null): boolean {
+    if (!actor || actor.type !== "staff") return false;
+    const roles = actor.roles ?? [];
+    const permissions = actor.permissions ?? [];
+    return (
+      roles.includes("FINANCE_OFFICER") ||
+      roles.includes("SUPER_ADMIN") ||
+      permissions.includes("reports.export")
+    );
+  },
 };

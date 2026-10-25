@@ -22,6 +22,9 @@ import {
   InsertGatewaySettlementLineRow,
   SettlementExceptionKind,
   SettlementExceptionStatus,
+  reportExportJobs,
+  ReportExportJobRow,
+  InsertReportExportJobRow,
 } from "./schema";
 import { ListExceptionsQuery } from "./dto";
 
@@ -32,6 +35,7 @@ const memCourierSettlementLines = new Map<string, CourierSettlementLineRow>();
 const memExceptions = new Map<string, SettlementExceptionRow>();
 const memGatewaySettlements = new Map<string, GatewaySettlementRow>();
 const memGatewaySettlementLines = new Map<string, GatewaySettlementLineRow>();
+const memExportJobs = new Map<string, ReportExportJobRow>();
 
 export function clearMemoryFinanceForTesting(): void {
   memInvoices.clear();
@@ -40,6 +44,7 @@ export function clearMemoryFinanceForTesting(): void {
   memExceptions.clear();
   memGatewaySettlements.clear();
   memGatewaySettlementLines.clear();
+  memExportJobs.clear();
 }
 
 export const financeRepo = {
@@ -130,6 +135,28 @@ export const financeRepo = {
     }
     return Array.from(memInvoices.values()).filter((inv) => inv.orderId === orderId);
   },
+
+  async listInvoicesInPeriod(
+    tx: Tx | undefined,
+    from: Date,
+    to: Date
+  ): Promise<InvoiceRow[]> {
+    const client = tx ?? defaultDb;
+    try {
+      const rows = await client
+        .select()
+        .from(invoices)
+        .where(and(gte(invoices.issuedAt, from), lte(invoices.issuedAt, to)))
+        .orderBy(desc(invoices.issuedAt));
+      if (rows.length > 0) return rows;
+    } catch {
+      // Fallback
+    }
+    return Array.from(memInvoices.values())
+      .filter((inv) => inv.issuedAt >= from && inv.issuedAt <= to)
+      .sort((a, b) => b.issuedAt.getTime() - a.issuedAt.getTime());
+  },
+
 
   async getInvoiceByOrderAndType(
     tx: Tx | undefined,
@@ -464,6 +491,9 @@ export const financeRepo = {
     tx: Tx | undefined,
     filter: ListExceptionsQuery = { limit: 50, offset: 0 }
   ): Promise<{ items: SettlementExceptionRow[]; total: number }> {
+    const limit = filter.limit ?? 50;
+    const offset = filter.offset ?? 0;
+
     const client = tx ?? defaultDb;
     try {
       const conditions = [];
@@ -482,8 +512,8 @@ export const financeRepo = {
         .from(settlementExceptions)
         .where(conditions.length > 0 ? and(...conditions) : undefined)
         .orderBy(desc(settlementExceptions.createdAt))
-        .limit(filter.limit)
-        .offset(filter.offset);
+        .limit(limit)
+        .offset(offset);
 
       if (rows.length > 0) {
         return { items: rows, total: rows.length };
@@ -504,7 +534,7 @@ export const financeRepo = {
     }
     all.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
     const total = all.length;
-    const paginated = all.slice(filter.offset, filter.offset + filter.limit);
+    const paginated = all.slice(offset, offset + limit);
     return { items: paginated, total };
   },
 
@@ -759,5 +789,91 @@ export const financeRepo = {
       }
     }
     return total;
+  },
+
+  // --------------------------------------------------------------------------
+  // Report Export Jobs (P35)
+  // --------------------------------------------------------------------------
+  async createExportJob(
+    tx: Tx | undefined,
+    data: InsertReportExportJobRow
+  ): Promise<ReportExportJobRow> {
+    const client = tx ?? defaultDb;
+    try {
+      const [created] = await client.insert(reportExportJobs).values(data).returning();
+      if (created) {
+        memExportJobs.set(created.id, created);
+        return created;
+      }
+    } catch {
+      // Fallback
+    }
+
+    const memJob: ReportExportJobRow = {
+      id: data.id ?? crypto.randomUUID(),
+      reportType: data.reportType,
+      format: data.format ?? "json",
+      queryParams: data.queryParams,
+      status: data.status ?? "PENDING",
+      fileKey: data.fileKey ?? null,
+      fileSizeBytes: data.fileSizeBytes ?? null,
+      downloadUrl: data.downloadUrl ?? null,
+      errorMessage: data.errorMessage ?? null,
+      createdBy: data.createdBy ?? null,
+      completedAt: data.completedAt ?? null,
+      createdAt: data.createdAt ?? new Date(),
+      updatedAt: data.updatedAt ?? new Date(),
+    };
+    memExportJobs.set(memJob.id, memJob);
+    return memJob;
+  },
+
+  async getExportJobById(
+    tx: Tx | undefined,
+    id: string
+  ): Promise<ReportExportJobRow | null> {
+    const client = tx ?? defaultDb;
+    try {
+      const [found] = await client
+        .select()
+        .from(reportExportJobs)
+        .where(eq(reportExportJobs.id, id));
+      if (found) return found;
+    } catch {
+      // Fallback
+    }
+    return memExportJobs.get(id) ?? null;
+  },
+
+  async updateExportJob(
+    tx: Tx | undefined,
+    id: string,
+    updates: Partial<InsertReportExportJobRow>
+  ): Promise<ReportExportJobRow> {
+    const client = tx ?? defaultDb;
+    try {
+      const [updated] = await client
+        .update(reportExportJobs)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(reportExportJobs.id, id))
+        .returning();
+      if (updated) {
+        memExportJobs.set(id, updated);
+        return updated;
+      }
+    } catch {
+      // Fallback
+    }
+    const existing = memExportJobs.get(id);
+    if (!existing) {
+      throw new Error(`Report export job '${id}' not found`);
+    }
+    const merged: ReportExportJobRow = {
+      ...existing,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    memExportJobs.set(id, merged);
+    return merged;
   },
 };

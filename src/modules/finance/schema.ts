@@ -312,3 +312,50 @@ export const gatewaySettlementLines = pgTable(
 
 export type GatewaySettlementLineRow = typeof gatewaySettlementLines.$inferSelect;
 export type InsertGatewaySettlementLineRow = typeof gatewaySettlementLines.$inferInsert;
+
+// --------------------------------------------------------------------------
+// 6. Report Export Jobs Table (P35 Heavy Reports > 90 days)
+// --------------------------------------------------------------------------
+export const exportJobStatusEnum = [
+  "PENDING",
+  "PROCESSING",
+  "COMPLETED",
+  "FAILED",
+] as const;
+export type ExportJobStatus = (typeof exportJobStatusEnum)[number];
+
+export const exportFormatEnum = ["json", "csv", "xlsx"] as const;
+export type ExportFormat = (typeof exportFormatEnum)[number];
+
+export const reportExportJobs = pgTable(
+  "report_export_jobs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    reportType: text("report_type").notNull(),
+    format: text("format", { enum: exportFormatEnum }).default("json").notNull(),
+    queryParams: jsonb("query_params").$type<Record<string, unknown>>().notNull(),
+    status: text("status", { enum: exportJobStatusEnum })
+      .default("PENDING")
+      .notNull(),
+    fileKey: text("file_key"),
+    fileSizeBytes: bigint("file_size_bytes", { mode: "number" }),
+    downloadUrl: text("download_url"),
+    errorMessage: text("error_message"),
+    createdBy: text("created_by"),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    index("idx_report_export_jobs_status").on(table.status),
+    index("idx_report_export_jobs_created_at").on(table.createdAt),
+  ]
+);
+
+export type ReportExportJobRow = typeof reportExportJobs.$inferSelect;
+export type InsertReportExportJobRow = typeof reportExportJobs.$inferInsert;
+

@@ -104,8 +104,11 @@ export interface AccountStatementSummary {
   asOf: string;
   openingBalancePaisa: number;
   closingBalancePaisa: number;
+  netBalancePaisa?: number;
   items: AccountStatementItem[];
   totalDebitsPaisa: number;
   totalCreditsPaisa: number;
+  debitPaisa?: number;
+  creditPaisa?: number;
   total: number;
 }

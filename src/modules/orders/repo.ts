@@ -692,6 +692,13 @@ export const ordersRepo = {
     return null;
   },
 
+  async findPaymentTransactionByTranId(
+    tx: Tx | undefined,
+    tranId: string
+  ): Promise<PaymentTransactionRow | null> {
+    return this.getPaymentTransactionByTranId(tx, tranId);
+  },
+
   /**
    * Find payment transaction by tranId with optional row lock.
    */

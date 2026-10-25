@@ -547,21 +547,21 @@ export const ledgerRepo = {
   async getAccountStatement(
     tx: Tx | undefined,
     code: string,
-    filter: AccountStatementFilterDto
+    filter: AccountStatementFilterDto = {}
   ): Promise<AccountStatementSummary> {
     const account = await this.getAccountByCode(tx, code);
     if (!account) {
       throw new Error(`Account code '${code}' not found`);
     }
 
-    const asOf = filter.to ?? new Date();
-    const from = filter.from ?? new Date(0);
-    const page = filter.page ?? 1;
-    const limit = filter.limit ?? 50;
+    const asOf = filter?.to ?? new Date();
+    const from = filter?.from ?? new Date(0);
+    const page = filter?.page ?? 1;
+    const limit = filter?.limit ?? 50;
     const offset = (page - 1) * limit;
 
     // 1. Opening balance before 'from'
-    const opening = await this.getAccountBalance(tx, code, new Date(from.getTime() - 1), filter.subLedgerRef);
+    const opening = await this.getAccountBalance(tx, code, new Date(from.getTime() - 1), filter?.subLedgerRef);
     const openingBalancePaisa = opening.netBalancePaisa;
 
     // 2. Lines within range
@@ -663,9 +663,12 @@ export const ledgerRepo = {
       asOf: asOf.toISOString(),
       openingBalancePaisa,
       closingBalancePaisa,
+      netBalancePaisa: closingBalancePaisa,
       items: statementItems,
       totalDebitsPaisa: periodDebits,
       totalCreditsPaisa: periodCredits,
+      debitPaisa: periodDebits,
+      creditPaisa: periodCredits,
       total,
     };
   },

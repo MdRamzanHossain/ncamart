@@ -20,6 +20,7 @@ import {
   AccountStatementSummary,
 } from "./dto";
 import { ledgerRepo, clearMemoryLedgerForTesting } from "./repo";
+export { clearMemoryLedgerForTesting };
 
 export const ledgerService = {
   /**
@@ -255,6 +256,10 @@ export const ledgerService = {
     return ledgerRepo.getTrialBalance(undefined, asOf);
   },
 
+  async getTrialBalance(asOf?: Date): Promise<TrialBalanceSummary> {
+    return this.trialBalance(asOf);
+  },
+
   async subLedgerBalance(
     accountCode: string,
     asOf?: Date
@@ -289,7 +294,7 @@ export const ledgerService = {
 
   async getAccountStatement(
     code: string,
-    filter: AccountStatementFilterDto
+    filter: AccountStatementFilterDto = {}
   ): Promise<AccountStatementSummary> {
     return ledgerRepo.getAccountStatement(undefined, code, filter);
   },
