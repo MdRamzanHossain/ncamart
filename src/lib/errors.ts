@@ -101,6 +101,8 @@ export class UnauthenticatedError extends AppError {
   }
 }
 
+export { UnauthenticatedError as UnauthorizedError };
+
 export class ForbiddenError extends AppError {
   constructor(message = "You do not have permission to perform this action", details: ErrorDetails = {}) {
     super("ERR_FORBIDDEN", message, details);

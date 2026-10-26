@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import crypto from "node:crypto";
 
 export const DEVICE_COOKIE_NAME = "nca_did";
 const TWO_YEARS_SECONDS = 60 * 60 * 24 * 365 * 2;
@@ -74,12 +73,15 @@ export function middleware(request: NextRequest) {
   }
 
   // Apply Security Headers (PRD §3.18, architechture.md §18)
-  applySecurityHeaders(response);
+  applySecurityHeaders(response, request.nextUrl.pathname);
 
   return response;
 }
 
-export function applySecurityHeaders(response: NextResponse | Response): void {
+export function applySecurityHeaders(
+  response: NextResponse | Response,
+  pathname?: string
+): void {
   // HSTS (HTTP Strict Transport Security)
   response.headers.set(
     "Strict-Transport-Security",
@@ -92,10 +94,17 @@ export function applySecurityHeaders(response: NextResponse | Response): void {
   // Strict Referrer Policy
   response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
   // Content Security Policy
-  response.headers.set(
-    "Content-Security-Policy",
-    "frame-ancestors 'none'; default-src 'self'"
-  );
+  if (pathname?.startsWith("/api/docs")) {
+    response.headers.set(
+      "Content-Security-Policy",
+      "default-src 'self' https://cdn.jsdelivr.net; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https:;"
+    );
+  } else {
+    response.headers.set(
+      "Content-Security-Policy",
+      "frame-ancestors 'none'; default-src 'self'"
+    );
+  }
 }
 
 export const config = {

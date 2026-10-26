@@ -32,13 +32,5 @@ export const logger = pino({
     ],
     censor: "[REDACTED]",
   },
-  transport: isDev
-    ? {
-        target: "pino-pretty",
-        options: {
-          colorize: true,
-          ignore: "pid,hostname",
-        },
-      }
-    : undefined,
+  transport: undefined,
 });
