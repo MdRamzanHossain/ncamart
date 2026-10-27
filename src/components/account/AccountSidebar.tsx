@@ -55,6 +55,12 @@ export function AccountSidebar({
       badgeType: "wallet",
     },
     {
+      href: "/account/wishlist",
+      label: "Wishlist & Alerts",
+      icon: "❤️",
+      badge: null,
+    },
+    {
       href: "/account/addresses",
       label: "Address Book",
       icon: "📍",
