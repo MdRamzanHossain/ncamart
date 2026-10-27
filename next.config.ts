@@ -9,8 +9,12 @@ import type { NextConfig } from "next";
  *    to prevent hydration / decryption mismatch errors when Server Actions execute across replicas.
  * 3. Identical NEXT_DEPLOYMENT_ID (or GIT_SHA) to ensure chunk assets match across all replicas.
  */
+const isWindows = process.platform === "win32";
+
 const nextConfig: NextConfig = {
-  output: "standalone",
+  // Standalone output is used in Linux Docker containers; disabled on Windows virtual drives to prevent EINVAL filesystem tracing errors
+  output: isWindows && process.env.DOCKER_BUILD !== "1" ? undefined : "standalone",
+  serverExternalPackages: ["bullmq", "ioredis", "pg", "argon2"],
   reactStrictMode: true,
   poweredByHeader: false,
   typescript: {
@@ -25,9 +29,9 @@ const nextConfig: NextConfig = {
   // Multi-replica synchronized deployment ID
   deploymentId: process.env.NEXT_DEPLOYMENT_ID || process.env.GIT_SHA || "ncamart-prod",
 
-  // Multi-replica shared cache handler (Redis)
+  // Multi-replica shared cache handler (Redis) - only active if REDIS_URL and ENABLE_REDIS_CACHE are enabled
   cacheHandler:
-    process.env.NODE_ENV === "production"
+    process.env.NODE_ENV === "production" && process.env.ENABLE_REDIS_CACHE === "true"
       ? require.resolve("./src/lib/cache/redisCacheHandler.cjs")
       : undefined,
 
