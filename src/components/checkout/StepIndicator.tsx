@@ -3,8 +3,8 @@
 import React from "react";
 
 export interface StepIndicatorProps {
-  currentStep: 1 | 2 | 3;
-  onStepClick?: (step: 1 | 2 | 3) => void;
+  currentStep: 1 | 2 | 3 | 4;
+  onStepClick?: (step: 1 | 2 | 3 | 4) => void;
 }
 
 export function StepIndicator({ currentStep, onStepClick }: StepIndicatorProps) {
@@ -12,7 +12,11 @@ export function StepIndicator({ currentStep, onStepClick }: StepIndicatorProps) 
     { num: 1, label: "Identity & Phone", desc: "OTP Verification" },
     { num: 2, label: "Shipping Address", desc: "Geo Cascade & Tax" },
     { num: 3, label: "Order Review", desc: "Coupons & Summary" },
+    { num: 4, label: "Payment Method", desc: "Online / COD / Pin" },
   ];
+
+  const progressPercent =
+    currentStep === 1 ? "0%" : currentStep === 2 ? "33%" : currentStep === 3 ? "66%" : "100%";
 
   return (
     <div style={{ width: "100%", paddingBottom: "24px" }}>
@@ -23,7 +27,7 @@ export function StepIndicator({ currentStep, onStepClick }: StepIndicatorProps) 
           alignItems: "center",
           justifyContent: "space-between",
           position: "relative",
-          maxWidth: "680px",
+          maxWidth: "760px",
           margin: "0 auto",
         }}
       >
@@ -43,7 +47,7 @@ export function StepIndicator({ currentStep, onStepClick }: StepIndicatorProps) 
           <div
             style={{
               height: "100%",
-              width: currentStep === 1 ? "0%" : currentStep === 2 ? "50%" : "100%",
+              width: progressPercent,
               backgroundColor: "#3b82f6",
               transition: "width 0.3s ease",
             }}
@@ -58,7 +62,7 @@ export function StepIndicator({ currentStep, onStepClick }: StepIndicatorProps) 
           return (
             <div
               key={s.num}
-              onClick={() => isClickable && onStepClick(s.num as 1 | 2 | 3)}
+              onClick={() => isClickable && onStepClick(s.num as 1 | 2 | 3 | 4)}
               style={{
                 position: "relative",
                 zIndex: 2,
