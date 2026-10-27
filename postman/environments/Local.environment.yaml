@@ -1,0 +1,17 @@
+name: Local
+values:
+  - key: baseUrl
+    value: http://127.0.0.1:3000
+    enabled: true
+  - key: sessionToken
+    value: ""
+    enabled: true
+    secret: true
+  - key: bearerToken
+    value: ""
+    enabled: true
+    secret: true
+  - key: internalSecret
+    value: nca_internal_worker_secret_key_2026
+    enabled: true
+    secret: true

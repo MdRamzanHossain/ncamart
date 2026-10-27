@@ -302,42 +302,56 @@ export function generatePostmanCollection() {
     ],
   };
 
-  // 1. Write postman/NCAMart.postman_collection.json
-  const outDir = path.resolve(process.cwd(), "postman");
-  fs.mkdirSync(outDir, { recursive: true });
-  const collectionFile = path.join(outDir, "NCAMart.postman_collection.json");
+  // 1. Write docs/postman/NCAMart.postman_collection.json (for single-file import)
+  const docsPostmanDir = path.resolve(process.cwd(), "docs/postman");
+  fs.mkdirSync(docsPostmanDir, { recursive: true });
+  const collectionFile = path.join(docsPostmanDir, "NCAMart.postman_collection.json");
   fs.writeFileSync(collectionFile, JSON.stringify(collection, null, 2), "utf8");
 
-  // 2. Write Environments
-  const envDir = path.join(outDir, "environments");
+  // 2. Write Postman v3 YAML Environments
+  const envDir = path.resolve(process.cwd(), "postman/environments");
   fs.mkdirSync(envDir, { recursive: true });
 
-  const localEnv = {
-    id: "ncamart-local-env",
-    name: "NCAMart Local (Development)",
-    values: [
-      { key: "baseUrl", value: "http://127.0.0.1:3000", enabled: true, type: "default" },
-      { key: "sessionToken", value: "", enabled: true, type: "secret" },
-      { key: "bearerToken", value: "", enabled: true, type: "secret" },
-      { key: "internalSecret", value: "nca_internal_worker_secret_key_2026", enabled: true, type: "secret" },
-    ],
-    _postman_variable_scope: "environment",
-  };
+  const localYaml = `name: Local
+values:
+  - key: baseUrl
+    value: http://127.0.0.1:3000
+    enabled: true
+  - key: sessionToken
+    value: ""
+    enabled: true
+    secret: true
+  - key: bearerToken
+    value: ""
+    enabled: true
+    secret: true
+  - key: internalSecret
+    value: nca_internal_worker_secret_key_2026
+    enabled: true
+    secret: true
+`;
 
-  const prodEnv = {
-    id: "ncamart-prod-env",
-    name: "NCAMart Production",
-    values: [
-      { key: "baseUrl", value: "https://ncamart.com", enabled: true, type: "default" },
-      { key: "sessionToken", value: "", enabled: true, type: "secret" },
-      { key: "bearerToken", value: "", enabled: true, type: "secret" },
-      { key: "internalSecret", value: "", enabled: true, type: "secret" },
-    ],
-    _postman_variable_scope: "environment",
-  };
+  const prodYaml = `name: Production
+values:
+  - key: baseUrl
+    value: https://ncamart.com
+    enabled: true
+  - key: sessionToken
+    value: ""
+    enabled: true
+    secret: true
+  - key: bearerToken
+    value: ""
+    enabled: true
+    secret: true
+  - key: internalSecret
+    value: ""
+    enabled: true
+    secret: true
+`;
 
-  fs.writeFileSync(path.join(envDir, "Local.postman_environment.json"), JSON.stringify(localEnv, null, 2), "utf8");
-  fs.writeFileSync(path.join(envDir, "Production.postman_environment.json"), JSON.stringify(prodEnv, null, 2), "utf8");
+  fs.writeFileSync(path.join(envDir, "Local.environment.yaml"), localYaml, "utf8");
+  fs.writeFileSync(path.join(envDir, "Production.environment.yaml"), prodYaml, "utf8");
 
   console.log(`Generated Categories/Tags: ${foldersMap.size} modules`);
   console.log(`Total Operations:         ${totalOperations} endpoints`);

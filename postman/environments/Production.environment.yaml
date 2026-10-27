@@ -1,0 +1,17 @@
+name: Production
+values:
+  - key: baseUrl
+    value: https://ncamart.com
+    enabled: true
+  - key: sessionToken
+    value: ""
+    enabled: true
+    secret: true
+  - key: bearerToken
+    value: ""
+    enabled: true
+    secret: true
+  - key: internalSecret
+    value: ""
+    enabled: true
+    secret: true
