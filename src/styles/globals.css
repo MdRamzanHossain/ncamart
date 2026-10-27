@@ -1,0 +1,221 @@
+/**
+ * NCAMart — Global Styles & Foundation Reset
+ * PRD §1.1, architechture.md §18, F01
+ */
+
+@import "./tokens.css";
+
+/* ===========================================================================
+   1. MODERN CSS RESET & BOX MODEL
+   =========================================================================== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-family: var(--font-family-sans);
+  font-size: 16px;
+  line-height: var(--line-height-normal);
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  background-color: var(--bg-canvas);
+  color: var(--text-primary);
+  font-family: var(--font-family-sans);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color var(--duration-normal) var(--ease-in-out-smooth),
+              color var(--duration-normal) var(--ease-in-out-smooth);
+  overflow-x: hidden;
+}
+
+/* ===========================================================================
+   2. TYPOGRAPHY & ELEMENTS
+   =========================================================================== */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-family-display);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+h1 { font-size: var(--font-size-4xl); }
+h2 { font-size: var(--font-size-3xl); }
+h3 { font-size: var(--font-size-2xl); }
+h4 { font-size: var(--font-size-xl); }
+h5 { font-size: var(--font-size-lg); }
+h6 { font-size: var(--font-size-base); }
+
+p {
+  color: var(--text-secondary);
+  line-height: var(--line-height-relaxed);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: color var(--duration-fast) ease;
+}
+
+button, input, optgroup, select, textarea {
+  font-family: inherit;
+  font-size: 100%;
+  line-height: 1.15;
+  margin: 0;
+}
+
+button, [role="button"] {
+  cursor: pointer;
+  border: none;
+  background: none;
+  user-select: none;
+}
+
+img, picture, video, canvas, svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* ===========================================================================
+   3. ACCESSIBLE DUAL-RING FOCUS STYLES
+   =========================================================================== */
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.25);
+  border-radius: var(--radius-xs);
+}
+
+/* Skip to main content anchor */
+.skip-link {
+  position: absolute;
+  top: -9999px;
+  left: var(--space-md);
+  z-index: 9999;
+  background: var(--color-brand-primary);
+  color: #ffffff;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  font-weight: var(--font-weight-medium);
+  transition: top var(--duration-fast) ease;
+}
+
+.skip-link:focus-visible {
+  top: var(--space-md);
+}
+
+/* ===========================================================================
+   4. CUSTOM SLEEK SCROLLBARS
+   =========================================================================== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-canvas);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--neutral-700);
+  border-radius: var(--radius-full);
+  border: 2px solid var(--bg-canvas);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--neutral-500);
+}
+
+/* ===========================================================================
+   5. GLASSMORPHISM & TACTILE UTILITIES
+   =========================================================================== */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur-md);
+  -webkit-backdrop-filter: var(--glass-blur-md);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-md);
+}
+
+.glass-panel-subtle {
+  background: var(--glass-bg-subtle);
+  backdrop-filter: var(--glass-blur-sm);
+  -webkit-backdrop-filter: var(--glass-blur-sm);
+  border: 1px solid var(--border-subtle);
+}
+
+/* 100% Authentic Foil Shimmer Animation */
+@keyframes authenticShimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.authentic-shimmer-badge {
+  background: var(--tier-authentic-shimmer);
+  background-size: 200% 200%;
+  animation: authenticShimmer 6s ease infinite;
+  color: #0b0f19;
+  font-weight: var(--font-weight-bold);
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.4);
+}
+
+/* Budget Smart Cyber Pulse */
+@keyframes cyberPulse {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(20, 184, 166, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(20, 184, 166, 0.5);
+  }
+}
+
+.budget-smart-glow {
+  animation: cyberPulse 3s ease-in-out infinite;
+}
+
+/* Interactive Spring Hover */
+.interactive-scale {
+  transition: transform var(--duration-fast) var(--ease-spring),
+              box-shadow var(--duration-fast) ease;
+}
+
+.interactive-scale:hover {
+  transform: translateY(-2px) scale(1.015);
+}
+
+.interactive-scale:active {
+  transform: translateY(0) scale(0.985);
+}
+
+/* ===========================================================================
+   6. REDUCED MOTION PREFERENCES (WCAG 2.1 AA)
+   =========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

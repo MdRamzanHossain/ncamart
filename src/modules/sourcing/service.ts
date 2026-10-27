@@ -2634,7 +2634,7 @@ export const sourcingService = {
       if (task && task.status !== "PURCHASED" && task.status !== "RECEIVED_AT_GODOWN") {
         await sourcingRepo.updateRunnerTask(purchase.taskId, {
           status: "PURCHASED",
-          actualUnitCostPaisa: purchase.unitCostPaisa,
+          quotedUnitPricePaisa: purchase.unitCostPaisa,
         });
       }
     }

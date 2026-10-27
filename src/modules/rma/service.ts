@@ -787,11 +787,11 @@ export const rmaService = {
           claimId: claim.id,
           skuId,
           skuTitle,
-          shippingAddress: originalOrder?.shippingAddress || "Customer Address",
-          shippingDistrict: originalOrder?.shippingDistrict || "Dhaka",
-          shippingThana: originalOrder?.shippingThana || "Dhanmondi",
-          customerPhone: originalOrder?.customerPhone || "01700000000",
-          customerName: originalOrder?.customerName || "Customer",
+          shippingAddress: originalOrder?.addressSnapshot?.addressLine || "Customer Address",
+          shippingDistrict: originalOrder?.addressSnapshot?.districtName || "Dhaka",
+          shippingThana: originalOrder?.addressSnapshot?.thanaName || "Dhanmondi",
+          customerPhone: originalOrder?.addressSnapshot?.phone || "01700000000",
+          customerName: originalOrder?.addressSnapshot?.consignee || "Customer",
         });
         replacementOrderId = repOrder.id;
         await rmaRepo.updateClaim(claim.id, {
@@ -814,7 +814,7 @@ export const rmaService = {
       if (replacementOrderId) {
         await ordersRepo.updateOrder(undefined, replacementOrderId, {
           notes: `Inherited warranty days: ${remainingWarrantyDays} (Original Seal: ${claim.sealId})`,
-        });
+        } as any);
       }
 
       nextStatus = "RESOLVED";
@@ -823,8 +823,8 @@ export const rmaService = {
       let lineAmountPaisa = 100000;
       if (claim.orderId) {
         const order = await ordersRepo.getOrderById(undefined, claim.orderId);
-        if (order?.totalAmountPaisa) {
-          lineAmountPaisa = order.totalAmountPaisa;
+        if (order?.totalPayablePaisa) {
+          lineAmountPaisa = order.totalPayablePaisa;
         }
       }
 
@@ -912,7 +912,9 @@ export const rmaService = {
         skuId: seal?.skuId || "01920000-0000-7000-8000-0000000000s1",
         qty: 1,
         supplierId: "01920000-0000-7000-8000-0000000000u1",
-        notes: `Distributor warranty liaison for claim ${claim.claimNumber} (${distributorName})`,
+        maxUnitPricePaisa: 0,
+        dueAt: new Date(Date.now() + 86400000 * 3),
+        overrideReason: `Distributor warranty liaison for claim ${claim.claimNumber} (${distributorName})`,
       });
     } catch {
       // fallback mock task
@@ -1159,7 +1161,7 @@ export const rmaService = {
         const urlInfo = await mediaService.getMediaUrl(m.id, actor);
         media.push({
           id: m.id,
-          purpose: m.purpose,
+          purpose: (m.kind as any) || "RMA_ATTACHMENT",
           content_type: m.contentType,
           url: urlInfo.url,
           expires_in_seconds: urlInfo.expires_in_seconds,

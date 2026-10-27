@@ -374,3 +374,5 @@ export const supplierRefundSchema = z.object({
 });
 export type SupplierRefundDto = z.infer<typeof supplierRefundSchema>;
 
+export type { RunnerPurchaseRow, InsertRunnerPurchaseRow } from "./schema";
+

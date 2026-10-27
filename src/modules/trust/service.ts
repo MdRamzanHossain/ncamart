@@ -87,26 +87,11 @@ export const trustService = {
   }> {
     assertCanExecuteQc(actor);
 
-    // List candidate orders
-    const candidateOrders: OrderWithDetails[] = [];
-
-    // Orders at AT_GODOWN_QC
-    const atGodownRes = await ordersRepo.listOrders(undefined, {
-      status: "AT_GODOWN_QC",
-      limit: 100,
-    });
-    candidateOrders.push(...atGodownRes.orders);
-
-    // Pre-orders arrived at godown
-    const arrivedRes = await ordersRepo.listOrders(undefined, {
-      status: "ARRIVED_GODOWN",
-      limit: 100,
-    });
-    for (const o of arrivedRes.orders) {
-      if (!candidateOrders.some((co) => co.id === o.id)) {
-        candidateOrders.push(o);
-      }
-    }
+    // Orders at AT_GODOWN_QC or ARRIVED_GODOWN
+    const candidateOrders: OrderWithDetails[] = await ordersRepo.findOrdersByStatuses(undefined, [
+      "AT_GODOWN_QC",
+      "ARRIVED_GODOWN",
+    ]);
 
     const queue: Array<{
       order_id: string;
@@ -620,7 +605,7 @@ export const trustService = {
             if (order.orderType === "PRE_ORDER") {
               // Pre-orders advance to QC_VERIFIED_BALANCE_DUE
               try {
-                await preorderService.advanceToQcVerifiedBalanceDue(order.id, actor);
+                await ordersService.transitionOrder(undefined, order.id, "QC_VERIFIED_BALANCE_DUE", actor);
               } catch {
                 // If pre-order service handles state directly
               }

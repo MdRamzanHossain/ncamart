@@ -1,0 +1,274 @@
+/**
+ * NCAMart — Core Design System Tokens
+ * PRD §1.1, architechture.md §18, F00 & F01
+ * Strict Vanilla CSS design tokens with Zero Tailwind requirement
+ */
+
+:root {
+  /* =========================================================================
+     1. BRAND COLORS & DUAL-TIER PALETTE
+     ========================================================================= */
+  --color-brand-primary: #3b82f6;
+  --color-brand-primary-hover: #2563eb;
+  --color-brand-primary-glow: rgba(59, 130, 246, 0.35);
+
+  /* Dual-Tier: 100% Authentic (Brushed Champagne Gold) */
+  --tier-authentic-gold: #f59e0b;
+  --tier-authentic-gold-dark: #b45309;
+  --tier-authentic-gold-light: #fef3c7;
+  --tier-authentic-gold-border: rgba(245, 158, 11, 0.45);
+  --tier-authentic-gold-bg: rgba(245, 158, 11, 0.08);
+  --tier-authentic-gold-glow: 0 0 20px rgba(245, 158, 11, 0.28);
+  --tier-authentic-shimmer: linear-gradient(
+    135deg,
+    #b45309 0%,
+    #f59e0b 25%,
+    #fef08a 50%,
+    #f59e0b 75%,
+    #92400e 100%
+  );
+
+  /* Dual-Tier: Budget Smart (Cyber Neon Teal) */
+  --tier-budget-teal: #14b8a6;
+  --tier-budget-teal-dark: #0f766e;
+  --tier-budget-teal-light: #ccfbf1;
+  --tier-budget-teal-border: rgba(20, 184, 166, 0.45);
+  --tier-budget-teal-bg: rgba(20, 184, 166, 0.08);
+  --tier-budget-teal-glow: 0 0 20px rgba(20, 184, 166, 0.28);
+  --tier-budget-shimmer: linear-gradient(
+    135deg,
+    #0f766e 0%,
+    #14b8a6 30%,
+    #5eead4 50%,
+    #0d9488 75%,
+    #042f2e 100%
+  );
+
+  /* Functional Status Colors */
+  --color-success: #10b981;
+  --color-success-bg: rgba(16, 185, 129, 0.12);
+  --color-success-border: rgba(16, 185, 129, 0.35);
+
+  --color-warning: #f59e0b;
+  --color-warning-bg: rgba(245, 158, 11, 0.12);
+  --color-warning-border: rgba(245, 158, 11, 0.35);
+
+  --color-destructive: #ef4444;
+  --color-destructive-bg: rgba(239, 68, 68, 0.12);
+  --color-destructive-border: rgba(239, 68, 68, 0.35);
+
+  --color-info: #0ea5e9;
+  --color-info-bg: rgba(14, 165, 233, 0.12);
+  --color-info-border: rgba(14, 165, 233, 0.35);
+
+  /* =========================================================================
+     2. SPACING & RADIUS (4px Base Grid)
+     ========================================================================= */
+  --space-2xs: 2px;
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 20px;
+  --space-2xl: 24px;
+  --space-3xl: 32px;
+  --space-4xl: 48px;
+  --space-5xl: 64px;
+
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-2xl: 28px;
+  --radius-full: 9999px;
+
+  /* =========================================================================
+     3. TYPOGRAPHY TOKENS
+     ========================================================================= */
+  --font-family-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  --font-family-display: "Outfit", "Clash Display", var(--font-family-sans);
+  --font-family-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  --font-size-2xs: 0.6875rem; /* 11px */
+  --font-size-xs: 0.75rem;    /* 12px */
+  --font-size-sm: 0.875rem;   /* 14px */
+  --font-size-base: 1rem;     /* 16px */
+  --font-size-lg: 1.125rem;   /* 18px */
+  --font-size-xl: 1.25rem;    /* 20px */
+  --font-size-2xl: 1.5rem;    /* 24px */
+  --font-size-3xl: 1.875rem;  /* 30px */
+  --font-size-4xl: 2.25rem;   /* 36px */
+  --font-size-5xl: 3rem;      /* 48px */
+
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+
+  --line-height-tight: 1.15;
+  --line-height-snug: 1.3;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.65;
+
+  /* =========================================================================
+     4. MOTION TIMING & EASING (Tactile Micro-Interactions)
+     ========================================================================= */
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --ease-spring-soft: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+
+  --duration-instant: 75ms;
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 400ms;
+  --duration-slower: 600ms;
+
+  /* =========================================================================
+     5. ELEVATION, GLASSMORPHISM & SHADOWS (Dark Obsidian Default)
+     ========================================================================= */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.45), 0 2px 4px -2px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.55), 0 4px 6px -4px rgba(0, 0, 0, 0.45);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.65), 0 8px 10px -6px rgba(0, 0, 0, 0.55);
+  --shadow-glow: 0 0 25px rgba(59, 130, 246, 0.25);
+  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.45);
+
+  --glass-blur-sm: blur(8px);
+  --glass-blur-md: blur(16px);
+  --glass-blur-lg: blur(24px);
+}
+
+/* ===========================================================================
+   DARK OBSIDIAN THEME (Default Experience)
+   =========================================================================== */
+:root,
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Neutral Spectrum */
+  --neutral-50: #f8fafc;
+  --neutral-100: #f1f5f9;
+  --neutral-200: #e2e8f0;
+  --neutral-300: #cbd5e1;
+  --neutral-400: #94a3b8;
+  --neutral-500: #64748b;
+  --neutral-600: #475569;
+  --neutral-700: #334155;
+  --neutral-800: #1e293b;
+  --neutral-850: #151e2e;
+  --neutral-900: #0f172a;
+  --neutral-950: #0b0f19;
+
+  /* Surface & Canvas Tokens */
+  --bg-canvas: #07090e;
+  --bg-surface: #0b0f19;
+  --bg-surface-elevated: #111827;
+  --bg-surface-overlay: #1e293b;
+  --bg-surface-active: #283548;
+
+  /* Glassmorphism Surfaces */
+  --glass-bg: rgba(11, 15, 25, 0.78);
+  --glass-bg-subtle: rgba(17, 24, 39, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-hover: rgba(255, 255, 255, 0.16);
+
+  /* Typography Colors */
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-tertiary: #64748b;
+  --text-disabled: #475569;
+  --text-inverse: #0b0f19;
+
+  /* Borders & Dividers */
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-default: rgba(255, 255, 255, 0.12);
+  --border-strong: rgba(255, 255, 255, 0.22);
+
+  /* Focus & Focus-Visible Dual Ring */
+  --focus-ring: #3b82f6;
+  --focus-ring-offset: #07090e;
+}
+
+/* ===========================================================================
+   WARM LIGHT THEME
+   =========================================================================== */
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  /* Neutral Spectrum */
+  --neutral-50: #0b0f19;
+  --neutral-100: #1e293b;
+  --neutral-200: #334155;
+  --neutral-300: #475569;
+  --neutral-400: #64748b;
+  --neutral-500: #94a3b8;
+  --neutral-600: #cbd5e1;
+  --neutral-700: #e2e8f0;
+  --neutral-800: #f1f5f9;
+  --neutral-850: #f8fafc;
+  --neutral-900: #fafaf9;
+  --neutral-950: #ffffff;
+
+  /* Surface & Canvas Tokens */
+  --bg-canvas: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #ffffff;
+  --bg-surface-overlay: #f1f5f9;
+  --bg-surface-active: #e2e8f0;
+
+  /* Glassmorphism Surfaces */
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-bg-subtle: rgba(248, 250, 252, 0.75);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-border-hover: rgba(0, 0, 0, 0.16);
+
+  /* Typography Colors */
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-tertiary: #64748b;
+  --text-disabled: #94a3b8;
+  --text-inverse: #f8fafc;
+
+  /* Borders & Dividers */
+  --border-subtle: rgba(0, 0, 0, 0.05);
+  --border-default: rgba(0, 0, 0, 0.1);
+  --border-strong: rgba(0, 0, 0, 0.2);
+
+  /* Shadows for Light Mode */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.06);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+  --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.2);
+  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+
+  /* Focus & Focus-Visible Dual Ring */
+  --focus-ring: #2563eb;
+  --focus-ring-offset: #ffffff;
+}
+
+/* ===========================================================================
+   HIGH-CONTRAST OLED DARK THEME
+   =========================================================================== */
+:root[data-theme="oled"] {
+  color-scheme: dark;
+
+  --bg-canvas: #000000;
+  --bg-surface: #050505;
+  --bg-surface-elevated: #0a0a0a;
+  --bg-surface-overlay: #121212;
+  --bg-surface-active: #1a1a1a;
+
+  --glass-bg: rgba(0, 0, 0, 0.92);
+  --glass-border: rgba(255, 255, 255, 0.12);
+
+  --border-subtle: rgba(255, 255, 255, 0.1);
+  --border-default: rgba(255, 255, 255, 0.18);
+  --border-strong: rgba(255, 255, 255, 0.35);
+
+  --focus-ring: #60a5fa;
+  --focus-ring-offset: #000000;
+}
