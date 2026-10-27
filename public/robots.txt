@@ -1,0 +1,4 @@
+# NCAMart Robots.txt
+User-agent: *
+Allow: /
+Sitemap: https://ncamart.com/sitemap.xml
