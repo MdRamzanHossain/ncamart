@@ -62,6 +62,7 @@
 | Prompt | Area | Scope / Description | Status | Components / Assets / Tests | Open TODOs |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **F00** | Master Context | Master Frontend Context & Design Philosophy | **DONE** | Color palette, dual-tier indicators, motion & typography standards | None |
-| **F01** | Foundation | Core Design System, CSS Tokens & Theme Engine | **DONE** | `src/styles/tokens.css`, `src/styles/globals.css`, `src/lib/theme/*` (ThemeScript, ThemeProvider, ThemeToggle, ThemeCycleButton), `src/app/layout.tsx` wired with Zero FOUT, unit test passing | None (Proceed to F02) |
+| **F01** | Foundation | Core Design System, CSS Tokens & Theme Engine | **DONE** | `src/styles/tokens.css`, `src/styles/globals.css`, `src/lib/theme/*` (ThemeScript, ThemeProvider, ThemeToggle, ThemeCycleButton), `src/app/layout.tsx` wired with Zero FOUT, unit test passing | None |
+| **F02** | Foundation | Base UI Component Primitive Library | **DONE** | Accessible animated primitives in `src/components/ui/` (`Button`, `Input`, `Textarea`, `MoneyInput`, `Badge`, `AuthenticBadge`, `BudgetSmartBadge`, `Dialog`, `Drawer`, `Tooltip`, `ToastProvider`, `useToast`, `Skeleton`), `/design-system` demo page, 615 tests passing | None (Proceed to F03) |
 
 

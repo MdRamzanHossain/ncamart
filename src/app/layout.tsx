@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "@/styles/globals.css";
 import { ThemeProvider, ThemeScript } from "@/lib/theme";
+import { ToastProvider } from "@/components/ui";
 
 export const metadata: Metadata = {
   title: "NCAMart — High-Trust Dual-Tier Tech Accessories",
@@ -47,7 +48,11 @@ export default function RootLayout({
         <a href="#main-content" className="skip-link">
           Skip to main content
         </a>
-        <ThemeProvider defaultTheme="dark">{children}</ThemeProvider>
+        <ThemeProvider defaultTheme="dark">
+          <ToastProvider>
+            {children}
+          </ToastProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

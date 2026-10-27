@@ -128,3 +128,16 @@ export function pctOfPaisa(paisa: Paisa, bp: number, rounding: Rounding = "half_
   }
   return fromBigInt(divRound(BigInt(paisa) * BigInt(bp), 10_000n, rounding));
 }
+
+/** Convenience aliases for UI formatting & parsing */
+export const formatPaisa = paisaToTakaString;
+export const bdtToPaisa = (bdt: number | string): number => {
+  try {
+    return Number(takaToPaisa(bdt));
+  } catch {
+    const num = typeof bdt === "number" ? bdt : parseFloat(bdt) || 0;
+    return Math.round(num * 100);
+  }
+};
+export const paisaToBdt = (paisa: number): number => paisa / 100;
+
