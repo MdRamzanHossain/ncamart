@@ -547,7 +547,7 @@ describe("P25 — Runner Float Sessions, Purchases & Offline Sync", () => {
     );
 
     expect(res.results[0]?.result).toBe("ok");
-    const purchaseId = res.results[0]?.server_ids?.purchase_id!;
+    const purchaseId = res.results[0]!.server_ids!.purchase_id;
     const purchase = await sourcingRepo.getRunnerPurchaseById(purchaseId);
     expect(purchase?.receiptMissingFlag).toBe(true);
     expect(purchase?.requiresApproval).toBe(true);

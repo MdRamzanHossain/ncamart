@@ -315,7 +315,7 @@ export function mapOutboxEventToNotifications(
 
     // 12. Cloned Seal Alert (Security Internal Admin)
     case "trust.cloned_seal_detected":
-    case "security.cloned_seal":
+    case "security.cloned_seal": {
       const adminPhone = (p.adminPhone as string) || "+8801700000000";
       const adminEmail = (p.adminEmail as string) || "security@ncamart.com";
       targets.push({
@@ -352,6 +352,7 @@ export function mapOutboxEventToNotifications(
         locale: "en",
       });
       break;
+    }
 
     // Internal Alerts from Earlier Prompts:
     case "sourcing.override_requested":

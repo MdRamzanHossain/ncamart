@@ -17,6 +17,9 @@ export default tseslint.config(
       ],
       "@typescript-eslint/explicit-module-boundary-types": "off",
       "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-non-null-asserted-optional-chain": "warn",
+      "prefer-const": "warn",
+      "no-case-declarations": "warn",
     },
   },
   // Module boundary protection rule

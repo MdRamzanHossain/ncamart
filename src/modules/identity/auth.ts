@@ -666,7 +666,7 @@ export const authService = {
     fullName?: string | null
   ): Promise<CustomerRow> {
     const normalized = normalizeBdPhone(phone);
-    let existing = await this.findCustomerByPhone(normalized);
+    const existing = await this.findCustomerByPhone(normalized);
     if (existing) {
       if (fullName && !existing.fullName) {
         existing.fullName = fullName;

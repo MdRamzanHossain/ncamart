@@ -407,7 +407,7 @@ export const mediaService = {
 
     let flagged = media.flagged;
     let flagReason = media.flagReason;
-    let durationSeconds = dto.duration_seconds ?? media.durationSeconds;
+    const durationSeconds = dto.duration_seconds ?? media.durationSeconds;
 
     // Check duration verification for RMA video
     if (media.kind === "RMA_VIDEO" && durationSeconds && durationSeconds > 180) {

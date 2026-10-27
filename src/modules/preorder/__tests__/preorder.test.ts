@@ -648,14 +648,14 @@ describe("P23 — Pre-Order Engine (Deposit, Milestones, Balance, Delay, Reprici
 
       // 4. Flash deal created for the physical units
       const flashDeal = await preorderRepo.findActiveFlashDealForSku(
-        order.items[0]?.skuId!
+        order.items[0]!.skuId
       );
       expect(flashDeal).toBeDefined();
       expect(flashDeal?.status).toBe("ACTIVE");
-      expect(flashDeal?.qty).toBe(order.items[0]?.qty);
+      expect(flashDeal?.qty).toBe(order.items[0]!.qty);
 
       // 5. Preorder service exposes active flash deal for pricing engine / catalog
-      const activeDeal = await preorderService.getActiveFlashDeal(order.items[0]?.skuId!);
+      const activeDeal = await preorderService.getActiveFlashDeal(order.items[0]!.skuId);
       expect(activeDeal).toBeDefined();
       expect(activeDeal?.pricePaisa).toBe(flashDeal?.pricePaisa);
     });
