@@ -137,27 +137,6 @@ export const geoAreas = pgTable(
   (table) => [index("idx_geo_areas_thana").on(table.thanaId)]
 );
 
-// 4. Courier Location Mapping Table
-export const courierLocationMap = pgTable(
-  "courier_location_map",
-  {
-    id: uuid("id").defaultRandom().primaryKey(),
-    courier: text("courier", { enum: ["STEADFAST", "PATHAO", "REDX"] }).notNull(),
-    geoLevel: text("geo_level", {
-      enum: ["DIVISION", "DISTRICT", "THANA", "AREA"],
-    }).notNull(),
-    geoId: text("geo_id").notNull(),
-    courierLocationId: text("courier_location_id").notNull(),
-    courierLocationName: text("courier_location_name").notNull(),
-  },
-  (table) => [
-    uniqueIndex("idx_courier_loc_unique").on(
-      table.courier,
-      table.geoLevel,
-      table.geoId
-    ),
-  ]
-);
 
 // 5. Staff Table
 export const staff = pgTable(

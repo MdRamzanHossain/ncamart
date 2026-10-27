@@ -15,7 +15,7 @@ import { checkRateLimit } from "../ratelimit";
 import { beginIdempotency, completeIdempotency } from "../idempotency";
 import { env } from "../env";
 
-export type AuthRequirement = "public" | "customer" | "staff" | "any";
+export type AuthRequirement = "public" | "customer" | "staff" | "any" | "optional";
 
 export interface Actor {
   id: string;
@@ -77,6 +77,8 @@ export interface RouteConfig<
   body?: z.ZodType<TBody>;
   query?: z.ZodType<TQuery>;
   params?: z.ZodType<TParams>;
+  schema?: z.ZodType<TBody>;
+  querySchema?: z.ZodType<TQuery>;
   idempotent?: string; // scope name, e.g. "checkout"
   rateLimit?: {
     limit: number;
@@ -162,9 +164,10 @@ export function withRoute<TBody = unknown, TQuery = unknown, TParams = unknown, 
 
       // 4. Parse query parameters
       let resolvedQuery: unknown = {};
-      if (config.query) {
+      const activeQuerySchema = config.query ?? config.querySchema;
+      if (activeQuerySchema) {
         const searchObj = Object.fromEntries(req.nextUrl.searchParams.entries());
-        const parsed = config.query.safeParse(searchObj);
+        const parsed = activeQuerySchema.safeParse(searchObj);
         if (!parsed.success) {
           throw new ValidationError("Invalid query parameters", { issues: parsed.error.issues });
         }
@@ -191,8 +194,9 @@ export function withRoute<TBody = unknown, TQuery = unknown, TParams = unknown, 
         }
       }
 
-      if (config.body) {
-        const parsed = config.body.safeParse(resolvedBody ?? {});
+      const activeBodySchema = config.body ?? config.schema;
+      if (activeBodySchema) {
+        const parsed = activeBodySchema.safeParse(resolvedBody ?? {});
         if (!parsed.success) {
           throw new ValidationError("Invalid request body", { issues: parsed.error.issues });
         }
@@ -310,4 +314,11 @@ export function withRoute<TBody = unknown, TQuery = unknown, TParams = unknown, 
       });
     }
   };
+}
+
+export function errorResponse(status: number, code: string, message: string, details?: unknown) {
+  return NextResponse.json(
+    toErrorEnvelope(new AppError(code, message, details, status)),
+    { status }
+  );
 }
