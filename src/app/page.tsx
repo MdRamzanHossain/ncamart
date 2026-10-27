@@ -5,6 +5,9 @@ import {
   CategoryDock,
   CollectionsGrid,
   RecommendedCarousel,
+  TripleGridSection,
+  RewardsTrustStrip,
+  TestimonialsAndNewsletter,
 } from "@/components/home";
 
 export default function HomePage() {
@@ -21,6 +24,16 @@ export default function HomePage() {
 
       {/* 4. Dual-Tier Recommended For You Carousel */}
       <RecommendedCarousel />
+
+      {/* 5. Triple-Grid Power Section: Trending, Campaign Banner & Flash Offers */}
+      <TripleGridSection />
+
+      {/* 6. Rewards & 4-Pillar Engineering Trust Strip */}
+      <RewardsTrustStrip />
+
+      {/* 7. Verified Community Testimonials & Newsletter */}
+      <TestimonialsAndNewsletter />
     </StorefrontShell>
   );
 }
+
