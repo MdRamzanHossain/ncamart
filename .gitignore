@@ -31,3 +31,6 @@ desktop.ini
 # Coverage and test artifacts
 coverage/
 .turbo
+
+# Temporary collections
+postman/collections/TestCollection/

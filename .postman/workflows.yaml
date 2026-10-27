@@ -1,0 +1,4 @@
+workflows:
+  syncSpecToCollection:
+    - spec: ../postman/specs/NCAMart Nawabpur Complex E-Commerce REST API/openapi.json
+      collection: ../postman/collections/TestCollection

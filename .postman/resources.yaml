@@ -1,0 +1,9 @@
+workspace:
+  id: f0ff2da3-d732-4984-8983-6476e66cb3fb
+localResources:
+  specs:
+    - ../docs/openapi.json
+    - ../postman/specs/NCAMart Nawabpur Complex E-Commerce REST API/openapi.json
+resourceNameMappings:
+  specs:
+    - ../postman/specs/NCAMart Nawabpur Complex E-Commerce REST API/openapi.json: NCAMart Nawabpur Complex E-Commerce REST API

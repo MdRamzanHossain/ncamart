@@ -221,15 +221,15 @@ Welcome to the **NCAMart** OpenAPI 3.1 specification. NCAMart is an e-commerce p
     },
     servers: [
       {
-        url: "/api/v1",
-        description: "Default API Gateway (Relative)",
+        url: "http://localhost:3000",
+        description: "Local Development Server",
       },
       {
-        url: "https://ncamart.com/api/v1",
+        url: "https://ncamart.com",
         description: "Production Gateway",
       },
       {
-        url: "https://staging.ncamart.com/api/v1",
+        url: "https://staging.ncamart.com",
         description: "Staging Environment",
       },
     ],

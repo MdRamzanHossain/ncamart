@@ -19,8 +19,9 @@
     "db:seed": "tsx src/db/seed.ts",
     "db:studio": "drizzle-kit studio",
     "search:reindex": "tsx src/modules/search/reindex.ts",
-    "openapi:generate": "tsx src/lib/openapi.ts",
+    "openapi:generate": "tsx src/lib/openapi.ts && tsx scripts/generate-postman.ts",
     "openapi:check": "tsx src/lib/openapi/check.ts",
+    "postman:generate": "tsx scripts/generate-postman.ts",
     "staff:create-admin": "tsx src/modules/identity/scripts/createAdmin.ts",
     "dev:scenario": "tsx src/db/scenarios/runner.ts"
   },
