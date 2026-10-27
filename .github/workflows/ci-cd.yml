@@ -195,11 +195,21 @@ jobs:
     needs: [build-and-push]
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    environment:
-      name: staging
-      url: https://staging.ncamart.com
+    outputs:
+      deployed: ${{ steps.check-creds.outputs.configured }}
     steps:
+      - name: Check Staging Secrets
+        id: check-creds
+        run: |
+          if [ -n "${{ secrets.STAGING_HOST }}" ] && [ -n "${{ secrets.STAGING_SSH_KEY }}" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Staging SSH credentials (STAGING_HOST, STAGING_SSH_KEY) are not configured. Staging deployment skipped."
+          fi
+
       - name: Execute Remote Staging Deployment via SSH
+        if: steps.check-creds.outputs.configured == 'true'
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.STAGING_HOST }}
@@ -224,6 +234,7 @@ jobs:
   e2e-staging:
     name: E2E API Verification on Staging
     needs: [deploy-staging]
+    if: github.ref == 'refs/heads/main' && needs.deploy-staging.outputs.deployed == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -246,13 +257,25 @@ jobs:
   # 8. Deploy to Production (Manual Approval Gate + Rolling Zero-Downtime Restart)
   deploy-production:
     name: Deploy to Production
-    needs: [e2e-staging]
+    needs: [build-and-push, deploy-staging]
+    if: github.ref == 'refs/heads/main' && needs.deploy-staging.outputs.deployed == 'true'
     runs-on: ubuntu-latest
     environment:
       name: production
       url: https://ncamart.com
     steps:
+      - name: Check Production Secrets
+        id: check-prod-creds
+        run: |
+          if [ -n "${{ secrets.PROD_HOST }}" ] && [ -n "${{ secrets.PROD_SSH_KEY }}" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Production SSH credentials (PROD_HOST, PROD_SSH_KEY) are not configured. Production deployment skipped."
+          fi
+
       - name: Execute Zero-Downtime Production Rolling Restart via SSH
+        if: steps.check-prod-creds.outputs.configured == 'true'
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.PROD_HOST }}
