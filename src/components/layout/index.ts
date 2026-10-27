@@ -8,4 +8,5 @@ export * from "./StorefrontShell";
 export * from "./MobileBottomNav";
 export * from "./MobileNavDrawer";
 export * from "./PullToRefresh";
-
+export * from "./LanguageSwitcher";
+export * from "./SkipToContent";

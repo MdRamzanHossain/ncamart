@@ -13,6 +13,11 @@ export function AdminShell({ children }: AdminShellProps) {
 
   return (
     <div className="admin-shell-layout" data-testid="admin-shell">
+      {/* Accessible Admin Skip Link */}
+      <a href="#admin-main-content" className="admin-skip-link" data-testid="admin-skip-link">
+        Skip to admin operations
+      </a>
+
       {/* Persistent Left RBAC Sidebar */}
       <AdminSidebar currentRole={activeRole} onRoleChange={setActiveRole} />
 
@@ -47,10 +52,34 @@ export function AdminShell({ children }: AdminShellProps) {
         </header>
 
         {/* View Content */}
-        <main className="admin-content-area">{children}</main>
+        <main id="admin-main-content" className="admin-content-area" tabIndex={-1}>
+          {children}
+        </main>
       </div>
 
       <style jsx>{`
+        .admin-skip-link {
+          position: absolute;
+          top: -100px;
+          left: 16px;
+          background: #38bdf8;
+          color: #032135;
+          padding: 8px 16px;
+          border-radius: 6px;
+          font-weight: 800;
+          font-size: 12px;
+          z-index: 99999;
+          text-decoration: none;
+          transition: top 0.15s ease-in-out;
+        }
+
+        .admin-skip-link:focus,
+        .admin-skip-link:focus-visible {
+          top: 16px;
+          outline: 3px solid #f8fafc;
+          outline-offset: 2px;
+        }
+
         .admin-shell-layout {
           display: flex;
           min-height: 100vh;

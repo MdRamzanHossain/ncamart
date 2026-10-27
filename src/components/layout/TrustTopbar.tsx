@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { ThemeToggle } from "@/lib/theme";
+import { useLocale } from "@/context/LocaleContext";
 
 export function TrustTopbar() {
-  const [locale, setLocale] = useState<"bn" | "en">("bn");
+  const { locale, setLocale } = useLocale();
 
   return (
     <div

@@ -3,6 +3,8 @@ import "@/styles/globals.css";
 import { ThemeProvider, ThemeScript } from "@/lib/theme";
 import { ToastProvider } from "@/components/ui";
 import { AuthProvider } from "@/context/AuthContext";
+import { LocaleProvider } from "@/context/LocaleContext";
+import { SkipToContent } from "@/components/layout/SkipToContent";
 
 export const metadata: Metadata = {
   title: "NCAMart — High-Trust Dual-Tier Tech Accessories",
@@ -46,15 +48,15 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <a href="#main-content" className="skip-link">
-          Skip to main content
-        </a>
         <ThemeProvider defaultTheme="dark">
-          <ToastProvider>
-            <AuthProvider>
-              {children}
-            </AuthProvider>
-          </ToastProvider>
+          <LocaleProvider defaultLocale="bn">
+            <SkipToContent targetId="main-content" />
+            <ToastProvider>
+              <AuthProvider>
+                {children}
+              </AuthProvider>
+            </ToastProvider>
+          </LocaleProvider>
         </ThemeProvider>
       </body>
     </html>
