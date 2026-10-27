@@ -192,9 +192,15 @@ Build the global storefront layout and responsive navigation header:
      * Engineering & Soldering Tools, High-Power Chargers & GaN Adapters, Smart Wearables,
        Industrial Utility Cables, CCTV & Surveillance.
    - Visual category badges showing Authentic count vs. Budget Smart OEM options.
-   - Quick Action Icons: Search (`Cmd+K`), Wishlist with counter badge, Cart with animated item count,
-     User Account avatar/dropdown.
-3. Micro-Announcements Bar:
+   - Quick Action Icons: Search (`Cmd+K`), Notification Bell with live unread counter badge,
+     Wishlist with counter badge, Cart with animated item count, User Account avatar/dropdown.
+3. Real-Time Notification Drawer (`src/components/layout/NotificationDrawer.tsx`):
+   - Slide-over panel grouping alerts into PRD v1.4 Notification Classes:
+     * Class A (Critical/Transactional): OTPs, payment confirmations, PIN pickup alerts.
+     * Class B (Operational): Runner dispatch, godown QC pass, courier tracking milestones.
+     * Class C (Marketing/Deals): Flash offer starts, back-in-stock alerts.
+   - Connected directly to `useRealtimeEvents` SSE stream for instant sound/badge updates.
+4. Micro-Announcements Bar:
    - Real-time marquee banner for daily cut-off SLA ("Orders placed before 2:00 PM ship today inside Dhaka").
 
 Done when:
@@ -530,22 +536,29 @@ Done when:
 
 ```text
 Build the distraction-free Multi-Step Checkout flow (`src/app/checkout/page.tsx`):
-1. Step 1: Customer Identity & Phone OTP:
+1. Step 1: Customer Identity, Phone OTP & SIM Recycling Detection:
    - Clean mobile number input (+880 prefix).
    - If guest, sends 6-digit OTP via `/api/v1/auth/otp/send` with auto-focus digit inputs
      and 60-second resend cooldown timer.
-   - Existing customer session automatically skips to Step 2.
-2. Step 2: Shipping Address with Bangladesh Geo Cascade:
-   - Division dropdown -> populates Districts -> populates Thanas dynamically from `/api/v1/geo/*`.
+   - Guest Account Merge / Recycled Phone Detection (PRD §3.9.4):
+     * If phone matches existing customer account: Prompt with friendly modal:
+       "An account exists for this number. Enter password or OTP to link this order to your history, or continue as guest."
+2. Step 2: Shipping Address & B2B Corporate Tax Details:
+   - Bangladesh Geo Cascade: Division -> District -> Thana loaded dynamically from `/api/v1/geo/*`.
    - Street address, landmark notes, and alternate contact number.
    - "Deliver to Nawabpur Showroom for Free PIN Pickup" option toggle.
-3. Step 3: Order Review:
+   - Corporate / B2B Invoice Toggle (PRD §3.7):
+     * Checkbox: "I need a Corporate VAT / Mushak 6.3 Tax Invoice".
+     * Expands Company Name and 11-digit Business Identification Number (BIN) input.
+3. Step 3: Order Review & Coupon Validation:
    - Itemized list, price breakdown (Subtotal, VAT, Courier Fee, Store Credit discount, Coupon discount).
-   - Interactive Coupon Code input with real-time validation feedback.
+   - Interactive Coupon Code input with real-time validation feedback, min-basket threshold progress bar,
+     and non-stackable coupon rule alerts per PRD §3.14.
 
 Done when:
 - Address cascade dropdowns load instantly from seed data/API with zero blank states.
 - Phone OTP inputs support paste and keyboard backspace flow.
+- Corporate BIN input validates 11-digit format and stores billing details.
 - `pnpm lint && pnpm typecheck && pnpm test` pass.
 ```
 
@@ -752,11 +765,22 @@ Build the Customer Order History and Live Courier Tracker (`src/app/account/orde
      Courier Contact Hotline.
 3. Live SSE Connection:
    - Uses `useRealtimeEvents` to listen for delivery status transitions without requiring page reloads.
-4. One-Click Showroom Pickup PIN Modal (if order selected Showroom Pickup):
+4. In-Transit Customer Cancellation Lock (PRD §3.12, Edge Case EC-03):
+   - When order reaches `WITH_COURIER`, the "Cancel Order" button is disabled/locked:
+     * Tooltip: "Parcel has already been dispatched with courier rider. Refuse parcel at doorstep or initiate RMA upon arrival."
+5. Partial Stockout Customer Decision Modal (PRD §3.11, Edge Case EC-04):
+   - If field runner encounters a wholesale stall stockout on 1 item of a multi-item order:
+     * Interactive Alert Modal prompts customer to choose:
+       [ A: Split & Ship Available Items Immediately ]
+       [ B: Wait 24 Hours for Alternate Wholesale Sourcing ]
+       [ C: Cancel Out-of-Stock Item & Receive Instant Store Credit Refund ]
+6. One-Click Showroom Pickup PIN Modal (if order selected Showroom Pickup):
    - Displays 6-digit Pickup PIN and QR code for scanning at Nawabpur Showroom Counter.
 
 Done when:
 - Progress bar accurately reflects order state machine status.
+- In-transit orders cleanly disable cancellation with helpful tooltip.
+- Partial stockout decision modal sends choice to `/api/v1/orders/[orderNumber]/stockout-choice`.
 - Showroom pickup PIN displays securely with expiration timer.
 - `pnpm lint && pnpm typecheck && pnpm test` pass.
 ```
@@ -952,8 +976,19 @@ Build the Admin Backoffice Dashboard shell (`src/app/admin/`):
    - Left sidebar with collapsible sections:
      * Overview, Catalog & SKUs, Orders & Fulfillment, Godown & QC, Runner Sourcing,
        Financial Ledger, Customer Service & RMA, Staff & Roles, System Health.
-   - Granular RBAC masking: Menu items automatically hide if the authenticated staff member
-     lacks the required role (e.g., Runners and QC agents cannot see Finance or Staff menus).
+   - Granular RBAC Masking across all 10 Staff Roles (PRD §3.9):
+     * `SUPER_ADMIN`: Unrestricted access across all domains.
+     * `OPS_MANAGER`: Full operational view, supervisor price overrides, outbox monitor.
+     * `SHOWROOM_AGENT`: Default landing `/pos` (Touch POS counter, PIN pickups, cash drawer).
+     * `FIELD_RUNNER`: Default landing `/runner` (Mobile PWA task queue, stall camera memo scan).
+     * `QC_INSPECTOR`: Default landing `/admin/qc` (Intake queue, thermal seal print console).
+     * `CATALOG_MANAGER`: Default landing `/admin/catalog` (Products, SKUs, media, governance).
+     * `INVENTORY_MANAGER`: Default landing `/admin/inventory` (Stock levels, godowns, locations).
+     * `CUSTOMER_SUPPORT`: Default landing `/admin/support` (Orders, RMA adjudications, reviews).
+     * `FINANCE_MANAGER`: Default landing `/admin/finance` (Double-entry ledger, settlements).
+     * `DISPATCHER`: Default landing `/admin/orders` (Kanban dispatch, courier manifests).
+   - Intelligent Staff Landing Router: Staff login (`/login`) automatically redirects user to their
+     dedicated role landing page with a role-switcher dropdown if multi-role staff.
 2. Executive Analytics Overview (`src/app/admin/page.tsx`):
    - KPI Stat Cards: Gross Revenue (BDT ৳), Daily Drop-and-Pack Orders, Active Pre-Orders,
      RTO Rate (%), Open RMA Claims.
