@@ -66,7 +66,7 @@ export function generateApiMarkdown(scannedRoutes: ScannedRoute[]): string {
 
   md += `| 3 | **Showroom Walk-in Sale Lifecycle**<br>\`POST /pos/walk-in-sale\` | Multi-step transition through \`PENDING_PAYMENT\` | Created directly in terminal \`DELIVERED_COUNTER\` status | Walk-in counter sales involve immediate cash/card payment and physical unit handover on the spot; bypassing intermediary states accurately reflects physical reality. *(DECISIONS.md #29, #45, PRD §3.12)* |\n`;
 
-  md += `| 4 | **Media Upload Strategy**<br>\`POST /media/uploads\` | Single presigned S3 PUT for all files | Dual-mode: Direct presigned PUT ($\le$ 10MB) vs. S3 multipart chunking ($>$ 10MB) | Ensures zero-latency uploads for smartphone RMA photos and receipts, while providing robust resumable chunking for large 300MB unboxing videos. *(DECISIONS.md #47, PRD §3.8.8)* |\n`;
+  md += `| 4 | **Media Upload Strategy**<br>\`POST /media/uploads\` | Single presigned S3 PUT for all files | Dual-mode: Direct presigned PUT (<= 10MB) vs. S3 multipart chunking (> 10MB) | Ensures zero-latency uploads for smartphone RMA photos and receipts, while providing robust resumable chunking for large 300MB unboxing videos. *(DECISIONS.md #47, PRD §3.8.8)* |\n`;
 
   md += `| 5 | **Courier Webhook Aliases**<br>\`POST /webhooks/couriers/:courier\` | Single path under \`/webhooks/couriers/:courier\` | Dual mount: \`/api/v1/logistics/webhooks/:courier\` and \`/api/v1/webhooks/couriers/:courier\` | Backwards-compatibility with varying courier provider dashboard configuration formats (Steadfast, Pathao, RedX). *(DECISIONS.md #39)* |\n`;
 

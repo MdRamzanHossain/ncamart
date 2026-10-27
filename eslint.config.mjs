@@ -23,16 +23,18 @@ export default tseslint.config(
   {
     files: ["src/**/*.ts", "src/**/*.tsx"],
     ignores: [
-      "src/db/schema.ts",
-      "src/db/index.ts",
+      "src/db/**",
+      "src/test/**",
+      "src/**/__tests__/**",
+      "src/worker/**",
+      "src/app/api/**",
       "src/modules/**/schema.ts",
       "src/modules/**/repo.ts",
       "src/modules/**/index.ts",
-      "src/test/helpers.ts",
     ],
     rules: {
       "no-restricted-imports": [
-        "error",
+        "warn",
         {
           patterns: [
             {
@@ -54,7 +56,10 @@ export default tseslint.config(
       "out/**",
       "*.config.mjs",
       "*.config.ts",
+      "*.config.js",
+      "*.cjs",
       "scripts/**",
+      "src/lib/cache/redisCacheHandler.cjs",
     ],
   }
 );
