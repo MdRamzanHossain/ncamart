@@ -10,9 +10,11 @@ import { AuthenticBadge, BudgetSmartBadge } from "@/components/ui/badge";
 export function Navbar({
   onSearchClick,
   onMobileMenuClick,
+  onCartClick,
 }: {
   onSearchClick?: () => void;
   onMobileMenuClick?: () => void;
+  onCartClick?: () => void;
 }) {
   const { user, isAuthenticated, cartCount } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -351,8 +353,9 @@ export function Navbar({
             </Link>
 
             {/* Cart Button with Counter */}
-            <Link
-              href="/cart"
+            <button
+              type="button"
+              onClick={onCartClick}
               aria-label={`Shopping cart with ${cartCount} items`}
               style={{
                 position: "relative",
@@ -389,7 +392,7 @@ export function Navbar({
               >
                 {cartCount}
               </span>
-            </Link>
+            </button>
 
             {/* User Account / Login */}
             {isAuthenticated ? (

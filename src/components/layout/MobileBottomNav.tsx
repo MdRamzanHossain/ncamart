@@ -7,9 +7,10 @@ import { useAuth } from "@/context/AuthContext";
 
 interface MobileBottomNavProps {
   onOpenCategories?: () => void;
+  onCartClick?: () => void;
 }
 
-export function MobileBottomNav({ onOpenCategories }: MobileBottomNavProps) {
+export function MobileBottomNav({ onOpenCategories, onCartClick }: MobileBottomNavProps) {
   const pathname = usePathname();
   const { cartCount } = useAuth();
 
@@ -169,14 +170,17 @@ export function MobileBottomNav({ onOpenCategories }: MobileBottomNavProps) {
         </Link>
 
         {/* 5. Cart Tab with Live Counter */}
-        <Link
-          href="/cart"
+        <button
+          type="button"
+          onClick={onCartClick}
           style={{
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
             gap: "3px",
-            textDecoration: "none",
+            background: "none",
+            border: "none",
+            cursor: "pointer",
             color: isCart ? "var(--color-brand-primary)" : "var(--text-tertiary)",
             transition: "all var(--duration-fast) ease",
             padding: "4px 10px",
@@ -216,7 +220,7 @@ export function MobileBottomNav({ onOpenCategories }: MobileBottomNavProps) {
             )}
           </div>
           <span style={{ fontSize: "10px", fontWeight: isCart ? "700" : "500" }}>Cart</span>
-        </Link>
+        </button>
       </div>
 
       <style jsx global>{`

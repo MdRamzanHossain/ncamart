@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { TrustTopbar } from "./TrustTopbar";
 import { MicroAnnouncementBar } from "./MicroAnnouncementBar";
 import { Navbar } from "./Navbar";
@@ -9,10 +9,30 @@ import { MobileBottomNav } from "./MobileBottomNav";
 import { MobileNavDrawer } from "./MobileNavDrawer";
 import { PullToRefresh } from "./PullToRefresh";
 import { SearchModal } from "@/components/search";
+import { CartDrawer } from "@/components/cart";
 
 export function StorefrontShell({ children }: { children: React.ReactNode }) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+
+  // Global event listener to open cart from any component (e.g., PDP Add to Cart, ProductCard quick add)
+  useEffect(() => {
+    const handleOpenCart = () => setIsCartOpen(true);
+    const handleCartAdd = () => setIsCartOpen(true);
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("ncamart:open-cart", handleOpenCart);
+      window.addEventListener("ncamart:cart-add", handleCartAdd);
+    }
+
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("ncamart:open-cart", handleOpenCart);
+        window.removeEventListener("ncamart:cart-add", handleCartAdd);
+      }
+    };
+  }, []);
 
   return (
     <div
@@ -33,6 +53,7 @@ export function StorefrontShell({ children }: { children: React.ReactNode }) {
       <Navbar
         onSearchClick={() => setIsSearchOpen(true)}
         onMobileMenuClick={() => setIsMobileMenuOpen(true)}
+        onCartClick={() => setIsCartOpen(true)}
       />
 
       {/* 4. Global Cmd+K Instant Search & Discovery Modal */}
@@ -45,7 +66,10 @@ export function StorefrontShell({ children }: { children: React.ReactNode }) {
         onSearchClick={() => setIsSearchOpen(true)}
       />
 
-      {/* 6. Page Main Content Body with Pull-to-Refresh */}
+      {/* 6. Slide-Over Cart Drawer with 15-Minute Reservation Timer */}
+      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+
+      {/* 7. Page Main Content Body with Pull-to-Refresh */}
       <main
         id="main-content"
         style={{
@@ -56,13 +80,14 @@ export function StorefrontShell({ children }: { children: React.ReactNode }) {
         <PullToRefresh>{children}</PullToRefresh>
       </main>
 
-      {/* 7. Comprehensive Legal & High-Trust Footer */}
+      {/* 8. Comprehensive Legal & High-Trust Footer */}
       <Footer />
 
-      {/* 8. Fixed Native Mobile Bottom Dock */}
-      <MobileBottomNav onOpenCategories={() => setIsMobileMenuOpen(true)} />
+      {/* 9. Fixed Native Mobile Bottom Dock */}
+      <MobileBottomNav
+        onOpenCategories={() => setIsMobileMenuOpen(true)}
+        onCartClick={() => setIsCartOpen(true)}
+      />
     </div>
   );
 }
-
-
