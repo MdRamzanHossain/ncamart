@@ -8,4 +8,7 @@ export * from "./FeaturedCampaignBanner";
 export * from "./TripleGridSection";
 export * from "./RewardsTrustStrip";
 export * from "./TestimonialsAndNewsletter";
+export * from "./NawabpurMarketMap";
+export * from "./BrandAuthenticityHub";
+
 

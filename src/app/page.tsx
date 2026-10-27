@@ -8,6 +8,8 @@ import {
   TripleGridSection,
   RewardsTrustStrip,
   TestimonialsAndNewsletter,
+  NawabpurMarketMap,
+  BrandAuthenticityHub,
 } from "@/components/home";
 
 export default function HomePage() {
@@ -28,12 +30,19 @@ export default function HomePage() {
       {/* 5. Triple-Grid Power Section: Trending, Campaign Banner & Flash Offers */}
       <TripleGridSection />
 
-      {/* 6. Rewards & 4-Pillar Engineering Trust Strip */}
+      {/* 6. Nawabpur Tech Corridor Interactive Map & Drop-and-Pack Sourcing */}
+      <NawabpurMarketMap />
+
+      {/* 7. Authorized Brand Authenticity & Credentials Hub */}
+      <BrandAuthenticityHub />
+
+      {/* 8. Rewards & 4-Pillar Engineering Trust Strip */}
       <RewardsTrustStrip />
 
-      {/* 7. Verified Community Testimonials & Newsletter */}
+      {/* 9. Verified Community Testimonials & Newsletter */}
       <TestimonialsAndNewsletter />
     </StorefrontShell>
   );
 }
+
 

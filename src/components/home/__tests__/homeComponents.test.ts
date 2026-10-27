@@ -1,15 +1,19 @@
 import { describe, it, expect, vi } from "vitest";
 import React from "react";
-import { HeroPortal } from "../HeroPortal";
-import { CategoryDock } from "../CategoryDock";
-import { CollectionsGrid } from "../CollectionsGrid";
-import { RecommendedCarousel } from "../RecommendedCarousel";
-import { FlashOffersCard } from "../FlashOffersCard";
-import { TrendingLeaderboard } from "../TrendingLeaderboard";
-import { FeaturedCampaignBanner } from "../FeaturedCampaignBanner";
-import { TripleGridSection } from "../TripleGridSection";
-import { RewardsTrustStrip } from "../RewardsTrustStrip";
-import { TestimonialsAndNewsletter } from "../TestimonialsAndNewsletter";
+import {
+  HeroPortal,
+  CategoryDock,
+  CollectionsGrid,
+  RecommendedCarousel,
+  FlashOffersCard,
+  TrendingLeaderboard,
+  FeaturedCampaignBanner,
+  TripleGridSection,
+  RewardsTrustStrip,
+  TestimonialsAndNewsletter,
+  NawabpurMarketMap,
+  BrandAuthenticityHub,
+} from "../index";
 
 // Mock toast hook
 vi.mock("@/components/ui/toast", () => ({
@@ -18,7 +22,7 @@ vi.mock("@/components/ui/toast", () => ({
   }),
 }));
 
-describe("F07 & F08 — Interactive Homepage, Hero Portal & Triple-Grid Power Section", () => {
+describe("F07, F08 & F09 — Interactive Homepage, Hero Portal, Triple-Grid & Market Map", () => {
   it("renders HeroPortal with 3D parallax container and trust micro-bar", () => {
     const element = React.createElement(HeroPortal);
     expect(element).toBeDefined();
@@ -77,5 +81,17 @@ describe("F07 & F08 — Interactive Homepage, Hero Portal & Triple-Grid Power Se
     const element = React.createElement(TestimonialsAndNewsletter);
     expect(element).toBeDefined();
     expect(element.type).toBe(TestimonialsAndNewsletter);
+  });
+
+  it("renders NawabpurMarketMap with interactive beacons and drop-and-pack stepper", () => {
+    const element = React.createElement(NawabpurMarketMap);
+    expect(element).toBeDefined();
+    expect(element.type).toBe(NawabpurMarketMap);
+  });
+
+  it("renders BrandAuthenticityHub with authorized brands and certificate credentials", () => {
+    const element = React.createElement(BrandAuthenticityHub);
+    expect(element).toBeDefined();
+    expect(element.type).toBe(BrandAuthenticityHub);
   });
 });
