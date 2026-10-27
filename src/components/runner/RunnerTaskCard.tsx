@@ -4,12 +4,14 @@ import React, { useState } from "react";
 import type { RunnerTask } from "./types";
 import { formatPaisa } from "@/lib/money";
 import { useToast } from "@/components/ui/toast";
+import { VoucherCameraModal } from "./VoucherCameraModal";
 
 interface RunnerTaskCardProps {
   task: RunnerTask;
   onUpdateStatus: (taskId: string, nextStatus: RunnerTask["status"], negotiatedPricePaisa?: number) => void;
   onRequestOverride: (taskId: string, spotPricePaisa: number) => void;
   onApproveOverrideSimulated: (taskId: string) => void;
+  onAttachVoucher?: (taskId: string, voucherDataUrl: string) => void;
 }
 
 export function RunnerTaskCard({
@@ -17,7 +19,10 @@ export function RunnerTaskCard({
   onUpdateStatus,
   onRequestOverride,
   onApproveOverrideSimulated,
+  onAttachVoucher,
 }: RunnerTaskCardProps) {
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [voucherUrl, setVoucherUrl] = useState<string | null>(task.purchasedReceiptUrl || null);
   const [spotPriceInput, setSpotPriceInput] = useState<string>(
     task.negotiatedSpotPricePaisa
       ? (task.negotiatedSpotPricePaisa / 100).toString()
@@ -232,6 +237,35 @@ export function RunnerTaskCard({
           </>
         )}
 
+        {/* Stall Memo Voucher Scanner Button */}
+        {(task.status === "AT_STALL" || task.status === "PURCHASED") && (
+          <div style={{ marginTop: "6px" }}>
+            <button
+              type="button"
+              onClick={() => setIsCameraOpen(true)}
+              style={{
+                width: "100%",
+                padding: "8px 12px",
+                borderRadius: "6px",
+                background: voucherUrl ? "rgba(16, 185, 129, 0.15)" : "rgba(255, 255, 255, 0.06)",
+                border: voucherUrl ? "1px solid rgba(16, 185, 129, 0.35)" : "1px solid rgba(255, 255, 255, 0.12)",
+                color: voucherUrl ? "#34d399" : "#cbd5e1",
+                fontSize: "11px",
+                fontWeight: 700,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "6px",
+              }}
+              data-testid="voucher-camera-trigger"
+            >
+              <span>📷</span>
+              <span>{voucherUrl ? "✓ Stall Cash Memo Attached (Tap to View/Retake)" : "Scan Wholesale Stall Memo Receipt"}</span>
+            </button>
+          </div>
+        )}
+
         {task.status === "PURCHASED" && (
           <button type="button" onClick={handleAdvanceStatus} className="btn-action btn-godown">
             <span>📦 Return Batch to Nawabpur Godown QC</span>
@@ -244,6 +278,20 @@ export function RunnerTaskCard({
           </div>
         )}
       </div>
+
+      {/* Wholesale Stall Memo Camera Modal */}
+      <VoucherCameraModal
+        isOpen={isCameraOpen}
+        taskId={task.id}
+        stallName={task.stallName}
+        onClose={() => setIsCameraOpen(false)}
+        onVoucherCaptured={(tid, dataUrl) => {
+          setVoucherUrl(dataUrl);
+          if (onAttachVoucher) {
+            onAttachVoucher(tid, dataUrl);
+          }
+        }}
+      />
 
       <style jsx>{`
         .runner-task-card {

@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import type { RunnerTask, RunnerProfile } from "./types";
 import { RunnerTaskCard } from "./RunnerTaskCard";
+import { GodownHandoverModal } from "./GodownHandoverModal";
 import { formatPaisa } from "@/lib/money";
 import { useToast } from "@/components/ui/toast";
 
@@ -72,8 +73,17 @@ export function RunnerTaskDashboard() {
   const [runner, setRunner] = useState<RunnerProfile>(INITIAL_RUNNER);
   const [tasks, setTasks] = useState<RunnerTask[]>(INITIAL_TASKS);
   const [activeFilter, setActiveFilter] = useState<"ALL" | "PENDING" | "PURCHASED">("ALL");
+  const [isHandoverOpen, setIsHandoverOpen] = useState(false);
 
   const { addToast } = useToast();
+
+  const handleHandoverConfirmed = (batchId: string) => {
+    setTasks((prev) =>
+      prev.map((t) =>
+        t.status === "PURCHASED" ? { ...t, status: "RETURNED_GODOWN" } : t
+      )
+    );
+  };
 
   const handleUpdateStatus = (
     taskId: string,
@@ -278,7 +288,30 @@ export function RunnerTaskDashboard() {
             ))
           )}
         </main>
+
+        {/* Sticky Godown Handover Bar */}
+        {purchasedCount > 0 && (
+          <div className="handover-sticky-bar">
+            <button
+              type="button"
+              className="handover-trigger-btn"
+              onClick={() => setIsHandoverOpen(true)}
+              data-testid="handover-batch-btn"
+            >
+              <span className="icon">📦</span>
+              <span>Handover Batch to Godown QC ({purchasedCount} items)</span>
+            </button>
+          </div>
+        )}
       </div>
+
+      <GodownHandoverModal
+        isOpen={isHandoverOpen}
+        runner={runner}
+        purchasedTasks={tasks.filter((t) => t.status === "PURCHASED")}
+        onClose={() => setIsHandoverOpen(false)}
+        onHandoverConfirmed={handleHandoverConfirmed}
+      />
 
       <style jsx>{`
         .runner-pwa-container {
@@ -500,6 +533,42 @@ export function RunnerTaskDashboard() {
           font-size: 12px;
           color: #94a3b8;
           margin: 0;
+        }
+
+        .handover-sticky-bar {
+          position: sticky;
+          bottom: 0;
+          background: #0f172a;
+          border-top: 1px solid rgba(255, 255, 255, 0.1);
+          padding: 12px 16px;
+          z-index: 90;
+          box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.4);
+        }
+
+        .handover-trigger-btn {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          padding: 12px 16px;
+          border-radius: 8px;
+          background: #10b981;
+          color: #022c22;
+          font-weight: 800;
+          font-size: 13px;
+          border: none;
+          cursor: pointer;
+          transition: transform 0.1s ease, background 0.15s ease;
+        }
+
+        .handover-trigger-btn:hover {
+          background: #34d399;
+          transform: translateY(-1px);
+        }
+
+        .handover-trigger-btn .icon {
+          font-size: 16px;
         }
       `}</style>
     </div>
