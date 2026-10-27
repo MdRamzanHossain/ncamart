@@ -1,9 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { withRoute } from "@/lib/http/route";
 import { QUEUE_NAMES, getQueue, getMockQueuedJobs } from "@/lib/queues";
 import { env } from "@/lib/env";
 
-export const GET = withRoute(
+export const dynamic = "force-dynamic";
+
+const handler = withRoute(
   {
     auth: "staff",
     permission: "queues.admin",
@@ -101,3 +103,7 @@ export const GET = withRoute(
     });
   }
 );
+
+export async function GET(req: NextRequest, ctx: any) {
+  return handler(req, ctx);
+}
