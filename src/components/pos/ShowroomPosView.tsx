@@ -12,6 +12,8 @@ import type {
 import { formatPaisa } from "@/lib/money";
 import { useBarcodeScanner, playPosBeep } from "./useBarcodeScanner";
 import { useToast } from "@/components/ui/toast";
+import { ThermalReceiptPreview } from "./ThermalReceiptPreview";
+import { PickupPinModal } from "./PickupPinModal";
 
 const INITIAL_SESSION: PosSessionInfo = {
   counterId: "COUNTER_NAWABPUR_01",
@@ -119,6 +121,7 @@ export function ShowroomPosView() {
 
   const [lastReceipt, setLastReceipt] = useState<PosSaleReceipt | null>(null);
   const [isProcessingSale, setIsProcessingSale] = useState(false);
+  const [isPickupModalOpen, setIsPickupModalOpen] = useState(false);
 
   const { addToast } = useToast();
 
@@ -380,6 +383,16 @@ export function ShowroomPosView() {
             <span className="drawer-label">Drawer Active</span>
             <span className="drawer-amount">৳10,000 Float</span>
           </div>
+
+          <button
+            type="button"
+            className="pickup-trigger-btn"
+            onClick={() => setIsPickupModalOpen(true)}
+            data-testid="pos-pickup-trigger-btn"
+          >
+            <span>🔑</span>
+            <span>Pickup PIN Handover</span>
+          </button>
 
           <div className="pos-clock">
             {new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
@@ -770,108 +783,22 @@ export function ShowroomPosView() {
         </section>
       </main>
 
-      {/* Sale Success & Thermal Receipt Modal */}
+      {/* Pickup PIN Verification Dialog */}
+      <PickupPinModal
+        isOpen={isPickupModalOpen}
+        onClose={() => setIsPickupModalOpen(false)}
+        onHandoverComplete={(receipt) => {
+          setIsPickupModalOpen(false);
+          setLastReceipt(receipt);
+        }}
+      />
+
+      {/* 80mm ESC/POS Thermal Receipt Preview */}
       {lastReceipt && (
-        <div className="receipt-modal-backdrop" onClick={() => setLastReceipt(null)}>
-          <div className="receipt-modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="receipt-header">
-              <span className="success-check">✓</span>
-              <h2>Walk-in Sale Confirmed!</h2>
-              <p>Mushak 6.3 VAT Tax Invoice Printed to Counter Receipt Printer</p>
-            </div>
-
-            <div className="receipt-paper">
-              <div className="paper-header">
-                <h3>NAWABPUR COMPLEX ACCESSORIES</h3>
-                <p>Nawabpur Tower, Shop #14, Nawabpur Road, Dhaka</p>
-                <p>BIN / Mushak Registration: 002391029-0101</p>
-                <p>MUSHAK 6.3 TAX INVOICE: {lastReceipt.mushak63Serial}</p>
-                <div className="divider-dash" />
-              </div>
-
-              <div className="paper-meta">
-                <div>Invoice: {lastReceipt.invoiceNumber}</div>
-                <div>Time: {lastReceipt.timestamp}</div>
-                <div>Cashier: {lastReceipt.cashierName}</div>
-                <div>Customer: {lastReceipt.customer.name} ({lastReceipt.customer.phone})</div>
-                <div className="divider-dash" />
-              </div>
-
-              <div className="paper-items">
-                {lastReceipt.items.map((i, idx) => (
-                  <div key={idx} className="paper-item-row">
-                    <span>
-                      {i.quantity}x {i.product.title}
-                    </span>
-                    <span>{formatPaisa(i.product.pricePaisa * i.quantity)}</span>
-                  </div>
-                ))}
-                <div className="divider-dash" />
-              </div>
-
-              <div className="paper-totals">
-                <div className="paper-tot-row">
-                  <span>Subtotal:</span>
-                  <span>{formatPaisa(lastReceipt.subtotalPaisa)}</span>
-                </div>
-                <div className="paper-tot-row">
-                  <span>VAT (7.5% Included):</span>
-                  <span>{formatPaisa(lastReceipt.vatPaisa)}</span>
-                </div>
-                <div className="paper-tot-row font-bold">
-                  <span>Total Paid:</span>
-                  <span>{formatPaisa(lastReceipt.totalPaisa)}</span>
-                </div>
-                {lastReceipt.paymentMethod === "CASH" && (
-                  <>
-                    <div className="paper-tot-row">
-                      <span>Tendered:</span>
-                      <span>{formatPaisa(lastReceipt.tenderedPaisa)}</span>
-                    </div>
-                    <div className="paper-tot-row font-bold">
-                      <span>Change Given:</span>
-                      <span>{formatPaisa(lastReceipt.changeDuePaisa)}</span>
-                    </div>
-                  </>
-                )}
-                <div className="divider-dash" />
-              </div>
-
-              <div className="paper-seals">
-                <p className="seals-header">Tamper-Evident Holographic Seals:</p>
-                {lastReceipt.sealIds.map((s, idx) => (
-                  <p key={idx} className="seal-code">
-                    🔒 {s} (Verify at ncamart.com/verify)
-                  </p>
-                ))}
-              </div>
-
-              <div className="paper-footer">
-                <p>Thank you for choosing Nawabpur Authentic Gear!</p>
-                <p>No Counterfeit Guarantee • 72-Hour Swap Policy</p>
-              </div>
-            </div>
-
-            <div className="receipt-actions">
-              <button
-                type="button"
-                className="btn-print"
-                onClick={() => {
-                  if (typeof window !== "undefined") window.print();
-                }}
-              >
-                🖨️ Re-Print Receipt (80mm)
-              </button>
-              <button
-                type="button"
-                className="btn-done"
-                onClick={() => setLastReceipt(null)}
-              >
-                Start Next Customer Sale
-              </button>
-            </div>
-          </div>
-        </div>
+        <ThermalReceiptPreview
+          receipt={lastReceipt}
+          onClose={() => setLastReceipt(null)}
+        />
       )}
 
       <style jsx>{`
@@ -985,6 +912,25 @@ export function ShowroomPosView() {
         .drawer-amount {
           color: #a7f3d0;
           font-weight: 800;
+        }
+
+        .pickup-trigger-btn {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 11px;
+          font-weight: 800;
+          padding: 4px 10px;
+          border-radius: 6px;
+          background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+          color: #ffffff;
+          border: none;
+          cursor: pointer;
+          transition: transform 0.15s ease;
+        }
+
+        .pickup-trigger-btn:hover {
+          transform: translateY(-1px);
         }
 
         .pos-clock {
