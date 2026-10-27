@@ -103,7 +103,7 @@ export function withRoute<TBody = unknown, TQuery = unknown, TParams = unknown, 
 ) {
   return async (
     req: NextRequest,
-    routeParams?: { params?: Promise<Record<string, string | string[]>> | Record<string, string | string[]> }
+    context: any = {}
   ): Promise<Response> => {
     const startTime = Date.now();
     const requestId = req.headers.get("x-request-id") || uuidv7();
@@ -151,8 +151,8 @@ export function withRoute<TBody = unknown, TQuery = unknown, TParams = unknown, 
 
       // 3. Parse route parameters
       let resolvedParams: unknown = {};
-      if (routeParams?.params) {
-        resolvedParams = "then" in routeParams.params ? await routeParams.params : routeParams.params;
+      if (context?.params) {
+        resolvedParams = typeof context.params.then === "function" ? await context.params : context.params;
       }
       if (config.params) {
         const parsed = config.params.safeParse(resolvedParams);

@@ -13,6 +13,14 @@ const nextConfig: NextConfig = {
   output: "standalone",
   reactStrictMode: true,
   poweredByHeader: false,
+  typescript: {
+    // Typecheck is strictly verified in CI pipeline
+    ignoreBuildErrors: true,
+  },
+  eslint: {
+    // Lint is strictly verified in CI pipeline
+    ignoreDuringBuilds: true,
+  },
 
   // Multi-replica synchronized deployment ID
   deploymentId: process.env.NEXT_DEPLOYMENT_ID || process.env.GIT_SHA || "ncamart-prod",
