@@ -1,9 +1,26 @@
+import React from "react";
+import { StorefrontShell } from "@/components/layout";
+import {
+  HeroPortal,
+  CategoryDock,
+  CollectionsGrid,
+  RecommendedCarousel,
+} from "@/components/home";
+
 export default function HomePage() {
   return (
-    <main style={{ padding: "2rem", fontFamily: "sans-serif" }}>
-      <h1>NCAMart Backend API</h1>
-      <p>Backend-first infrastructure active. API routes available at <code>/api/v1/*</code>.</p>
-      <p>Health check: <a href="/api/v1/health"><code>/api/v1/health</code></a></p>
-    </main>
+    <StorefrontShell>
+      {/* 1. Futuristic Hero Shopping Portal with 3D Parallax & Hologram Ring */}
+      <HeroPortal />
+
+      {/* 2. Circular Category Dock with Glassmorphic Icons & Spring Scale */}
+      <CategoryDock />
+
+      {/* 3. Interactive Collections (4-Card Grid with Expansion Morphing) */}
+      <CollectionsGrid />
+
+      {/* 4. Dual-Tier Recommended For You Carousel */}
+      <RecommendedCarousel />
+    </StorefrontShell>
   );
 }
