@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "@/styles/globals.css";
 import { ThemeProvider, ThemeScript } from "@/lib/theme";
 import { ToastProvider } from "@/components/ui";
+import { AuthProvider } from "@/context/AuthContext";
 
 export const metadata: Metadata = {
   title: "NCAMart — High-Trust Dual-Tier Tech Accessories",
@@ -50,7 +51,9 @@ export default function RootLayout({
         </a>
         <ThemeProvider defaultTheme="dark">
           <ToastProvider>
-            {children}
+            <AuthProvider>
+              {children}
+            </AuthProvider>
           </ToastProvider>
         </ThemeProvider>
       </body>

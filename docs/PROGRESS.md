@@ -63,6 +63,7 @@
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **F00** | Master Context | Master Frontend Context & Design Philosophy | **DONE** | Color palette, dual-tier indicators, motion & typography standards | None |
 | **F01** | Foundation | Core Design System, CSS Tokens & Theme Engine | **DONE** | `src/styles/tokens.css`, `src/styles/globals.css`, `src/lib/theme/*` (ThemeScript, ThemeProvider, ThemeToggle, ThemeCycleButton), `src/app/layout.tsx` wired with Zero FOUT, unit test passing | None |
-| **F02** | Foundation | Base UI Component Primitive Library | **DONE** | Accessible animated primitives in `src/components/ui/` (`Button`, `Input`, `Textarea`, `MoneyInput`, `Badge`, `AuthenticBadge`, `BudgetSmartBadge`, `Dialog`, `Drawer`, `Tooltip`, `ToastProvider`, `useToast`, `Skeleton`), `/design-system` demo page, 615 tests passing | None (Proceed to F03) |
+| **F02** | Foundation | Base UI Component Primitive Library | **DONE** | Accessible animated primitives in `src/components/ui/` (`Button`, `Input`, `Textarea`, `MoneyInput`, `Badge`, `AuthenticBadge`, `BudgetSmartBadge`, `Dialog`, `Drawer`, `Tooltip`, `ToastProvider`, `useToast`, `Skeleton`), `/design-system` demo page, 615 tests passing | None |
+| **F03** | Core Layer | API Client, Global State & Real-Time SSE Layer | **DONE** | Type-safe fetch client (`src/lib/api/client.ts`) with RFC 7807 problem details & bilingual error translator, `AuthContext` (`src/context/AuthContext.tsx`), real-time SSE hook with exponential backoff (`src/hooks/useRealtimeEvents.ts`), unit tests passing | None (Proceed to F04) |
 
 
