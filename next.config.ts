@@ -26,8 +26,11 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
 
-  // Multi-replica synchronized deployment ID
-  deploymentId: process.env.NEXT_DEPLOYMENT_ID || process.env.GIT_SHA || "ncamart-prod",
+  // Multi-replica synchronized deployment ID (strictly in production only)
+  deploymentId:
+    process.env.NODE_ENV === "production"
+      ? process.env.NEXT_DEPLOYMENT_ID || process.env.GIT_SHA || "ncamart-prod"
+      : undefined,
 
   // Multi-replica shared cache handler (Redis) - only active if REDIS_URL and ENABLE_REDIS_CACHE are enabled
   cacheHandler:
