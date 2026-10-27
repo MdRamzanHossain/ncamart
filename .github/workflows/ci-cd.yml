@@ -148,6 +148,7 @@ jobs:
         run: |
           SHA_SHORT=$(git rev-parse --short HEAD)
           echo "version=${SHA_SHORT}" >> "$GITHUB_OUTPUT"
+          echo "IMAGE_NAME_LOWER=$(echo "${IMAGE_NAME}" | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
 
       # Build Web Image
       - name: Build and Push Web Image
@@ -157,8 +158,8 @@ jobs:
           file: docker/Dockerfile.web
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/web:${{ steps.meta.outputs.version }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/web:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}/web:${{ steps.meta.outputs.version }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}/web:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -170,8 +171,8 @@ jobs:
           file: docker/Dockerfile.worker
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/worker:${{ steps.meta.outputs.version }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/worker:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}/worker:${{ steps.meta.outputs.version }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}/worker:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -183,8 +184,8 @@ jobs:
           file: docker/Dockerfile.migrate
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/migration:${{ steps.meta.outputs.version }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/migration:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}/migration:${{ steps.meta.outputs.version }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}/migration:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -192,7 +193,7 @@ jobs:
   deploy-staging:
     name: Deploy to Staging
     needs: [build-and-push]
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && secrets.STAGING_HOST != ''
     runs-on: ubuntu-latest
     environment:
       name: staging
