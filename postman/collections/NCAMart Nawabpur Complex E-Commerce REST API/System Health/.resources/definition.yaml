@@ -1,0 +1,3 @@
+$kind: collection
+description: "System Health monitoring endpoints"
+order: 1000

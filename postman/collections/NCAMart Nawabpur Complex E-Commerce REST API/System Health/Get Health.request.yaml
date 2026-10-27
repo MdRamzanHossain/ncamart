@@ -1,0 +1,18 @@
+$kind: http-request
+description: |
+  Handles **GET** requests on `/api/v1/health`.
+  
+  Returns system health status for PostgreSQL database, Redis cache/queues, and Meilisearch engine.
+
+  - **Authentication:** PUBLIC
+  - **Source File:** `src/app/api/v1/health/route.ts`
+url: "{{baseUrl}}/api/v1/health"
+method: GET
+headers:
+  - key: Accept
+    value: application/json
+body:
+  type: text
+  content: ""
+settings: {}
+order: 1000
