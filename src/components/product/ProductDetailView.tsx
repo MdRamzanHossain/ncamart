@@ -9,6 +9,7 @@ import { VariantSelector } from "./VariantSelector";
 import { DeliveryEstimator } from "./DeliveryEstimator";
 import { formatPaisa } from "@/lib/money";
 import { useToast } from "@/components/ui/toast";
+import { HolographicSealPreview } from "@/components/trust";
 import Link from "next/link";
 
 export interface ProductDetailViewProps {
@@ -621,6 +622,9 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
                   </li>
                 </ol>
               </div>
+
+              {/* Interactive Holographic Seal Card with VOID toggle */}
+              <HolographicSealPreview tier={product.product_tier} />
             </div>
           )}
         </div>
