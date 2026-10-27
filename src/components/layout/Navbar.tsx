@@ -7,7 +7,13 @@ import { NotificationDrawer } from "./NotificationDrawer";
 import { useAuth } from "@/context/AuthContext";
 import { AuthenticBadge, BudgetSmartBadge } from "@/components/ui/badge";
 
-export function Navbar({ onSearchClick }: { onSearchClick?: () => void }) {
+export function Navbar({
+  onSearchClick,
+  onMobileMenuClick,
+}: {
+  onSearchClick?: () => void;
+  onMobileMenuClick?: () => void;
+}) {
   const { user, isAuthenticated, cartCount } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
@@ -52,7 +58,29 @@ export function Navbar({ onSearchClick }: { onSearchClick?: () => void }) {
           }}
         >
           {/* Left Brand & MegaMenu */}
-          <div style={{ display: "flex", alignItems: "center", gap: "var(--space-xl)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)" }}>
+            {/* Mobile Hamburger Button */}
+            <button
+              type="button"
+              onClick={onMobileMenuClick}
+              aria-label="Open mobile menu"
+              style={{
+                display: "none",
+                background: "transparent",
+                border: "none",
+                color: "var(--text-primary)",
+                cursor: "pointer",
+                padding: "6px",
+              }}
+              className="mobile-hamburger-btn"
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                <line x1="3" y1="12" x2="21" y2="12" />
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="3" y1="18" x2="21" y2="18" />
+              </svg>
+            </button>
+
             {/* Logo with Holographic Foil Hover */}
             <Link
               href="/"
@@ -64,6 +92,7 @@ export function Navbar({ onSearchClick }: { onSearchClick?: () => void }) {
                 textDecoration: "none",
               }}
             >
+
               <div
                 style={{
                   width: "38px",
@@ -423,6 +452,17 @@ export function Navbar({ onSearchClick }: { onSearchClick?: () => void }) {
         onClose={() => setIsNotificationOpen(false)}
         onUnreadCountChange={(c) => setUnreadCount(c)}
       />
+
+      <style jsx global>{`
+        @media (max-width: 768px) {
+          .mobile-hamburger-btn {
+            display: flex !important;
+            align-items: center;
+            justifyContent: center;
+          }
+        }
+      `}</style>
     </>
   );
 }
+
