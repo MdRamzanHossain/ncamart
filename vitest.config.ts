@@ -19,7 +19,7 @@ export default defineConfig({
         },
         test: {
           name: "unit",
-          include: ["src/**/*.test.ts"],
+          include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
           exclude: ["src/**/*.int.test.ts", "node_modules"],
           environment: "node",
         },
