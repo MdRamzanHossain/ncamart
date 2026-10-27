@@ -1,7 +1,7 @@
 # NCAMart REST API Specification & Endpoint Reference
 
 **Document Version:** 2.0.0 (OpenAPI 3.1 Synchronized)  
-**Last Generated:** 2026-10-27T06:26:43.849Z  
+**Last Generated:** 2026-10-27T13:05:10.324Z  
 **Total Active Endpoints:** 266  
 **Source of Truth:** `docs/openapi.json` (Generated via `pnpm openapi:generate`)  
 
@@ -418,7 +418,7 @@ The following architectural enhancements and intentional deviations from the ori
 | 1 | **Pre-Order Balance COD Cap**<br>`POST /orders/:id/balance` | Allowed unrestricted COD balance payments | Strictly capped COD balance payments at ৳30,000 (3,000,000 paisa) with `422 ERR_COD_NOT_ALLOWED` | High-value courier COD carries severe courier cash handling and default risks. Pre-order balances $>৳30,000$ must be settled online or at the Nawabpur showroom counter. *(DECISIONS.md #33, PRD §3.3.4)* |
 | 2 | **Public `/verify` Clone Alerts**<br>`GET /verify/:sealId` | Suggested showing clone suspicion banner to visitor | Returns standard valid seal metadata to public visitor; emits internal Class A incident alert to Super Admin | Revealing clone suspicion on public lookups tips off counterfeiters and causes panic for legitimate customers who bought genuine items. *(DECISIONS.md #38, PRD §3.2.3)* |
 | 3 | **Showroom Walk-in Sale Lifecycle**<br>`POST /pos/walk-in-sale` | Multi-step transition through `PENDING_PAYMENT` | Created directly in terminal `DELIVERED_COUNTER` status | Walk-in counter sales involve immediate cash/card payment and physical unit handover on the spot; bypassing intermediary states accurately reflects physical reality. *(DECISIONS.md #29, #45, PRD §3.12)* |
-| 4 | **Media Upload Strategy**<br>`POST /media/uploads` | Single presigned S3 PUT for all files | Dual-mode: Direct presigned PUT ($le$ 10MB) vs. S3 multipart chunking ($>$ 10MB) | Ensures zero-latency uploads for smartphone RMA photos and receipts, while providing robust resumable chunking for large 300MB unboxing videos. *(DECISIONS.md #47, PRD §3.8.8)* |
+| 4 | **Media Upload Strategy**<br>`POST /media/uploads` | Single presigned S3 PUT for all files | Dual-mode: Direct presigned PUT (<= 10MB) vs. S3 multipart chunking (> 10MB) | Ensures zero-latency uploads for smartphone RMA photos and receipts, while providing robust resumable chunking for large 300MB unboxing videos. *(DECISIONS.md #47, PRD §3.8.8)* |
 | 5 | **Courier Webhook Aliases**<br>`POST /webhooks/couriers/:courier` | Single path under `/webhooks/couriers/:courier` | Dual mount: `/api/v1/logistics/webhooks/:courier` and `/api/v1/webhooks/couriers/:courier` | Backwards-compatibility with varying courier provider dashboard configuration formats (Steadfast, Pathao, RedX). *(DECISIONS.md #39)* |
 | 6 | **Customer Data Anonymization**<br>`POST /admin/customers/:id/anonymize` | Hard `DELETE` customer record | Irreversible phone SHA-256 hashing and PII masking; preserves balanced journal entries and Mushak invoices | Statutory Bangladesh accounting and VAT compliance requires 6-year retention of sales ledgers, while honoring Customer Right to be Forgotten. *(DECISIONS.md #64, PRD §3.18)* |
 | 7 | **Store Credit Expiry Accounting**<br>`Daily 00:15 Asia/Dhaka Job` | Mutation of historical store credit balance | Append-only negative `EXPIRY` entry with ledger reversal `Dr 2020 / Cr 5400` | Preserves immutable store credit log integrity without mutating historical rows or ledger lines. *(DECISIONS.md #27, PRD §3.14.6)* |

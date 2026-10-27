@@ -1,0 +1,153 @@
+/**
+ * NCAMart — Pre-Order Verified Mock Catalog Items
+ * PRD §3.3, §3.12, F18
+ */
+
+import { PreOrderItem } from "./types";
+
+export const MOCK_PREORDERS: PreOrderItem[] = [
+  {
+    id: "po-fnirsi-dso-tc3",
+    slug: "fnirsi-dso-tc3-transistor-tester-oscilloscope",
+    sku_code: "ENG-FNI-DSO-TC3",
+    title_en: "FNIRSI DSO-TC3 3-in-1 Handheld Digital Oscilloscope & Component Tester",
+    title_bn: "এফএনআইআরএসআই ৩-ইন-১ পকেট ডিজিটাল অসিলোস্কোপ ও ট্রানজিস্টর টেস্টার",
+    brand_name: "FNIRSI",
+    brand_slug: "fnirsi",
+    category_name: "Testing & Measurement Equipment",
+    category_slug: "testing-equipment",
+    total_price_paisa: 650000, // ৳6,500
+    deposit_percent: 15, // 15% deposit -> ৳975
+    target_quota: 10,
+    reserved_quota: 8,
+    batch_code: "AF-DH-2026-B08",
+    estimated_arrival_window: "Nov 12 – Nov 18, 2026",
+    eta_days_min: 14,
+    eta_days_max: 20,
+    image_url: "/images/product-main.png",
+    origin_hub: "Shenzhen Air Cargo Hub",
+    warranty_days: 180,
+    btrc_cleared: true,
+    specs: [
+      { label: "Real-time Sampling Rate", value: "10MS/s" },
+      { label: "Analog Bandwidth", value: "500kHz" },
+      { label: "Display", value: "2.4 inch TFT Color Screen" },
+      { label: "Battery", value: "1500mAh USB-C Rechargeable" },
+    ],
+    highlights: [
+      "Direct import from FNIRSI authorized Asian factory",
+      "8 of 10 units reserved — batch air-freight closing soon",
+      "Full 180-Day Nawabpur Complex assisted warranty replacement",
+      "100% Refund guarantee if customs delay exceeds ETA + 7 days",
+    ],
+    status: "OPEN",
+  },
+  {
+    id: "po-fluke-thermal-pt120",
+    slug: "fluke-pt120-pocket-thermal-camera-9hz",
+    sku_code: "ENG-FLU-PT120",
+    title_en: "Fluke PTi120 Pocket Thermal Imaging Camera (9Hz Industrial)",
+    title_bn: "ফ্লুক পকেট থার্মাল ইমেজিং ক্যামেরা (ইন্ডাস্ট্রিয়াল সার্কিট ডায়াগনস্টিক)",
+    brand_name: "Fluke",
+    brand_slug: "fluke",
+    category_name: "Testing & Measurement Equipment",
+    category_slug: "testing-equipment",
+    total_price_paisa: 6800000, // ৳68,000
+    deposit_percent: 20, // 20% deposit -> ৳13,600
+    target_quota: 5,
+    reserved_quota: 4,
+    batch_code: "AF-DH-2026-FLU1",
+    estimated_arrival_window: "Nov 20 – Nov 28, 2026",
+    eta_days_min: 20,
+    eta_days_max: 28,
+    image_url: "/images/product-main.png",
+    origin_hub: "Fluke Regional Hub (Singapore)",
+    warranty_days: 365,
+    btrc_cleared: true,
+    specs: [
+      { label: "Infrared Resolution", value: "120 x 90 (10,800 pixels)" },
+      { label: "Temperature Range", value: "-20 °C to 150 °C" },
+      { label: "Drop Rating", value: "1-meter drop test rating" },
+      { label: "Touchscreen", value: "3.5\" LCD with IR-Fusion" },
+    ],
+    highlights: [
+      "Genuine Fluke Authorized Global Distribution import",
+      "Official Calibration Certificate & Sealed Destructive Hologram",
+      "BTRC NOC Cleared for enterprise circuit diagnostics",
+      "Specialized 20% deposit lock — remaining payable on godown arrival",
+    ],
+    status: "OPEN",
+  },
+  {
+    id: "po-aifen-a9-pro",
+    slug: "aifen-a9-pro-smart-soldering-station-c210-c245",
+    sku_code: "ENG-AIF-A9PRO",
+    title_en: "AIFEN A9 Pro 120W Precision Smart Soldering Station (Dual Handle)",
+    title_bn: "আইফেন এ৯ প্রো ১২০ওয়াট স্মার্ট প্রেসিশন সোল্ডারিং স্টেশন",
+    brand_name: "AIFEN",
+    brand_slug: "aifen",
+    category_name: "Soldering & Rework Stations",
+    category_slug: "soldering-rework",
+    total_price_paisa: 1450000, // ৳14,500
+    deposit_percent: 15, // 15% deposit -> ৳2,175
+    target_quota: 10,
+    reserved_quota: 7,
+    batch_code: "AF-DH-2026-B09",
+    estimated_arrival_window: "Nov 15 – Nov 22, 2026",
+    eta_days_min: 15,
+    eta_days_max: 22,
+    image_url: "/images/product-angle.png",
+    origin_hub: "Guangdong Tech Cargo Hub",
+    warranty_days: 180,
+    btrc_cleared: true,
+    specs: [
+      { label: "Power Output", value: "120W Peak Rapid Heat" },
+      { label: "Compatible Tips", value: "C210 / C245 / C115" },
+      { label: "Heating Speed", value: "Target Temp in 2 Seconds" },
+      { label: "PID Control", value: "±2°C Temperature Stability" },
+    ],
+    highlights: [
+      "High-precision micro-soldering station for motherboard repair",
+      "Includes original C245 precision handle and 3 genuine tips",
+      "Batch 70% filled — target quota triggers express air clearance",
+      "Deposit protected under NCAMart 100% money-back SLA guarantee",
+    ],
+    status: "OPEN",
+  },
+  {
+    id: "po-anker-prime-250w",
+    slug: "anker-prime-250w-gan-desktop-charging-dock",
+    sku_code: "ENG-ANK-PRIME-250",
+    title_en: "Anker Prime 250W GaN 6-Port Smart Desktop Power Station with Display",
+    title_bn: "অ্যাঙ্কার প্রাইম ২৫০ওয়াট জিএএন ৬-পোর্ট স্মার্ট পাওয়ার স্টেশন",
+    brand_name: "Anker",
+    brand_slug: "anker",
+    category_name: "Fast Chargers & GaN Adapters",
+    category_slug: "chargers-adapters",
+    total_price_paisa: 1950000, // ৳19,500
+    deposit_percent: 10, // 10% deposit -> ৳1,950
+    target_quota: 12,
+    reserved_quota: 11,
+    batch_code: "AF-DH-2026-ANK4",
+    estimated_arrival_window: "Nov 10 – Nov 16, 2026",
+    eta_days_min: 10,
+    eta_days_max: 16,
+    image_url: "/images/product-main.png",
+    origin_hub: "Hong Kong Air Freight",
+    warranty_days: 365,
+    btrc_cleared: true,
+    specs: [
+      { label: "Total Output", value: "250W Ultra-Fast GaN" },
+      { label: "Single Port Max", value: "140W USB-C PD 3.1" },
+      { label: "Ports", value: "4x USB-C + 2x USB-A" },
+      { label: "Smart Display", value: "2.26-inch LCD Real-Time Wattage" },
+    ],
+    highlights: [
+      "Final 1 unit remaining to lock batch air cargo!",
+      "Super low 10% advance deposit required",
+      "Multi-device simultaneous 140W laptop charging",
+      "Full official 1-year Anker replacement warranty via NCAMart",
+    ],
+    status: "OPEN",
+  },
+];

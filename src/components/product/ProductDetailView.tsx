@@ -10,6 +10,7 @@ import { DeliveryEstimator } from "./DeliveryEstimator";
 import { formatPaisa } from "@/lib/money";
 import { useToast } from "@/components/ui/toast";
 import { HolographicSealPreview } from "@/components/trust";
+import { DepositCalculator, PreOrderPolicyBanner } from "@/components/preorder";
 import Link from "next/link";
 
 export interface ProductDetailViewProps {
@@ -258,6 +259,18 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
             onSelectSku={handleSelectSku}
           />
 
+          {/* Pre-Order Progressive Deposit Calculator if applicable */}
+          {isPreOrder && (
+            <div style={{ margin: "8px 0" }}>
+              <DepositCalculator
+                totalPricePaisa={regularPrice}
+                defaultDepositPercent={product.preorder_info?.deposit_percentage || 15}
+                initialQuantity={quantity}
+                onQuantityChange={(q) => setQuantity(q)}
+              />
+            </div>
+          )}
+
           {/* Quantity & CTA Buttons */}
           <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
@@ -421,6 +434,13 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
                 <span>View Matrix</span>
                 <span>→</span>
               </Link>
+            </div>
+          )}
+
+          {/* Pre-Order 100% Refund SLA Policy Banner */}
+          {isPreOrder && (
+            <div style={{ marginTop: "16px" }}>
+              <PreOrderPolicyBanner />
             </div>
           )}
         </div>
