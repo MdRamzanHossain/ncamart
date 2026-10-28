@@ -102,7 +102,7 @@ export function applySecurityHeaders(
   } else {
     response.headers.set(
       "Content-Security-Policy",
-      "frame-ancestors 'none'; default-src 'self'"
+      "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' https: blob: data:; connect-src 'self' ws: wss: http: https:; frame-ancestors 'none';"
     );
   }
 }
