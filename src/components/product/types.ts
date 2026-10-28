@@ -18,6 +18,7 @@ export interface ProductMediaItem {
 export interface ProductSkuVariant {
   id: string;
   sku_code: string;
+  title_en?: string;
   barcode_ean13?: string | null;
   price_paisa: number;
   compare_at_price_paisa?: number | null;

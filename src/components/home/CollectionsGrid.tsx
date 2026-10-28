@@ -62,7 +62,7 @@ const COLLECTIONS: CollectionCard[] = [
     accentColor: "#38bdf8",
     borderColor: "rgba(56, 189, 248, 0.3)",
     icon: "✈️",
-    link: "/pre-order",
+    link: "/pre-orders",
     items: ["Siglent Oscilloscope", "Thermal Imaging Cams", "SMD Rework Stations", "High-Voltage Probes"],
   },
 ];
@@ -142,7 +142,7 @@ export function CollectionsGrid() {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 260px), 1fr))",
           gap: "var(--space-lg)",
         }}
       >

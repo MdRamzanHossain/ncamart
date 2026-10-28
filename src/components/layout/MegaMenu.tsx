@@ -15,7 +15,7 @@ export interface CategoryItem {
   subcategories: Array<{ name: string; slug: string }>;
 }
 
-const CATEGORIES: CategoryItem[] = [
+const CATEGORIES: [CategoryItem, ...CategoryItem[]] = [
   {
     id: "cat-chargers",
     slug: "chargers-gan-adapters",

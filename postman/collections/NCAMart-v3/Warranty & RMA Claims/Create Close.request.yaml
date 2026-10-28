@@ -1,0 +1,33 @@
+$kind: http-request
+description: |
+  Handles **POST** requests on `/api/v1/rma/claims/{id}/close`.
+
+  - **Authentication:** STAFF
+  - **Source File:** `src/app/api/v1/rma/claims/[id]/close/route.ts`
+url: "{{baseUrl}}/api/v1/rma/claims/:id/close"
+method: POST
+headers:
+  - key: Accept
+    value: application/json
+  - key: Content-Type
+    value: application/json
+  - key: Idempotency-Key
+    value: "{{$guid}}"
+    description: UUIDv7 idempotency key for safe mutating requests
+  - key: Idempotency-Key
+    value: ""
+    disabled: true
+    description: ""
+  - key: X-Client-Mutation-Id
+    value: ""
+    disabled: true
+    description: ""
+  - key: Cookie
+    value: nca_sid={{sessionToken}}
+    description: Session authentication cookie
+pathVariables:
+  id: c4918a22-3819-4b62-8172-108291a92847
+body:
+  type: json
+  content: "{}"
+order: 5000

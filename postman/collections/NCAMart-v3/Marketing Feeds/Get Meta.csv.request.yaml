@@ -1,0 +1,11 @@
+$kind: http-request
+description: |
+  Handles **GET** requests on `/feeds/meta.csv`.
+
+  - **Authentication:** PUBLIC
+  - **Source File:** `src/app/feeds/meta.csv/route.ts`
+url: "{{baseUrl}}/feeds/meta.csv"
+method: GET
+headers:
+  Accept: application/json
+order: 2000

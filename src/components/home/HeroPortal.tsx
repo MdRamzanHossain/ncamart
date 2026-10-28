@@ -32,6 +32,7 @@ export function HeroPortal() {
   return (
     <section
       aria-label="Flagship Hero Shopping Portal"
+      className="hero-portal-section"
       ref={containerRef}
       onMouseMove={handleMouseMove}
       onMouseEnter={() => setIsHovered(true)}
@@ -342,9 +343,10 @@ export function HeroPortal() {
 
         {/* 4-Pillar Trust Micro-Bar */}
         <div
+          className="hero-trust-grid"
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 150px), 1fr))",
             gap: "var(--space-md)",
             width: "100%",
             maxWidth: "840px",

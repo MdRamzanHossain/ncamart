@@ -1,0 +1,23 @@
+$kind: http-request
+description: |
+  Handles **GET** requests on `/api/v1/admin/catalog/comparison-groups`.
+
+  - **Authentication:** STAFF
+  - **Required Permission:** `catalog.read`
+  - **Source File:** `src/app/api/v1/admin/catalog/comparison-groups/route.ts`
+url: "{{baseUrl}}/api/v1/admin/catalog/comparison-groups"
+method: GET
+headers:
+  Accept: application/json
+body:
+  type: text
+  content: ""
+auth:
+  type: apikey
+  credentials:
+    key: nca_sid
+    value: "{{apiKey}}"
+    in: header
+settings: {}
+examples: ./.resources/Get Comparison Groups.resources/examples
+order: 1000

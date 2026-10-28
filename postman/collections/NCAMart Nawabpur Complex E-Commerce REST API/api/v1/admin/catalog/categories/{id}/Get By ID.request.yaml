@@ -1,0 +1,42 @@
+$kind: http-request
+description: |
+  Handles **GET** requests on `/api/v1/admin/catalog/categories/{id}`.
+
+  - **Authentication:** STAFF
+  - **Required Permission:** `catalog.read`
+  - **Source File:** `src/app/api/v1/admin/catalog/categories/[id]/route.ts`
+url: "{{baseUrl}}/api/v1/admin/catalog/categories/:id"
+method: GET
+headers:
+  Accept: application/json
+pathVariables:
+  - key: id
+    value: c4918a22-3819-4b62-8172-108291a92847
+    disabled: false
+    description: ""
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "value": {
+            "description": "Identifier for id",
+            "type": "string",
+            "example": "c4918a22-3819-4b62-8172-108291a92847"
+          }
+        },
+        "required": [
+          "value"
+        ]
+      }
+body:
+  type: text
+  content: ""
+auth:
+  type: apikey
+  credentials:
+    key: nca_sid
+    value: "{{apiKey}}"
+    in: header
+settings: {}
+examples: ./.resources/Get By ID.resources/examples
+order: 2000

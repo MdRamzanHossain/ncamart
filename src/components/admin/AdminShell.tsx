@@ -10,6 +10,7 @@ interface AdminShellProps {
 
 export function AdminShell({ children }: AdminShellProps) {
   const [activeRole, setActiveRole] = useState<AdminRole>("SUPER_ADMIN");
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   return (
     <div className="admin-shell-layout" data-testid="admin-shell">
@@ -18,14 +19,33 @@ export function AdminShell({ children }: AdminShellProps) {
         Skip to admin operations
       </a>
 
+      {/* Mobile Sidebar Backdrop */}
+      {isMobileSidebarOpen && (
+        <div
+          className="admin-sidebar-backdrop"
+          onClick={() => setIsMobileSidebarOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
       {/* Persistent Left RBAC Sidebar */}
-      <AdminSidebar currentRole={activeRole} onRoleChange={setActiveRole} />
+      <div className={`admin-sidebar-wrapper ${isMobileSidebarOpen ? "open" : ""}`}>
+        <AdminSidebar currentRole={activeRole} onRoleChange={setActiveRole} />
+      </div>
 
       {/* Main Content Area */}
       <div className="admin-main-wrap">
         {/* Top Navbar */}
         <header className="admin-topbar">
           <div className="topbar-left">
+            <button
+              type="button"
+              className="admin-mobile-menu-btn"
+              onClick={() => setIsMobileSidebarOpen((v) => !v)}
+              aria-label="Toggle admin navigation"
+            >
+              ☰
+            </button>
             <span className="location-pill">📍 Nawabpur Central Godown Hub</span>
             <span className="sep">/</span>
             <span className="breadcrumb-current">Control Center</span>
@@ -198,6 +218,62 @@ export function AdminShell({ children }: AdminShellProps) {
           flex: 1;
           display: flex;
           flex-direction: column;
+        }
+
+        .admin-mobile-menu-btn {
+          display: none;
+          width: 34px;
+          height: 34px;
+          border-radius: 8px;
+          background: rgba(255, 255, 255, 0.06);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          color: #f8fafc;
+          align-items: center;
+          justify-content: center;
+          font-size: 16px;
+          cursor: pointer;
+        }
+
+        .admin-sidebar-backdrop {
+          display: none;
+        }
+
+        @media (max-width: 900px) {
+          .admin-mobile-menu-btn {
+            display: inline-flex;
+          }
+
+          .admin-sidebar-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            z-index: 200;
+            transform: translateX(-100%);
+            transition: transform 0.22s ease;
+          }
+
+          .admin-sidebar-wrapper.open {
+            transform: translateX(0);
+          }
+
+          .admin-sidebar-backdrop {
+            display: block;
+            position: fixed;
+            inset: 0;
+            background: rgba(2, 6, 23, 0.65);
+            backdrop-filter: blur(4px);
+            z-index: 190;
+          }
+
+          .admin-topbar {
+            padding: 0 12px;
+          }
+
+          .sep,
+          .breadcrumb-current {
+            display: none;
+          }
         }
       `}</style>
     </div>

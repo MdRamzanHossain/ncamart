@@ -1,0 +1,16 @@
+$kind: http-request
+description: |
+  Handles **GET** requests on `/api/v1/admin/staff`.
+
+  - **Authentication:** STAFF
+  - **Required Permission:** `staff.manage`
+  - **Source File:** `src/app/api/v1/admin/staff/route.ts`
+url: "{{baseUrl}}/api/v1/admin/staff"
+method: GET
+headers:
+  - key: Accept
+    value: application/json
+  - key: Cookie
+    value: nca_sid={{sessionToken}}
+    description: Session authentication cookie
+order: 98000

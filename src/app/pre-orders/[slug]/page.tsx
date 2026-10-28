@@ -13,7 +13,11 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const item = MOCK_PREORDERS.find((p) => p.slug === slug) || MOCK_PREORDERS[0];
+  const item = MOCK_PREORDERS.find((p) => p.slug === slug) ?? MOCK_PREORDERS[0];
+
+  if (!item) {
+    return { title: "Pre-Order | NCAMart Air-Freight Import" };
+  }
 
   return {
     title: `Pre-Order: ${item.title_en} | NCAMart Air-Freight Import`,
@@ -23,7 +27,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function PreOrderPDPPage({ params }: PageProps) {
   const { slug } = await params;
-  const item = MOCK_PREORDERS.find((p) => p.slug === slug);
+  const item =
+    MOCK_PREORDERS.find((p) => p.slug === slug || slug.includes(p.brand_slug)) || MOCK_PREORDERS[0];
 
   if (!item) {
     notFound();

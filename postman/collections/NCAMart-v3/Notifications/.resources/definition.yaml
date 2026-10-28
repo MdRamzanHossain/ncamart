@@ -1,0 +1,3 @@
+$kind: collection
+description: Endpoints related to Notifications
+order: 15000

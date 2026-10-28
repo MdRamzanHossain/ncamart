@@ -1,0 +1,14 @@
+$kind: http-request
+name: Get By ID
+description: |
+  Handles **GET** requests on `/api/v1/catalog/products/{slug}`.
+
+  - **Authentication:** PUBLIC
+  - **Source File:** `src/app/api/v1/catalog/products/[slug]/route.ts`
+url: "{{baseUrl}}/api/v1/catalog/products/:slug"
+method: GET
+headers:
+  Accept: application/json
+pathVariables:
+  slug: c4918a22-3819-4b62-8172-108291a92847
+order: 4000

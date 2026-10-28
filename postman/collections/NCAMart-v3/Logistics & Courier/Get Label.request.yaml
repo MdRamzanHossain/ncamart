@@ -1,0 +1,17 @@
+$kind: http-request
+description: |
+  Handles **GET** requests on `/api/v1/logistics/shipments/{id}/label`.
+
+  - **Authentication:** STAFF
+  - **Source File:** `src/app/api/v1/logistics/shipments/[id]/label/route.ts`
+url: "{{baseUrl}}/api/v1/logistics/shipments/:id/label"
+method: GET
+headers:
+  - key: Accept
+    value: application/json
+  - key: Cookie
+    value: nca_sid={{sessionToken}}
+    description: Session authentication cookie
+pathVariables:
+  id: c4918a22-3819-4b62-8172-108291a92847
+order: 6000

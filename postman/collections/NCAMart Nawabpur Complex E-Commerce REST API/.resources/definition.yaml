@@ -1,0 +1,18 @@
+$kind: collection
+description: |-
+  ## NCAMart Production REST API Specification
+
+  Welcome to the **NCAMart** OpenAPI 3.1 specification. NCAMart is an e-commerce platform rooted in Dhaka's historic Nawabpur tech market, featuring a dual-tier catalog (Authentic vs. Budget Smart), strict Crockford Base32 tamper-evident holographic seals, double-entry financial ledger accounting, pre-order clearance workflows, field-runner physical sourcing, and multi-channel fulfillment.
+
+  ### Architectural Invariants & Standards:
+  1. **Monetary Representation:** Integer Paisa (`1 BDT = 100 Paisa`).
+  2. **Percentages:** Integer Basis Points (`1% = 100 bp`).
+  3. **Session Authentication:** `nca_sid` HttpOnly cookie or `Authorization: Bearer <token>`.
+  4. **Idempotency:** Mutating operations support `Idempotency-Key` (UUIDv7) or `X-Client-Mutation-Id`.
+  5. **Errors:** RFC 7807 compatible error envelope with bilingual messages.
+
+  Contact Support:
+   Name: NCAMart Engineering & Compliance
+   Email: engineering@ncamart.com
+variables:
+  baseUrl: http://127.0.0.1:3000

@@ -1,0 +1,17 @@
+$kind: http-request
+description: |
+  Handles **GET** requests on `/api/v1/orders/{orderNumber}/refunds`.
+
+  - **Authentication:** ANY
+  - **Source File:** `src/app/api/v1/orders/[orderNumber]/refunds/route.ts`
+url: "{{baseUrl}}/api/v1/orders/:orderNumber/refunds"
+method: GET
+headers:
+  - key: Accept
+    value: application/json
+  - key: Cookie
+    value: nca_sid={{sessionToken}}
+    description: Session authentication cookie
+pathVariables:
+  orderNumber: c4918a22-3819-4b62-8172-108291a92847
+order: 11000

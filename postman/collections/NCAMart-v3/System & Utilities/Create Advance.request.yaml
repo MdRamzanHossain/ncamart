@@ -1,0 +1,30 @@
+$kind: http-request
+description: |
+  Handles **POST** requests on `/api/v1/_dev/courier/{consignment}/advance`.
+
+  - **Authentication:** PUBLIC
+  - **Source File:** `src/app/api/v1/_dev/courier/[consignment]/advance/route.ts`
+url: "{{baseUrl}}/api/v1/_dev/courier/:consignment/advance"
+method: POST
+headers:
+  - key: Accept
+    value: application/json
+  - key: Content-Type
+    value: application/json
+  - key: Idempotency-Key
+    value: "{{$guid}}"
+    description: UUIDv7 idempotency key for safe mutating requests
+  - key: Idempotency-Key
+    value: ""
+    disabled: true
+    description: ""
+  - key: X-Client-Mutation-Id
+    value: ""
+    disabled: true
+    description: ""
+pathVariables:
+  consignment: c4918a22-3819-4b62-8172-108291a92847
+body:
+  type: json
+  content: "{}"
+order: 4000

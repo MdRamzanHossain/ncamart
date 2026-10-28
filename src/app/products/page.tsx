@@ -126,16 +126,41 @@ function CatalogContent() {
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
 
+  // Derive category from path if navigating to /catalog/[slug] or /categories/[slug]
+  const pathCategory = React.useMemo(() => {
+    const parts = pathname.split("/").filter(Boolean);
+    if ((parts[0] === "catalog" || parts[0] === "categories") && parts.length > 1) {
+      return parts[parts.length - 1];
+    }
+    return "";
+  }, [pathname]);
+
   // Initialize filters from URL query parameters
   const [filters, setFilters] = useState<CatalogFilterState>(() => ({
     tier: (searchParams.get("tier") as "AUTHENTIC" | "BUDGET_SMART") || "",
-    category: searchParams.get("category") || "",
+    category: searchParams.get("category") || pathCategory || "",
     brand: searchParams.get("brand") || "",
     minPrice: searchParams.get("minPrice") ? Number(searchParams.get("minPrice")) : undefined,
     maxPrice: searchParams.get("maxPrice") ? Number(searchParams.get("maxPrice")) : undefined,
     inStockOnly: searchParams.get("inStockOnly") === "true",
     wattage: searchParams.get("wattage") || "",
   }));
+
+  // Sync filter state when URL searchParams or path changes via Navbar/MegaMenu navigation
+  useEffect(() => {
+    setFilters({
+      tier: (searchParams.get("tier") as "AUTHENTIC" | "BUDGET_SMART") || "",
+      category: searchParams.get("category") || pathCategory || "",
+      brand: searchParams.get("brand") || "",
+      minPrice: searchParams.get("minPrice") ? Number(searchParams.get("minPrice")) : undefined,
+      maxPrice: searchParams.get("maxPrice") ? Number(searchParams.get("maxPrice")) : undefined,
+      inStockOnly: searchParams.get("inStockOnly") === "true",
+      wattage: searchParams.get("wattage") || "",
+    });
+    if (searchParams.get("sort")) {
+      setSort(searchParams.get("sort") || "NEWEST");
+    }
+  }, [searchParams, pathCategory]);
 
   const [sort, setSort] = useState<string>(searchParams.get("sort") || "NEWEST");
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);

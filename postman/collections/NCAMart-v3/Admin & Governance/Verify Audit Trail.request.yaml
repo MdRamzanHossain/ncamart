@@ -1,0 +1,17 @@
+$kind: http-request
+description: |
+  Handles **GET** requests on `/api/v1/admin/security/audit-trail/verify`.
+
+  - **Authentication:** STAFF
+  - **Required Permission:** `audit.read`
+  - **Rate Limit:** 5/min per device, 60/min per IP
+  - **Source File:** `src/app/api/v1/admin/security/audit-trail/verify/route.ts`
+url: "{{baseUrl}}/api/v1/admin/security/audit-trail/verify"
+method: GET
+headers:
+  - key: Accept
+    value: application/json
+  - key: Cookie
+    value: nca_sid={{sessionToken}}
+    description: Session authentication cookie
+order: 83000

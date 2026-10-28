@@ -1,0 +1,11 @@
+$kind: http-request
+description: |
+  Handles **GET** requests on `/api/docs`.
+
+  - **Authentication:** PUBLIC
+  - **Source File:** `src/app/api/docs/route.ts`
+url: "{{baseUrl}}/api/docs"
+method: GET
+headers:
+  Accept: application/json
+order: 2000

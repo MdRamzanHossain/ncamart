@@ -1,0 +1,87 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/v1/admin/catalog/categories/:id/spec-fields"
+  method: GET
+  headers:
+    - key: Accept
+      value: application/json
+    - key: nca_sid
+      value: <API Key>
+      description: "Added as a part of security scheme: apikey"
+  pathVariables:
+    id: c4918a22-3819-4b62-8172-108291a92847
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 401
+  statusText: Unauthorized
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "error": {
+          "code": "ERR_VALIDATION",
+          "message": "Invalid request payload or missing parameters",
+          "status": 400,
+          "timestamp": "2026-10-25T12:00:00.000Z",
+          "details": {
+            "field": "phone",
+            "message": "Must be a valid Bangladeshi MSISDN"
+          }
+        }
+      }
+    $type: |-
+      {
+        "description": "Standard NCAMart RFC 7807 error response envelope",
+        "title": "ErrorEnvelope",
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "example": "ERR_VALIDATION",
+                "description": "Standard machine-readable error code"
+              },
+              "message": {
+                "type": "string",
+                "example": "Invalid request payload or missing parameters",
+                "description": "Human-readable bilingual explanation of the error"
+              },
+              "status": {
+                "type": "integer",
+                "example": 400,
+                "description": "HTTP status code matching the response"
+              },
+              "details": {
+                "type": "object",
+                "example": {
+                  "field": "phone",
+                  "message": "Must be a valid Bangladeshi MSISDN"
+                },
+                "description": "Structured contextual debugging details or validation errors"
+              },
+              "timestamp": {
+                "type": "string",
+                "example": "2026-10-25T12:00:00.000Z",
+                "description": "ISO 8601 UTC timestamp of when error occurred",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "code",
+              "message",
+              "status",
+              "timestamp"
+            ]
+          }
+        },
+        "required": [
+          "error"
+        ]
+      }
+order: 3000

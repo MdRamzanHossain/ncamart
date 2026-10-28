@@ -7,6 +7,7 @@ import { AuthenticBadge, BudgetSmartBadge } from "@/components/ui/badge";
 export function Footer() {
   return (
     <footer
+      className="storefront-footer"
       style={{
         backgroundColor: "var(--bg-canvas)",
         borderTop: "1px solid var(--border-default)",
@@ -21,7 +22,7 @@ export function Footer() {
           maxWidth: "1400px",
           margin: "0 auto",
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))",
           gap: "var(--space-3xl)",
           paddingBottom: "var(--space-3xl)",
           borderBottom: "1px solid var(--border-subtle)",
@@ -84,7 +85,7 @@ export function Footer() {
           <Link href="/pages/budget-smart-testing" style={{ color: "inherit" }}>
             Budget Smart 3-Point QC Protocol
           </Link>
-          <Link href="/preorder" style={{ color: "inherit" }}>
+          <Link href="/pre-orders" style={{ color: "inherit" }}>
             Pre-Order Milestone Journey & Deposits
           </Link>
           <Link href="/pages/warranty-policy" style={{ color: "inherit" }}>

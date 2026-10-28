@@ -1,0 +1,33 @@
+$kind: http-request
+description: |
+  Handles **POST** requests on `/api/v1/orders/checkout`.
+
+  - **Authentication:** CUSTOMER
+  - **Idempotency:** Supported via `Idempotency-Key` header (Scope: `checkout`)
+  - **Rate Limit:** 10/hr per customer flag
+  - **Source File:** `src/app/api/v1/orders/checkout/route.ts`
+url: "{{baseUrl}}/api/v1/orders/checkout"
+method: POST
+headers:
+  - key: Accept
+    value: application/json
+  - key: Content-Type
+    value: application/json
+  - key: Idempotency-Key
+    value: "{{$guid}}"
+    description: UUIDv7 idempotency key for safe mutating requests
+  - key: Idempotency-Key
+    value: ""
+    disabled: true
+    description: ""
+  - key: X-Client-Mutation-Id
+    value: ""
+    disabled: true
+    description: ""
+  - key: Cookie
+    value: nca_sid={{sessionToken}}
+    description: Session authentication cookie
+body:
+  type: json
+  content: "{}"
+order: 13000

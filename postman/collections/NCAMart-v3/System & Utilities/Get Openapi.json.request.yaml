@@ -1,0 +1,11 @@
+$kind: http-request
+description: |
+  Handles **GET** requests on `/api/v1/openapi.json`.
+
+  - **Authentication:** PUBLIC
+  - **Source File:** `src/app/api/v1/openapi.json/route.ts`
+url: "{{baseUrl}}/api/v1/openapi.json"
+method: GET
+headers:
+  Accept: application/json
+order: 5000

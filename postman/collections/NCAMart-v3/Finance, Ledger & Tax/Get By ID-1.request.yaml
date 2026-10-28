@@ -1,0 +1,18 @@
+$kind: http-request
+name: Get By ID
+description: |
+  Handles **GET** requests on `/api/v1/finance/reports/{reportType}`.
+
+  - **Authentication:** STAFF
+  - **Source File:** `src/app/api/v1/finance/reports/[reportType]/route.ts`
+url: "{{baseUrl}}/api/v1/finance/reports/:reportType"
+method: GET
+headers:
+  - key: Accept
+    value: application/json
+  - key: Cookie
+    value: nca_sid={{sessionToken}}
+    description: Session authentication cookie
+pathVariables:
+  reportType: c4918a22-3819-4b62-8172-108291a92847
+order: 19000

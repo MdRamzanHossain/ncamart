@@ -1,0 +1,11 @@
+$kind: http-request
+description: |
+  Handles **GET** requests on `/feeds/google.xml`.
+
+  - **Authentication:** PUBLIC
+  - **Source File:** `src/app/feeds/google.xml/route.ts`
+url: "{{baseUrl}}/feeds/google.xml"
+method: GET
+headers:
+  Accept: application/json
+order: 1000

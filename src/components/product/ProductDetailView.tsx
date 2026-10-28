@@ -29,9 +29,9 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
 
   // Read initial SKU from URL param or default to first SKU
   const initialSkuCode = searchParams ? searchParams.get("sku") : null;
-  const initialSku =
-    product.skus.find((s) => s.sku_code === initialSkuCode || s.id === initialSkuCode) ||
-    product.skus[0];
+  const initialSku: ProductSkuVariant =
+    product.skus.find((s) => s.sku_code === initialSkuCode || s.id === initialSkuCode) ??
+    product.skus[0]!;
 
   const [selectedSku, setSelectedSku] = useState<ProductSkuVariant>(initialSku);
 
@@ -108,13 +108,13 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
           gap: "40px",
           alignItems: "start",
         }}
       >
         {/* Left Column: Media Gallery */}
-        <div style={{ position: "sticky", top: "90px" }}>
+        <div className="pdp-media-sticky" style={{ position: "sticky", top: "90px" }}>
           <MediaGallery media={product.media} productTitle={product.title_en} />
         </div>
 
@@ -450,6 +450,7 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
       {/* Tabs Section: Specifications, Description & Highlights */}
       <div style={{ marginTop: "60px" }}>
         <div
+          className="pdp-tabs-header"
           style={{
             display: "flex",
             borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
@@ -656,7 +657,7 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
         productId={product.id}
         skuCode={selectedSku.sku_code}
         productTitle={product.title_en}
-        skuTitle={selectedSku.title_en}
+        skuTitle={selectedSku.title_en ?? selectedSku.sku_code}
         tier={product.product_tier}
         initialSummary={{
           averageRating: product.rating,

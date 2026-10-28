@@ -16,7 +16,7 @@ export function MobileBottomNav({ onOpenCategories, onCartClick }: MobileBottomN
 
   const isHome = pathname === "/";
   const isVerify = pathname.startsWith("/verify");
-  const isWishlist = pathname.startsWith("/customer/wishlist") || pathname === "/wishlist";
+  const isWishlist = pathname.startsWith("/account/wishlist") || pathname.startsWith("/customer/wishlist") || pathname === "/wishlist";
   const isCart = pathname.startsWith("/cart");
 
   return (
@@ -148,7 +148,7 @@ export function MobileBottomNav({ onOpenCategories, onCartClick }: MobileBottomN
 
         {/* 4. Wishlist Tab */}
         <Link
-          href="/customer/wishlist"
+          href="/account/wishlist"
           style={{
             display: "flex",
             flexDirection: "column",

@@ -1,0 +1,16 @@
+$kind: http-request
+name: Get Suppliers
+description: |
+  Handles **GET** requests on `/api/v1/admin/suppliers`.
+
+  - **Authentication:** STAFF
+  - **Source File:** `src/app/api/v1/admin/suppliers/route.ts`
+url: "{{baseUrl}}/api/v1/admin/suppliers"
+method: GET
+headers:
+  - key: Accept
+    value: application/json
+  - key: Cookie
+    value: nca_sid={{sessionToken}}
+    description: Session authentication cookie
+order: 105000

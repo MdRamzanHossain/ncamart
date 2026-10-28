@@ -1,0 +1,3 @@
+$kind: collection
+description: Endpoints related to External Webhooks
+order: 8000

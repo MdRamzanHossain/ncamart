@@ -1,0 +1,15 @@
+$kind: http-request
+description: |
+  Handles **GET** requests on `/api/v1/admin/reviews`.
+
+  - **Authentication:** STAFF
+  - **Source File:** `src/app/api/v1/admin/reviews/route.ts`
+url: "{{baseUrl}}/api/v1/admin/reviews"
+method: GET
+headers:
+  - key: Accept
+    value: application/json
+  - key: Cookie
+    value: nca_sid={{sessionToken}}
+    description: Session authentication cookie
+order: 80000

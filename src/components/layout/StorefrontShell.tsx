@@ -36,6 +36,7 @@ export function StorefrontShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div
+      className="storefront-shell-root"
       style={{
         display: "flex",
         flexDirection: "column",

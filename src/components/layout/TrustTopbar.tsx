@@ -9,6 +9,7 @@ export function TrustTopbar() {
 
   return (
     <div
+      className="topbar-root"
       style={{
         backgroundColor: "var(--bg-canvas)",
         borderBottom: "1px solid var(--border-subtle)",
@@ -23,12 +24,12 @@ export function TrustTopbar() {
       }}
     >
       {/* Physical Showroom Location */}
-      <div style={{ display: "flex", alignItems: "center", gap: "var(--space-xs)" }}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-brand-primary)" strokeWidth="2">
+      <div style={{ display: "flex", alignItems: "center", gap: "var(--space-xs)", minWidth: 0 }}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-brand-primary)" strokeWidth="2" style={{ flexShrink: 0 }}>
           <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
           <circle cx="12" cy="10" r="3" />
         </svg>
-        <span>
+        <span className="topbar-location-text">
           {locale === "bn"
             ? "দোকান ৪২, নবাবপুর কমপ্লেক্স, সুন্দরবন স্কোয়ার, ঢাকা"
             : "Shop 42, Nawabpur Complex, Sundarban Square, Dhaka"}
@@ -37,6 +38,7 @@ export function TrustTopbar() {
 
       {/* Trust Metrics Ticker */}
       <div
+        className="topbar-metrics-ticker"
         style={{
           display: "flex",
           alignItems: "center",
@@ -63,7 +65,7 @@ export function TrustTopbar() {
       </div>
 
       {/* Right Controls: Currency & Language Switcher & Theme */}
-      <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)" }}>
+      <div className="topbar-right-controls" style={{ display: "flex", alignItems: "center", gap: "var(--space-md)" }}>
         {/* Currency Indicator */}
         <span
           style={{

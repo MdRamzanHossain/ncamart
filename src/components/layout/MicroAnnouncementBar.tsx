@@ -9,6 +9,7 @@ export function MicroAnnouncementBar() {
 
   return (
     <div
+      className="announcement-root"
       style={{
         background: "linear-gradient(90deg, #1e293b 0%, #0f172a 50%, #1e293b 100%)",
         borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
@@ -23,6 +24,7 @@ export function MicroAnnouncementBar() {
       }}
     >
       <div
+        className="announcement-inner"
         style={{
           display: "flex",
           alignItems: "center",
@@ -40,6 +42,7 @@ export function MicroAnnouncementBar() {
             fontSize: "10px",
             textTransform: "uppercase",
             letterSpacing: "0.05em",
+            flexShrink: 0,
           }}
         >
           Daily SLA
@@ -49,9 +52,9 @@ export function MicroAnnouncementBar() {
           দুপুর ২:০০ টার পূর্বে অর্ডার করলে ঢাকা সিটিতে আজই ডেলিভারি · <strong>Orders placed before 2:00 PM ship today inside Dhaka</strong>
         </span>
 
-        <span style={{ color: "var(--border-strong)" }}>|</span>
+        <span className="announcement-secondary" style={{ color: "var(--border-strong)" }}>|</span>
 
-        <span style={{ color: "var(--tier-budget-teal)" }}>
+        <span className="announcement-secondary" style={{ color: "var(--tier-budget-teal)" }}>
           Direct Nawabpur Complex Import Wholesale Hub
         </span>
       </div>

@@ -1,0 +1,14 @@
+$kind: http-request
+description: |
+  Handles **GET** requests on `/api/v1/verify/{sealId}`.
+
+  - **Authentication:** PUBLIC
+  - **Rate Limit:** 5/min per device, 60/min per IP
+  - **Source File:** `src/app/api/v1/verify/[sealId]/route.ts`
+url: "{{baseUrl}}/api/v1/verify/:sealId"
+method: GET
+headers:
+  Accept: application/json
+pathVariables:
+  sealId: c4918a22-3819-4b62-8172-108291a92847
+order: 2000

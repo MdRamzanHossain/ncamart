@@ -1,0 +1,17 @@
+$kind: http-request
+description: |
+  Handles **GET** requests on `/api/v1/finance/ledger/accounts/{code}/statement`.
+
+  - **Authentication:** STAFF
+  - **Source File:** `src/app/api/v1/finance/ledger/accounts/[code]/statement/route.ts`
+url: "{{baseUrl}}/api/v1/finance/ledger/accounts/:code/statement"
+method: GET
+headers:
+  - key: Accept
+    value: application/json
+  - key: Cookie
+    value: nca_sid={{sessionToken}}
+    description: Session authentication cookie
+pathVariables:
+  code: c4918a22-3819-4b62-8172-108291a92847
+order: 14000

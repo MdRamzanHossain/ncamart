@@ -110,7 +110,7 @@ export function TestimonialsAndNewsletter() {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 260px), 1fr))",
           gap: "var(--space-lg)",
           marginBottom: "var(--space-2xl)",
         }}
@@ -273,6 +273,7 @@ export function TestimonialsAndNewsletter() {
         {/* Input Form */}
         <form
           onSubmit={handleSubscribe}
+          className="newsletter-form"
           style={{
             display: "flex",
             gap: "var(--space-xs)",

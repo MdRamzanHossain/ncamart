@@ -1,0 +1,15 @@
+$kind: http-request
+description: |
+  Handles **GET** requests on `/api/v1/finance/dashboard`.
+
+  - **Authentication:** STAFF
+  - **Source File:** `src/app/api/v1/finance/dashboard/route.ts`
+url: "{{baseUrl}}/api/v1/finance/dashboard"
+method: GET
+headers:
+  - key: Accept
+    value: application/json
+  - key: Cookie
+    value: nca_sid={{sessionToken}}
+    description: Session authentication cookie
+order: 2000

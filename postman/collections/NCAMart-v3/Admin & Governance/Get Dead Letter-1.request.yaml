@@ -1,0 +1,17 @@
+$kind: http-request
+name: Get Dead Letter
+description: |
+  Handles **GET** requests on `/api/v1/admin/queues/dead-letter`.
+
+  - **Authentication:** STAFF
+  - **Required Permission:** `queues.admin`
+  - **Source File:** `src/app/api/v1/admin/queues/dead-letter/route.ts`
+url: "{{baseUrl}}/api/v1/admin/queues/dead-letter"
+method: GET
+headers:
+  - key: Accept
+    value: application/json
+  - key: Cookie
+    value: nca_sid={{sessionToken}}
+    description: Session authentication cookie
+order: 72000

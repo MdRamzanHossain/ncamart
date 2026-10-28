@@ -16,7 +16,7 @@ interface HubLocation {
   icon: string;
 }
 
-const HUBS: HubLocation[] = [
+const HUBS: [HubLocation, ...HubLocation[]] = [
   {
     id: "hub-showroom",
     name: "Showroom & Pickup Counter",
@@ -128,7 +128,7 @@ export function NawabpurMarketMap() {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
           gap: "var(--space-xl)",
           alignItems: "center",
         }}

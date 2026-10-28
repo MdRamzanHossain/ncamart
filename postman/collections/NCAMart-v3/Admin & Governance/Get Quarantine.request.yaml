@@ -1,0 +1,16 @@
+$kind: http-request
+description: |
+  Handles **GET** requests on `/api/v1/admin/sourcing/quarantine`.
+
+  - **Authentication:** STAFF
+  - **Required Permission:** `sourcing.quarantine.review`
+  - **Source File:** `src/app/api/v1/admin/sourcing/quarantine/route.ts`
+url: "{{baseUrl}}/api/v1/admin/sourcing/quarantine"
+method: GET
+headers:
+  - key: Accept
+    value: application/json
+  - key: Cookie
+    value: nca_sid={{sessionToken}}
+    description: Session authentication cookie
+order: 90000

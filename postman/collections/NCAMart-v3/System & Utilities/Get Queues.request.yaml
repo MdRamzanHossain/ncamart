@@ -1,0 +1,16 @@
+$kind: http-request
+description: |
+  Handles **GET** requests on `/admin/queues`.
+
+  - **Authentication:** STAFF
+  - **Required Permission:** `queues.admin`
+  - **Source File:** `src/app/admin/queues/route.ts`
+url: "{{baseUrl}}/admin/queues"
+method: GET
+headers:
+  - key: Accept
+    value: application/json
+  - key: Cookie
+    value: nca_sid={{sessionToken}}
+    description: Session authentication cookie
+order: 1000

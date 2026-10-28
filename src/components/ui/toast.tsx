@@ -18,6 +18,7 @@ export interface ToastItem {
 export interface ToastContextValue {
   toasts: ToastItem[];
   toast: (options: Omit<ToastItem, "id" | "createdAt">) => string;
+  addToast: (options: Omit<ToastItem, "id" | "createdAt"> & { type?: ToastVariant; message?: string }) => string;
   dismissToast: (id: string) => void;
   toastError: (err: unknown, fallbackMessage?: string) => string;
 }
@@ -84,8 +85,19 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     [toast]
   );
 
+  const addToast = useCallback(
+    (options: Omit<ToastItem, "id" | "createdAt"> & { type?: ToastVariant; message?: string }) => {
+      return toast({
+        ...options,
+        title: options.title || options.message || "Notification",
+        variant: options.variant || options.type || "neutral",
+      });
+    },
+    [toast]
+  );
+
   return (
-    <ToastContext.Provider value={{ toasts, toast, dismissToast, toastError }}>
+    <ToastContext.Provider value={{ toasts, toast, addToast, dismissToast, toastError }}>
       {children}
       {/* Toast Viewport Container */}
       <div

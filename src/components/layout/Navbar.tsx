@@ -36,6 +36,7 @@ export function Navbar({
     <>
       <nav
         aria-label="Main navigation"
+        className="navbar-root"
         style={{
           position: "sticky",
           top: 0,
@@ -50,6 +51,7 @@ export function Navbar({
         }}
       >
         <div
+          className="navbar-container"
           style={{
             maxWidth: "1400px",
             margin: "0 auto",
@@ -60,7 +62,7 @@ export function Navbar({
           }}
         >
           {/* Left Brand & MegaMenu */}
-          <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)" }}>
+          <div className="navbar-left-group" style={{ display: "flex", alignItems: "center", gap: "var(--space-md)" }}>
             {/* Mobile Hamburger Button */}
             <button
               type="button"
@@ -96,6 +98,7 @@ export function Navbar({
             >
 
               <div
+                className="navbar-logo-box"
                 style={{
                   width: "38px",
                   height: "38px",
@@ -119,6 +122,7 @@ export function Navbar({
               <div style={{ display: "flex", flexDirection: "column" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                   <span
+                    className="navbar-brand-title"
                     style={{
                       fontFamily: "var(--font-family-display)",
                       fontWeight: "800",
@@ -130,6 +134,7 @@ export function Navbar({
                     NCA<span style={{ color: "var(--color-brand-primary)" }}>MART</span>
                   </span>
                   <span
+                    className="navbar-nawabpur-badge"
                     style={{
                       fontSize: "9px",
                       textTransform: "uppercase",
@@ -145,6 +150,7 @@ export function Navbar({
                   </span>
                 </div>
                 <span
+                  className="navbar-brand-subtitle"
                   style={{
                     fontSize: "10px",
                     color: "var(--text-tertiary)",
@@ -157,11 +163,14 @@ export function Navbar({
             </Link>
 
             {/* Mega Menu Dropdown */}
-            <MegaMenu />
+            <div className="navbar-megamenu-wrap">
+              <MegaMenu />
+            </div>
           </div>
 
           {/* Center Category Links */}
           <div
+            className="navbar-center-links"
             style={{
               display: "flex",
               alignItems: "center",
@@ -203,7 +212,7 @@ export function Navbar({
             </Link>
 
             <Link
-              href="/preorder"
+              href="/pre-orders"
               style={{
                 fontSize: "var(--font-size-sm)",
                 fontWeight: "var(--font-weight-medium)",
@@ -239,12 +248,13 @@ export function Navbar({
           </div>
 
           {/* Right Action Icons: Search, Notifications, Cart, Account */}
-          <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)" }}>
+          <div className="navbar-right-group" style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)" }}>
             {/* Search Quick Button */}
             <button
               type="button"
               onClick={onSearchClick}
               aria-label="Search catalog (Ctrl+K or Cmd+K)"
+              className="navbar-search-btn"
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -263,8 +273,9 @@ export function Navbar({
                 <circle cx="11" cy="11" r="8" />
                 <line x1="21" y1="21" x2="16.65" y2="16.65" />
               </svg>
-              <span>Search products...</span>
+              <span className="navbar-search-label">Search products...</span>
               <kbd
+                className="navbar-search-kbd"
                 style={{
                   backgroundColor: "var(--bg-surface-active)",
                   border: "1px solid var(--border-subtle)",
@@ -345,7 +356,7 @@ export function Navbar({
                 cursor: "pointer",
                 transition: "all var(--duration-fast) ease",
               }}
-              className="interactive-scale"
+              className="interactive-scale navbar-wishlist-btn"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
@@ -373,14 +384,14 @@ export function Navbar({
                 cursor: "pointer",
                 boxShadow: "0 2px 10px var(--color-brand-primary-glow)",
               }}
-              className="interactive-scale"
+              className="interactive-scale navbar-cart-btn"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <circle cx="8" cy="21" r="1" />
                 <circle cx="19" cy="21" r="1" />
                 <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
               </svg>
-              <span>Cart</span>
+              <span className="navbar-cart-label">Cart</span>
               <span
                 style={{
                   backgroundColor: "rgba(255, 255, 255, 0.25)",
@@ -425,9 +436,9 @@ export function Navbar({
                     fontWeight: "bold",
                   }}
                 >
-                  {(user?.name || user?.phone || "U")[0].toUpperCase()}
+                  {(user?.name || user?.phone || "U").charAt(0).toUpperCase()}
                 </div>
-                <span>{user?.isStaff ? "Backoffice" : "Account"}</span>
+                <span className="navbar-account-label">{user?.isStaff ? "Backoffice" : "Account"}</span>
               </Link>
             ) : (
               <Link
@@ -440,7 +451,7 @@ export function Navbar({
                   borderRadius: "var(--radius-sm)",
                   border: "1px solid var(--border-default)",
                 }}
-                className="interactive-scale"
+                className="interactive-scale navbar-login-btn"
               >
                 Login
               </Link>
@@ -455,16 +466,6 @@ export function Navbar({
         onClose={() => setIsNotificationOpen(false)}
         onUnreadCountChange={(c) => setUnreadCount(c)}
       />
-
-      <style jsx global>{`
-        @media (max-width: 768px) {
-          .mobile-hamburger-btn {
-            display: flex !important;
-            align-items: center;
-            justifyContent: center;
-          }
-        }
-      `}</style>
     </>
   );
 }

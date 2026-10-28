@@ -1,0 +1,60 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/v1/admin/godown/receive-runner-items"
+  method: POST
+  headers:
+    - key: Idempotency-Key
+      value: 0192b0c3-4d5e-7a1b-8c2d-3e4f5a6b7c8d
+      disabled: false
+      description: ""
+    - key: X-Client-Mutation-Id
+      value: b553c4cb-02c7-4b77-aa1a-8c7b0fbc1f33
+      disabled: false
+      description: ""
+    - key: Content-Type
+      value: application/json
+    - key: Accept
+      value: application/json
+    - key: nca_sid
+      value: <API Key>
+      description: "Added as a part of security scheme: apikey"
+  body:
+    type: json
+    content: |-
+      {
+        "key_0": "string",
+        "key_1": false,
+        "key_2": 2506.270296796984
+      }
+response:
+  statusCode: 201
+  statusText: Created
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "success": true,
+        "message": "Operation completed successfully"
+      }
+    $type: |-
+      {
+        "description": "Standard success response confirmation",
+        "title": "GenericSuccess",
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Operation completed successfully"
+          }
+        },
+        "required": [
+          "success"
+        ]
+      }
+order: 1000

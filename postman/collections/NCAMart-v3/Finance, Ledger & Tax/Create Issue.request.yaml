@@ -1,0 +1,31 @@
+$kind: http-request
+description: |
+  Handles **POST** requests on `/api/v1/finance/float/issue`.
+
+  - **Authentication:** STAFF
+  - **Source File:** `src/app/api/v1/finance/float/issue/route.ts`
+url: "{{baseUrl}}/api/v1/finance/float/issue"
+method: POST
+headers:
+  - key: Accept
+    value: application/json
+  - key: Content-Type
+    value: application/json
+  - key: Idempotency-Key
+    value: "{{$guid}}"
+    description: UUIDv7 idempotency key for safe mutating requests
+  - key: Idempotency-Key
+    value: ""
+    disabled: true
+    description: ""
+  - key: X-Client-Mutation-Id
+    value: ""
+    disabled: true
+    description: ""
+  - key: Cookie
+    value: nca_sid={{sessionToken}}
+    description: Session authentication cookie
+body:
+  type: json
+  content: "{}"
+order: 9000

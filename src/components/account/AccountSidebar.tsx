@@ -144,9 +144,12 @@ export function AccountSidebar({
         <button
           type="button"
           className="nav-item logout-btn"
-          onClick={() => {
+          onClick={async () => {
             if (typeof window !== "undefined") {
-              window.location.href = "/api/v1/auth/logout";
+              await fetch("/api/v1/auth/logout", { method: "POST" }).catch(() => {});
+              localStorage.removeItem("nca_token");
+              localStorage.removeItem("nca_user");
+              window.location.href = "/auth/login";
             }
           }}
         >

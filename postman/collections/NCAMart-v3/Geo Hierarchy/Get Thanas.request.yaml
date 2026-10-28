@@ -1,0 +1,11 @@
+$kind: http-request
+description: |
+  Handles **GET** requests on `/api/v1/geo/thanas`.
+
+  - **Authentication:** PUBLIC
+  - **Source File:** `src/app/api/v1/geo/thanas/route.ts`
+url: "{{baseUrl}}/api/v1/geo/thanas"
+method: GET
+headers:
+  Accept: application/json
+order: 4000

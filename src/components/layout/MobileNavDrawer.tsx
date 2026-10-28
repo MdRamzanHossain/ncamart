@@ -336,7 +336,7 @@ export function MobileNavDrawer({ isOpen, onClose, onSearchClick }: MobileNavDra
             </Link>
 
             <Link
-              href="/track-order"
+              href="/track"
               onClick={onClose}
               style={{
                 display: "flex",
@@ -359,7 +359,7 @@ export function MobileNavDrawer({ isOpen, onClose, onSearchClick }: MobileNavDra
             </Link>
 
             <Link
-              href="/customer/warranties"
+              href="/account/warranty"
               onClick={onClose}
               style={{
                 display: "flex",
@@ -411,7 +411,7 @@ export function MobileNavDrawer({ isOpen, onClose, onSearchClick }: MobileNavDra
               </button>
             ) : (
               <Link
-                href="/login"
+                href="/auth/login"
                 onClick={onClose}
                 style={{
                   display: "flex",

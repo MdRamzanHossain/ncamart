@@ -1,0 +1,23 @@
+$kind: http-request
+description: |
+  Handles **GET** requests on `/admin/queues`.
+
+  - **Authentication:** STAFF
+  - **Required Permission:** `queues.admin`
+  - **Source File:** `src/app/admin/queues/route.ts`
+url: "{{baseUrl}}/admin/queues"
+method: GET
+headers:
+  Accept: application/json
+body:
+  type: text
+  content: ""
+auth:
+  type: apikey
+  credentials:
+    key: nca_sid
+    value: "{{apiKey}}"
+    in: header
+settings: {}
+examples: ./.resources/Get Queues.resources/examples
+order: 1000

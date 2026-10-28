@@ -1,0 +1,11 @@
+$kind: http-request
+description: |
+  Handles **GET** requests on `/api/v1/seo/sitemap-entries`.
+
+  - **Authentication:** PUBLIC
+  - **Source File:** `src/app/api/v1/seo/sitemap-entries/route.ts`
+url: "{{baseUrl}}/api/v1/seo/sitemap-entries"
+method: GET
+headers:
+  Accept: application/json
+order: 1000

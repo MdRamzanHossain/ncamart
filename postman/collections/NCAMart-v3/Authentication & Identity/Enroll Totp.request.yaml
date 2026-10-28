@@ -1,0 +1,28 @@
+$kind: http-request
+description: |
+  Handles **POST** requests on `/api/v1/auth/staff/totp/enroll`.
+
+  - **Authentication:** PUBLIC
+  - **Source File:** `src/app/api/v1/auth/staff/totp/enroll/route.ts`
+url: "{{baseUrl}}/api/v1/auth/staff/totp/enroll"
+method: POST
+headers:
+  - key: Accept
+    value: application/json
+  - key: Content-Type
+    value: application/json
+  - key: Idempotency-Key
+    value: "{{$guid}}"
+    description: UUIDv7 idempotency key for safe mutating requests
+  - key: Idempotency-Key
+    value: ""
+    disabled: true
+    description: ""
+  - key: X-Client-Mutation-Id
+    value: ""
+    disabled: true
+    description: ""
+body:
+  type: json
+  content: "{}"
+order: 9000
