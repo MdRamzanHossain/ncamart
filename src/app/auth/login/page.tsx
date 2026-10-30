@@ -193,9 +193,8 @@ function LoginContent() {
   // Perform immediate safe redirection
   const performRedirect = (isStaffMember: boolean) => {
     setIsSuccess(true);
-    // User requested: Authentication success goes directly to admin page (or redirect target)
-    const targetUrl = redirectParam || (isStaffMember ? "/admin" : "/admin");
-    // Using window.location.href ensures clean session cookie propagation without stale Next.js cache
+    // User requested: If staff member -> /admin, if regular user -> "/" (or redirectParam if provided)
+    const targetUrl = redirectParam || (isStaffMember ? "/admin" : "/");
     setTimeout(() => {
       window.location.href = targetUrl;
     }, 300);
@@ -408,7 +407,7 @@ function LoginContent() {
                   onClick={() => performRedirect(Boolean(user.isStaff))}
                   className="btn-continue"
                 >
-                  Direct to Admin →
+                  {user.isStaff ? "Direct to Admin →" : "Continue Shopping →"}
                 </button>
                 <button
                   type="button"
@@ -425,7 +424,9 @@ function LoginContent() {
           {isSuccess && (
             <div className="success-alert-banner" role="status">
               <span className="success-spinner"></span>
-              <span>Authenticated successfully! Redirecting to Admin...</span>
+              <span>
+                Authenticated successfully! Redirecting to {user?.isStaff ? "Admin..." : "Storefront..."}
+              </span>
             </div>
           )}
 

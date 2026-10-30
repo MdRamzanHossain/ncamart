@@ -1,47 +1,64 @@
-import React from "react";
-import type { Metadata } from "next";
+"use client";
+
+import React, { useState, useEffect } from "react";
 import { WarrantyPortalView } from "@/components/rma/WarrantyPortalView";
 import type { ActiveWarranty } from "@/components/rma/types";
 
-export const metadata: Metadata = {
-  title: "Warranties & Defect Claims | NCAMart",
-  description: "View remaining official distributor warranties, inspect destructive seals, and request 72-hour Dhaka doorstep replacement swaps.",
-};
-
-const mockWarranties: ActiveWarranty[] = [
-  {
-    id: "war_01",
-    orderNumber: "NCA-2026-84920",
-    sealId: "NCA-9X4K-2M7B",
-    productTitleEn: "Anker Prime 67W GaN Wall Charger (3 Ports)",
-    productTitleBn: "অ্যাঙ্কার প্রাইম ৬৭ ওয়াট জিএএন ওয়াল চার্জার",
-    brandName: "Anker",
-    serialNumber: "ANK-2026-GAN-9941",
-    deliveredAt: "2026-10-24T14:32:00.000Z",
-    expiresAt: new Date(Date.now() + 540 * 24 * 3600 * 1000).toISOString(),
-    warrantyDaysTotal: 540,
-    coverageType: "OFFICIAL_DISTRIBUTOR_18_MONTH",
-    coverageLabel: "Official Distributor 18-Month",
-    imageUrl: "https://cdn.ncamart.com/products/front.webp",
-    status: "ACTIVE",
-  },
-  {
-    id: "war_02",
-    orderNumber: "NCA-2026-77142",
-    sealId: "NCA-MEC-4412",
-    productTitleEn: "Mechanic T12-X Intelligent Digital Soldering Station",
-    productTitleBn: "মেকানিক টি১২ ইন্টেলিজেন্ট ডিজিটাল শোল্ডারিং স্টেশন",
-    brandName: "Mechanic",
-    serialNumber: "MEC-2026-T12X-041",
-    deliveredAt: "2026-10-20T14:20:00.000Z",
-    expiresAt: new Date(Date.now() + 180 * 24 * 3600 * 1000).toISOString(),
-    warrantyDaysTotal: 180,
-    coverageType: "NCAMART_6_MONTH_REPLACEMENT",
-    coverageLabel: "NCAMart 6-Month Replacement",
-    status: "ACTIVE",
-  },
-];
-
 export default function WarrantiesPortalPage() {
-  return <WarrantyPortalView initialWarranties={mockWarranties} />;
+  const [warranties, setWarranties] = useState<ActiveWarranty[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function fetchWarranties() {
+      try {
+        const res = await fetch("/api/v1/customer/warranties");
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted && Array.isArray(data)) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const mapped: ActiveWarranty[] = data.map((w: any) => ({
+              id: w.id,
+              orderNumber: w.orderNumber || w.order_number || "NCA-ORDER",
+              sealId: w.sealId || w.seal_id || "NCA-SEAL",
+              productTitleEn: w.productTitleEn || w.product_title_en || "Authentic Component",
+              productTitleBn: w.productTitleBn || w.product_title_bn || "জেনুইন কম্পোনেন্ট",
+              brandName: w.brandName || w.brand_name || "NCA Partner",
+              serialNumber: w.serialNumber || w.serial_number || "SN-VERIFIED",
+              deliveredAt: w.deliveredAt || w.delivered_at || new Date().toISOString(),
+              expiresAt: w.expiresAt || w.expires_at || new Date().toISOString(),
+              warrantyDaysTotal: w.warrantyDaysTotal || w.warranty_days_total || 365,
+              coverageType: w.coverageType || w.coverage_type || "OFFICIAL_DISTRIBUTOR_18_MONTH",
+              coverageLabel: w.coverageLabel || w.coverage_label || "Official Distributor Warranty",
+              imageUrl: w.imageUrl || w.image_url,
+              status: w.status || "ACTIVE",
+            }));
+            setWarranties(mapped);
+          }
+        }
+      } catch {
+        // Safe empty fallback
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+
+    fetchWarranties();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div style={{ padding: "3rem", textAlign: "center", color: "var(--text-secondary)" }}>
+        <div style={{ fontSize: "2rem", marginBottom: "1rem" }}>🛡️</div>
+        <p>Loading your active warranties...</p>
+      </div>
+    );
+  }
+
+  return <WarrantyPortalView initialWarranties={warranties} />;
 }

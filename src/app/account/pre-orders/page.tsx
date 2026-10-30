@@ -1,12 +1,7 @@
-import React from "react";
-import type { Metadata } from "next";
-import Link from "next/link";
+"use client";
 
-export const metadata: Metadata = {
-  title: "My Pre-Orders & Import Arrivals | NCAMart",
-  description:
-    "Track 15% pre-order deposits, international air/sea freight milestones, Nawabpur Godown QC inspection, and 7-day balance settlement windows.",
-};
+import React, { useState, useEffect } from "react";
+import Link from "next/link";
 
 interface CustomerPreOrderSummary {
   orderNumber: string;
@@ -23,234 +18,229 @@ interface CustomerPreOrderSummary {
   sealId?: string;
 }
 
-const MOCK_CUSTOMER_PREORDERS: CustomerPreOrderSummary[] = [
-  {
-    orderNumber: "NCA-PO-2026-8812",
-    itemTitle: "AIFEN A9 Pro 120W Precision Smart Soldering Station (Dual Handle)",
-    brandName: "AIFEN",
-    skuCode: "ENG-AIF-A9PRO",
-    slug: "aifen-a9-pro-smart-soldering-station-c210-c245",
-    status: "ARRIVED_GODOWN",
-    statusLabel: "Arrived at Godown — Balance Due (7-Day Window)",
-    totalPriceBdt: "৳14,500",
-    depositPaidBdt: "৳2,175 (15%)",
-    balanceDueBdt: "৳12,325",
-    etaOrDeadline: "Settle by Nov 03, 2026 (23:59 BST)",
-    sealId: "NC-7X8M-92PQ",
-  },
-  {
-    orderNumber: "NCA-PO-2026-9045",
-    itemTitle: "FNIRSI DSO-TC3 3-in-1 Digital Oscilloscope, Signal Generator & Transistor Tester",
-    brandName: "FNIRSI",
-    skuCode: "ENG-FNI-DSOTC3",
-    slug: "fnirsi-dso-tc3-transistor-tester-oscilloscope",
-    status: "IN_TRANSIT",
-    statusLabel: "Air Freight Customs Clearance (HSIA Dhaka)",
-    totalPriceBdt: "৳6,500",
-    depositPaidBdt: "৳975 (15%)",
-    balanceDueBdt: "৳5,525",
-    etaOrDeadline: "Estimated Godown Arrival: Nov 12, 2026",
-  },
-];
-
 export default function CustomerPreOrdersPage() {
+  const [preOrders, setPreOrders] = useState<CustomerPreOrderSummary[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function fetchPreOrders() {
+      try {
+        const res = await fetch("/api/v1/orders?type=PRE_ORDER&limit=20");
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted && data && Array.isArray(data.items)) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const mapped: CustomerPreOrderSummary[] = data.items.map((o: any) => {
+              const totalBdt = Math.round((o.total_payable_paisa || 0) / 100);
+              const depositBdt = Math.round(totalBdt * 0.15);
+              const balanceBdt = totalBdt - depositBdt;
+              const firstItem = o.items_preview?.[0];
+
+              return {
+                orderNumber: o.order_number,
+                itemTitle: firstItem?.title_en || "Pre-Order Import Component",
+                brandName: "Genuine NCA Import",
+                skuCode: `PO-${o.order_number.slice(-4)}`,
+                slug: "pre-orders",
+                status: o.status === "QC_PASSED" || o.status === "PACKED" ? "ARRIVED_GODOWN" : "IN_TRANSIT",
+                statusLabel: o.status === "QC_PASSED" ? "Arrived at Godown — Balance Due" : "Import Freight & Customs Clearance",
+                totalPriceBdt: `৳${totalBdt.toLocaleString("en-BD")}`,
+                depositPaidBdt: `৳${depositBdt.toLocaleString("en-BD")} (15%)`,
+                balanceDueBdt: `৳${balanceBdt.toLocaleString("en-BD")}`,
+                etaOrDeadline: "Estimated Godown Arrival within 10-14 days",
+              };
+            });
+            setPreOrders(mapped);
+          }
+        }
+      } catch {
+        // Safe empty fallback
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+
+    fetchPreOrders();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div style={{ padding: "3rem", textAlign: "center", color: "var(--text-secondary)" }}>
+        <div style={{ fontSize: "2rem", marginBottom: "1rem" }}>⏳</div>
+        <p>Loading your pre-orders and import tracking...</p>
+      </div>
+    );
+  }
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
       {/* Header */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          flexWrap: "wrap",
-          gap: "1rem",
-        }}
-      >
-        <div>
-          <h1
-            style={{
-              fontSize: "1.5rem",
-              fontWeight: 800,
-              color: "var(--color-text-primary, #f8fafc)",
-              margin: "0 0 0.25rem",
-            }}
-          >
-            Pre-Orders & Import Arrivals
-          </h1>
-          <p style={{ fontSize: "0.875rem", color: "var(--color-text-secondary, #94a3b8)", margin: 0 }}>
-            Monitor direct-importer batch shipments, Godown QC seals, and remaining balance settlements.
-          </p>
-        </div>
-
-        <Link
-          href="/pre-orders"
+      <div>
+        <h1
           style={{
-            padding: "0.625rem 1.125rem",
-            borderRadius: "0.625rem",
-            backgroundColor: "var(--tier-authentic-gold, #f59e0b)",
-            color: "#0b0f19",
+            fontSize: "1.5rem",
             fontWeight: 800,
-            fontSize: "0.8125rem",
-            textDecoration: "none",
+            color: "var(--color-text-primary, #f8fafc)",
+            margin: "0 0 0.25rem",
           }}
         >
-          ✈️ Browse Active Pre-Order Batches →
-        </Link>
+          My Pre-Orders &amp; Import Arrivals
+        </h1>
+        <p style={{ fontSize: "0.875rem", color: "var(--color-text-secondary, #94a3b8)", margin: 0 }}>
+          Track 15% pre-order deposits, international air/sea freight milestones, Nawabpur Godown QC inspection, and
+          balance settlement windows.
+        </p>
       </div>
 
-      {/* Pre-Order Cards */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-        {MOCK_CUSTOMER_PREORDERS.map((po) => {
-          const isArrived = po.status === "ARRIVED_GODOWN";
-          return (
-            <div
-              key={po.orderNumber}
-              style={{
-                background: "var(--color-surface, #111827)",
-                border: isArrived
-                  ? "1.5px solid rgba(245, 158, 11, 0.55)"
-                  : "1px solid var(--color-border, #1e293b)",
-                borderRadius: "1rem",
-                padding: "1.25rem 1.5rem",
-                display: "flex",
-                flexDirection: "column",
-                gap: "1rem",
-                boxShadow: isArrived ? "0 8px 24px rgba(245, 158, 11, 0.12)" : "none",
-              }}
-            >
+      {/* Zero Pre-Orders State */}
+      {preOrders.length === 0 ? (
+        <div
+          style={{
+            padding: "3.5rem 2rem",
+            borderRadius: "16px",
+            background: "var(--color-surface, #ffffff)",
+            border: "1px solid var(--color-border, #e2e8f0)",
+            textAlign: "center",
+          }}
+        >
+          <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>⏳</div>
+          <h2 style={{ fontSize: "1.25rem", fontWeight: 800, marginBottom: "0.5rem" }}>No Active Pre-Orders</h2>
+          <p style={{ color: "var(--color-text-secondary, #64748b)", fontSize: "0.875rem", maxWidth: "480px", margin: "0 auto 1.5rem" }}>
+            You do not have any pending international import pre-orders. When you pre-order specialized tools or industrial gear with a 15% deposit, track them live here!
+          </p>
+          <Link
+            href="/pre-orders"
+            style={{
+              display: "inline-block",
+              padding: "0.75rem 1.75rem",
+              borderRadius: "9999px",
+              backgroundColor: "var(--color-brand-primary, #0066f5)",
+              color: "#ffffff",
+              fontWeight: 700,
+              fontSize: "0.875rem",
+              textDecoration: "none",
+            }}
+          >
+            Explore Nawabpur Pre-Orders →
+          </Link>
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          {preOrders.map((po) => {
+            const isArrived = po.status === "ARRIVED_GODOWN";
+
+            return (
               <div
+                key={po.orderNumber}
                 style={{
+                  borderRadius: "16px",
+                  padding: "1.25rem 1.5rem",
+                  background: isArrived
+                    ? "linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(15, 23, 42, 0.8) 100%)"
+                    : "var(--color-surface, #ffffff)",
+                  border: isArrived
+                    ? "1px solid rgba(245, 158, 11, 0.4)"
+                    : "1px solid var(--color-border, #e2e8f0)",
                   display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "flex-start",
-                  flexWrap: "wrap",
-                  gap: "0.75rem",
+                  flexDirection: "column",
+                  gap: "1rem",
                 }}
               >
-                <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.35rem" }}>
-                    <span
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem" }}>
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.35rem" }}>
+                      <span
+                        style={{
+                          fontFamily: "var(--font-mono, monospace)",
+                          fontSize: "0.8125rem",
+                          fontWeight: 800,
+                          color: "#f59e0b",
+                        }}
+                      >
+                        #{po.orderNumber}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: "0.6875rem",
+                          fontWeight: 700,
+                          padding: "0.15rem 0.5rem",
+                          borderRadius: "9999px",
+                          backgroundColor: isArrived ? "rgba(245, 158, 11, 0.18)" : "rgba(56, 189, 248, 0.15)",
+                          color: isArrived ? "#fbbf24" : "#38bdf8",
+                        }}
+                      >
+                        {po.statusLabel}
+                      </span>
+                    </div>
+
+                    <h2
                       style={{
-                        fontFamily: "var(--font-mono, monospace)",
-                        fontSize: "0.8125rem",
-                        fontWeight: 800,
-                        color: "var(--tier-authentic-gold, #f59e0b)",
-                      }}
-                    >
-                      #{po.orderNumber}
-                    </span>
-                    <span
-                      style={{
-                        fontSize: "0.6875rem",
+                        fontSize: "1.05rem",
                         fontWeight: 700,
-                        padding: "0.15rem 0.5rem",
-                        borderRadius: "9999px",
-                        backgroundColor: isArrived ? "rgba(245, 158, 11, 0.18)" : "rgba(56, 189, 248, 0.15)",
-                        color: isArrived ? "#fbbf24" : "#38bdf8",
+                        margin: "0 0 0.25rem",
                       }}
                     >
-                      {po.statusLabel}
-                    </span>
+                      {po.itemTitle}
+                    </h2>
+
+                    <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary, #64748b)" }}>
+                      Brand: <strong>{po.brandName}</strong> · SKU: <code>{po.skuCode}</code>
+                    </div>
                   </div>
 
-                  <h2
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary, #64748b)" }}>
+                      Remaining Balance Due
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "1.25rem",
+                        fontWeight: 900,
+                        fontFamily: "var(--font-mono, monospace)",
+                        color: isArrived ? "#fbbf24" : "var(--color-text-primary, #0f172a)",
+                      }}
+                    >
+                      {po.balanceDueBdt}
+                    </div>
+                    <div style={{ fontSize: "0.7rem", color: "#64748b" }}>
+                      Total: {po.totalPriceBdt} · Paid Deposit: {po.depositPaidBdt}
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    borderTop: "1px solid var(--color-border, #e2e8f0)",
+                    paddingTop: "0.75rem",
+                    fontSize: "0.8125rem",
+                  }}
+                >
+                  <span style={{ color: "#64748b" }}>{po.etaOrDeadline}</span>
+                  <Link
+                    href={`/account/orders/${po.orderNumber}`}
                     style={{
-                      fontSize: "1.05rem",
+                      color: "var(--color-brand-primary, #0066f5)",
                       fontWeight: 700,
-                      color: "var(--color-text-primary, #f8fafc)",
-                      margin: "0 0 0.25rem",
-                    }}
-                  >
-                    {po.itemTitle}
-                  </h2>
-
-                  <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary, #94a3b8)" }}>
-                    Brand: <strong>{po.brandName}</strong> · SKU: <code>{po.skuCode}</code>
-                    {po.sealId && (
-                      <>
-                        {" · "}QC Seal:{" "}
-                        <Link
-                          href={`/verify/${po.sealId}`}
-                          style={{ color: "#10b981", fontWeight: 700, textDecoration: "none" }}
-                        >
-                          🛡️ {po.sealId}
-                        </Link>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                <div style={{ textAlign: "right" }}>
-                  <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary, #94a3b8)" }}>
-                    Remaining Balance Due
-                  </div>
-                  <div
-                    style={{
-                      fontSize: "1.25rem",
-                      fontWeight: 900,
-                      fontFamily: "var(--font-mono, monospace)",
-                      color: isArrived ? "#fbbf24" : "var(--color-text-primary, #f8fafc)",
-                    }}
-                  >
-                    {po.balanceDueBdt}
-                  </div>
-                  <div style={{ fontSize: "0.7rem", color: "#64748b" }}>
-                    Total: {po.totalPriceBdt} · Paid Deposit: {po.depositPaidBdt}
-                  </div>
-                </div>
-              </div>
-
-              <div
-                style={{
-                  paddingTop: "0.75rem",
-                  borderTop: "1px solid rgba(255, 255, 255, 0.08)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  flexWrap: "wrap",
-                  gap: "0.75rem",
-                }}
-              >
-                <span style={{ fontSize: "0.75rem", color: isArrived ? "#f59e0b" : "#94a3b8", fontWeight: 600 }}>
-                  ⏳ {po.etaOrDeadline}
-                </span>
-
-                <div style={{ display: "flex", gap: "0.5rem" }}>
-                  <Link
-                    href={`/pre-orders/${po.slug}`}
-                    style={{
-                      padding: "0.5rem 0.875rem",
-                      borderRadius: "0.5rem",
-                      border: "1px solid rgba(255, 255, 255, 0.15)",
-                      color: "var(--color-text-primary, #f8fafc)",
-                      fontSize: "0.75rem",
-                      fontWeight: 600,
                       textDecoration: "none",
                     }}
                   >
-                    Batch Spec Sheet
-                  </Link>
-                  <Link
-                    href={`/account/pre-orders/${po.orderNumber}`}
-                    style={{
-                      padding: "0.5rem 1rem",
-                      borderRadius: "0.5rem",
-                      backgroundColor: isArrived ? "#f59e0b" : "#2563eb",
-                      color: isArrived ? "#0b0f19" : "#ffffff",
-                      fontSize: "0.75rem",
-                      fontWeight: 800,
-                      textDecoration: "none",
-                    }}
-                  >
-                    {isArrived ? "💳 Settle Balance & Dispatch →" : "📊 View Milestone Tracker →"}
+                    View Import Timeline →
                   </Link>
                 </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
-

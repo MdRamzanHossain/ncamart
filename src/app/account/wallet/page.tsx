@@ -1,56 +1,69 @@
-import React from "react";
-import type { Metadata } from "next";
+"use client";
+
+import React, { useState, useEffect } from "react";
 import { StoreCreditWalletView } from "@/components/account/StoreCreditWalletView";
 import type { StoreCreditWalletData } from "@/components/account/types";
 
-export const metadata: Metadata = {
-  title: "Store Credit Wallet | NCAMart",
-  description: "View store credit balance, review ledger transactions, and withdraw funds to bank or bKash.",
-};
-
-const mockWalletData: StoreCreditWalletData = {
-  balancePaisa: 485000, // ৳4,850.00
-  pendingWithdrawalPaisa: 0,
-  transactions: [
-    {
-      id: "tx_01",
-      amountPaisa: 285000,
-      type: "REFUND_RMA",
-      reference: "RMA-2026-0812",
-      notes: "RMA Defect Resolution: Instant Store Credit Refund for Anker GaN Charger",
-      createdAt: "2026-10-25T16:20:00.000Z",
-      balanceAfterPaisa: 485000,
-    },
-    {
-      id: "tx_02",
-      amountPaisa: 200000,
-      type: "PREORDER_FORFEITURE_CREDIT",
-      reference: "PRE-84920",
-      notes: "Pre-Order Balance Window Rebalance (10% restocking deducted per PRD §3.4)",
-      createdAt: "2026-10-22T11:45:00.000Z",
-      balanceAfterPaisa: 200000,
-    },
-    {
-      id: "tx_03",
-      amountPaisa: -145000,
-      type: "PURCHASE_DEBIT",
-      reference: "ORD-99214",
-      notes: "Store credit payment applied on checkout for Mechanic Soldering Paste & Flux",
-      createdAt: "2026-10-18T19:10:00.000Z",
-      balanceAfterPaisa: 0,
-    },
-    {
-      id: "tx_04",
-      amountPaisa: 145000,
-      type: "COMPENSATION",
-      reference: "CMP-00412",
-      notes: "Courier dispatch SLA goodwill credit voucher",
-      createdAt: "2026-10-15T14:00:00.000Z",
-      balanceAfterPaisa: 145000,
-    },
-  ],
-};
-
 export default function StoreCreditWalletPage() {
-  return <StoreCreditWalletView initialData={mockWalletData} />;
+  const [walletData, setWalletData] = useState<StoreCreditWalletData>({
+    balancePaisa: 0,
+    pendingWithdrawalPaisa: 0,
+    transactions: [],
+  });
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function fetchWallet() {
+      try {
+        const res = await fetch("/api/v1/customer/store-credit");
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted && data) {
+            const balancePaisa = data.balance?.totalBalancePaisa ?? 0;
+            const transactions = Array.isArray(data.history)
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              ? data.history.map((tx: any, idx: number) => ({
+                  id: tx.id || `tx_${idx}`,
+                  amountPaisa: tx.amountPaisa || tx.amount_paisa || 0,
+                  type: tx.type || "REFUND_RMA",
+                  reference: tx.reference || tx.orderNumber || "LEDGER",
+                  notes: tx.notes || tx.description || "NCA Store Credit Adjustment",
+                  createdAt: tx.createdAt || tx.created_at || new Date().toISOString(),
+                  balanceAfterPaisa: tx.balanceAfterPaisa || tx.balance_after_paisa || balancePaisa,
+                }))
+              : [];
+
+            setWalletData({
+              balancePaisa,
+              pendingWithdrawalPaisa: 0,
+              transactions,
+            });
+          }
+        }
+      } catch {
+        // Safe 0 balance fallback
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+
+    fetchWallet();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div style={{ padding: "3rem", textAlign: "center", color: "var(--text-secondary)" }}>
+        <div style={{ fontSize: "2rem", marginBottom: "1rem" }}>💳</div>
+        <p>Loading your store credit wallet...</p>
+      </div>
+    );
+  }
+
+  return <StoreCreditWalletView initialData={walletData} />;
 }
