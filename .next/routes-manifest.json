@@ -1207,6 +1207,12 @@
       "namedRegex": "^/admin/security(?:/)?$"
     },
     {
+      "page": "/admin/settings",
+      "regex": "^/admin/settings(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/settings(?:/)?$"
+    },
+    {
       "page": "/admin/sourcing",
       "regex": "^/admin/sourcing(?:/)?$",
       "routeKeys": {},
