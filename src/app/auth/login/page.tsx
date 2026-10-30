@@ -13,7 +13,8 @@ function LoginIllustration() {
       viewBox="0 0 540 600"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className="w-full h-full max-h-[520px] select-none object-contain drop-shadow-xl"
+      className="banner-illustration-svg"
+      aria-hidden="true"
     >
       <defs>
         <linearGradient id="waveGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -74,7 +75,7 @@ function LoginIllustration() {
         <rect x="290" y="275" width="115" height="85" rx="6" fill="#0f172a" />
         {/* Active Display Screen */}
         <rect x="296" y="281" width="103" height="73" rx="4" fill="#1e293b" />
-        {/* Mock Code / UI on screen */}
+        {/* Mock UI lines */}
         <rect x="304" y="290" width="45" height="6" rx="2" fill="#38bdf8" />
         <rect x="304" y="302" width="75" height="4" rx="2" fill="#64748b" />
         <rect x="304" y="311" width="60" height="4" rx="2" fill="#64748b" />
@@ -102,13 +103,9 @@ function LoginIllustration() {
       {/* Worker Character Sitting */}
       <g id="workerSitting">
         {/* Blue Trousers / Legs */}
-        {/* Left leg tucked */}
         <path d="M220 420 C240 440 255 460 255 500 L240 505 C230 465 215 445 205 425 Z" fill="#1d4ed8" />
-        {/* Left Shoe */}
         <ellipse cx="250" cy="506" rx="14" ry="7" fill="#0f172a" />
-        {/* Right leg extended */}
         <path d="M225 420 C250 435 285 450 310 520 L290 525 C270 465 240 445 215 425 Z" fill="#2563eb" />
-        {/* Right Shoe */}
         <ellipse cx="305" cy="525" rx="16" ry="8" fill="#0f172a" />
 
         {/* Torso / Crisp White Shirt */}
@@ -126,7 +123,6 @@ function LoginIllustration() {
 
         {/* Arm holding mug */}
         <path d="M235 335 C248 345 255 355 252 368" stroke="#ffffff" strokeWidth="16" strokeLinecap="round" />
-        {/* Hand */}
         <circle cx="253" cy="370" r="7" fill="#fed7aa" />
 
         {/* Head & Neck */}
@@ -258,7 +254,6 @@ function LoginContent() {
 
     setIsSubmitting(true);
     try {
-      // If running with Google Identity Services
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const win = window as any;
       if (win.google && win.google.accounts) {
@@ -288,7 +283,6 @@ function LoginContent() {
         });
         win.google.accounts.id.prompt();
       } else {
-        // Fallback info
         toast({
           title: "Google Authentication",
           description: "Connecting with Google Identity Services...",
@@ -354,91 +348,83 @@ function LoginContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[#14161a] text-slate-100 flex flex-col justify-center items-center p-4 sm:p-6 lg:p-10 relative overflow-hidden select-text">
-      {/* Subtle background decoration resembling mockup design presentation */}
-      <div className="absolute inset-0 pointer-events-none opacity-20">
-        <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+    <div className="login-root-container">
+      {/* Background Accent Lines */}
+      <div className="bg-canvas-accents" aria-hidden="true">
+        <svg className="accent-doodle-svg" viewBox="0 0 1200 800" fill="none">
           <path
-            d="M 50,100 Q 250,50 450,150 T 850,200"
-            fill="none"
+            d="M 50,150 Q 250,50 450,150 T 850,200"
             stroke="#22c55e"
-            strokeWidth="3"
-            strokeDasharray="12 12"
+            strokeWidth="3.5"
+            strokeDasharray="14 14"
           />
           <path
-            d="M 100,500 Q 400,600 700,450 T 1200,600"
-            fill="none"
+            d="M 100,500 Q 400,600 700,450 T 1150,600"
             stroke="#0066f5"
-            strokeWidth="3"
-            strokeDasharray="16 16"
+            strokeWidth="3.5"
+            strokeDasharray="18 18"
           />
         </svg>
       </div>
 
-      {/* Main Card Container */}
-      <div className="relative z-10 w-full max-w-[1040px] bg-white rounded-[32px] sm:rounded-[40px] shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-12 border border-slate-200/80">
-        {/* Left Side: Modern Blue Wave & Office Graphic */}
-        <div className="md:col-span-6 bg-[#0066f5] relative flex flex-col items-center justify-center p-6 sm:p-8 min-h-[320px] md:min-h-[580px] overflow-hidden">
-          <LoginIllustration />
+      {/* Main Responsive Card */}
+      <div className="login-main-card">
+        {/* Left Column (Top on mobile): Blue Wave with Modern Vector Illustration */}
+        <div className="login-illustration-pane">
+          <div className="illustration-wrapper">
+            <LoginIllustration />
+          </div>
 
-          {/* Quick Info Overlay for Nawabpur Complex Accessories */}
-          <div className="absolute bottom-4 left-6 right-6 hidden md:flex items-center justify-between text-white/80 text-xs tracking-wide">
-            <span className="font-semibold text-white">Nawabpur Complex Accessories</span>
-            <span className="bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-full font-mono text-[11px]">
-              Secure Backoffice & Commerce
-            </span>
+          <div className="illustration-caption">
+            <span className="caption-brand">Nawabpur Complex Accessories</span>
+            <span className="caption-pill">Enterprise Trade & Backoffice</span>
           </div>
         </div>
 
-        {/* Right Side: Clean White Login Form */}
-        <div className="md:col-span-6 bg-white p-8 sm:p-12 lg:p-14 flex flex-col justify-center text-slate-800">
+        {/* Right Column (Bottom on mobile): Clean Crisp White Form Card */}
+        <div className="login-form-pane">
           {/* Brand Logo & Header */}
-          <div className="mb-8">
-            <Link href="/" className="inline-flex items-center gap-2 group">
-              {/* Modern Logo Icon */}
-              <div className="w-10 h-10 rounded-xl bg-[#0066f5] text-white flex items-center justify-center font-black text-2xl shadow-md group-hover:scale-105 transition-transform">
-                N
-              </div>
-              <div className="flex flex-col">
-                <span className="text-2xl font-black tracking-tight text-slate-900 leading-none">
-                  ncamart<span className="text-[#0066f5]">.</span>
+          <div className="brand-header-area">
+            <Link href="/" className="brand-logo-link">
+              <div className="brand-logo-icon">N</div>
+              <div className="brand-logo-texts">
+                <span className="brand-title">
+                  ncamart<span className="brand-dot">.</span>
                 </span>
-                <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400 mt-1">
-                  Nawabpur Complex
-                </span>
+                <span className="brand-tagline">Nawabpur Complex</span>
               </div>
             </Link>
 
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-800 mt-5">
+            <h1 className="form-heading">
               {requires2Fa ? "Security Verification" : "Acesse sua conta"}
             </h1>
-            <p className="text-sm text-slate-500 mt-1">
+            <p className="form-subheading">
               {requires2Fa
-                ? "Staff 2-Factor Authentication (Google Authenticator)"
+                ? "Enter your 6-digit Google Authenticator code"
                 : "Sign in to access your dashboard, orders & wholesale prices"}
             </p>
           </div>
 
           {/* Active Session Notification */}
           {isAuthenticated && user && !requires2Fa && (
-            <div className="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-between gap-3 text-sm">
-              <div className="text-emerald-900">
-                <span className="font-bold">Signed in as:</span> {user.name || user.email || user.phone}
-                <span className="ml-1.5 text-xs bg-emerald-200/70 text-emerald-800 px-2 py-0.5 rounded-full font-semibold">
+            <div className="active-session-banner">
+              <div className="session-user-info">
+                <strong>Signed in as:</strong> {user.name || user.email || user.phone}
+                <span className="role-tag">
                   {user.isStaff ? "Staff / Backoffice" : "Customer"}
                 </span>
               </div>
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="session-actions">
                 <Link
                   href={user.isStaff ? "/admin" : redirectParam || "/"}
-                  className="px-3 py-1.5 bg-[#0066f5] text-white rounded-lg font-bold text-xs hover:bg-blue-700 transition"
+                  className="btn-continue"
                 >
                   Continue →
                 </Link>
                 <button
                   type="button"
                   onClick={() => logout()}
-                  className="px-2.5 py-1.5 text-xs text-slate-500 hover:text-rose-600 font-semibold transition"
+                  className="btn-signout"
                 >
                   Sign Out
                 </button>
@@ -448,8 +434,8 @@ function LoginContent() {
 
           {/* Error Banner */}
           {errorMessage && (
-            <div className="mb-6 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs sm:text-sm font-medium flex items-center gap-2 animate-shake">
-              <svg className="w-5 h-5 shrink-0 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="error-alert-banner" role="alert">
+              <svg className="error-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <span>{errorMessage}</span>
@@ -458,24 +444,23 @@ function LoginContent() {
 
           {/* ===================== MODE 1: 2FA TOTP VERIFICATION ===================== */}
           {requires2Fa ? (
-            <form onSubmit={handleSmartLogin} className="space-y-6">
-              <div className="p-4 bg-blue-50 border border-blue-200 rounded-2xl flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-lg shrink-0">
-                  🛡️
-                </div>
-                <div className="text-xs text-blue-950">
-                  <p className="font-bold">2FA Enabled on Staff Account</p>
-                  <p className="text-blue-700 mt-0.5">
-                    Open Google Authenticator or your 2FA app on your phone and enter the current 6-digit code.
-                  </p>
+            <form onSubmit={handleSmartLogin} className="form-wrapper">
+              <div className="totp-info-box">
+                <div className="totp-shield-badge">🛡️</div>
+                <div className="totp-info-text">
+                  <div className="totp-title">2FA Enabled on Staff Account</div>
+                  <div className="totp-desc">
+                    Open Google Authenticator on your phone and enter the active 6-digit verification code.
+                  </div>
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+              <div className="field-group">
+                <label className="field-label" htmlFor="totpCodeInput">
                   6-Digit Authenticator Code
                 </label>
                 <input
+                  id="totpCodeInput"
                   type="text"
                   maxLength={6}
                   inputMode="numeric"
@@ -483,21 +468,19 @@ function LoginContent() {
                   value={totpCode}
                   onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ""))}
                   placeholder="000 000"
-                  className="w-full text-center tracking-[0.4em] font-mono text-2xl font-black py-3.5 px-4 bg-slate-50 border-2 border-blue-500/40 focus:border-blue-600 rounded-2xl outline-none transition"
+                  className="totp-large-input"
                   autoFocus
                   required
                 />
               </div>
 
-              <div className="flex flex-col gap-3">
+              <div className="button-group">
                 <button
                   type="submit"
                   disabled={isSubmitting || totpCode.trim().length !== 6}
-                  className="w-full h-12 rounded-full bg-[#0066f5] hover:bg-blue-700 active:scale-[0.99] text-white font-bold text-sm uppercase tracking-wider flex items-center justify-center gap-3 shadow-lg shadow-blue-500/25 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="btn-pill-submit"
                 >
-                  <span className="w-7 h-7 rounded-full bg-[#22c55e] flex items-center justify-center text-white text-xs font-black">
-                    →
-                  </span>
+                  <span className="btn-circle-arrow">→</span>
                   <span>{isSubmitting ? "Verifying..." : "Verify & Access Admin"}</span>
                 </button>
 
@@ -507,7 +490,7 @@ function LoginContent() {
                     setRequires2Fa(false);
                     setTotpCode("");
                   }}
-                  className="text-xs text-slate-500 hover:text-slate-800 font-semibold py-2 text-center"
+                  className="btn-link-back"
                 >
                   ← Back to Login Credentials
                 </button>
@@ -516,21 +499,20 @@ function LoginContent() {
           ) : useOtpMode ? (
             /* ===================== MODE 2: CUSTOMER SMS OTP ===================== */
             otpStep === "PHONE" ? (
-              <form onSubmit={handleSendOtp} className="space-y-6">
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+              <form onSubmit={handleSendOtp} className="form-wrapper">
+                <div className="field-group">
+                  <label className="field-label" htmlFor="phoneInput">
                     Mobile Phone Number (Bangladesh)
                   </label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-3.5 text-slate-400 font-semibold text-sm">
-                      🇧🇩 +88
-                    </span>
+                  <div className="field-input-wrap">
+                    <span className="phone-prefix">🇧🇩 +88</span>
                     <input
+                      id="phoneInput"
                       type="tel"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="01712 345678"
-                      className="w-full pl-20 pr-4 py-3 bg-slate-50 border border-slate-200 focus:border-blue-600 rounded-xl text-slate-900 font-medium outline-none transition"
+                      className="clean-text-input prefix-padded"
                       required
                       autoFocus
                     />
@@ -540,37 +522,36 @@ function LoginContent() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full h-12 rounded-full bg-[#0066f5] hover:bg-blue-700 text-white font-bold text-sm uppercase tracking-wider flex items-center justify-center gap-3 shadow-lg transition"
+                  className="btn-pill-submit"
                 >
-                  <span className="w-7 h-7 rounded-full bg-[#22c55e] flex items-center justify-center text-white text-xs font-black">
-                    →
-                  </span>
+                  <span className="btn-circle-arrow">→</span>
                   <span>{isSubmitting ? "Sending..." : "Send Verification SMS"}</span>
                 </button>
 
-                <div className="text-center">
+                <div className="center-link-box">
                   <button
                     type="button"
                     onClick={() => setUseOtpMode(false)}
-                    className="text-xs text-[#0066f5] hover:underline font-semibold"
+                    className="btn-text-link"
                   >
                     ← Sign in with Password / Username instead
                   </button>
                 </div>
               </form>
             ) : (
-              <form onSubmit={handleVerifyOtp} className="space-y-6">
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+              <form onSubmit={handleVerifyOtp} className="form-wrapper">
+                <div className="field-group">
+                  <label className="field-label" htmlFor="otpCodeInput">
                     Enter 6-Digit OTP sent to {phone}
                   </label>
                   <input
+                    id="otpCodeInput"
                     type="text"
                     maxLength={6}
                     value={customerOtp}
                     onChange={(e) => setCustomerOtp(e.target.value.replace(/\D/g, ""))}
                     placeholder="000000"
-                    className="w-full text-center tracking-[0.4em] font-mono text-2xl font-black py-3 bg-slate-50 border border-blue-500 rounded-xl outline-none"
+                    className="totp-large-input"
                     autoFocus
                     required
                   />
@@ -579,19 +560,17 @@ function LoginContent() {
                 <button
                   type="submit"
                   disabled={isSubmitting || customerOtp.trim().length !== 6}
-                  className="w-full h-12 rounded-full bg-[#0066f5] hover:bg-blue-700 text-white font-bold text-sm uppercase tracking-wider flex items-center justify-center gap-3 shadow-lg transition"
+                  className="btn-pill-submit"
                 >
-                  <span className="w-7 h-7 rounded-full bg-[#22c55e] flex items-center justify-center text-white text-xs font-black">
-                    →
-                  </span>
+                  <span className="btn-circle-arrow">→</span>
                   <span>{isSubmitting ? "Verifying..." : "Verify OTP & Sign In"}</span>
                 </button>
 
-                <div className="flex justify-between text-xs text-slate-500 font-semibold">
-                  <button type="button" onClick={() => setOtpStep("PHONE")} className="hover:text-slate-800">
+                <div className="otp-actions-row">
+                  <button type="button" onClick={() => setOtpStep("PHONE")} className="btn-subtle">
                     Change Number
                   </button>
-                  <button type="button" onClick={() => setUseOtpMode(false)} className="text-[#0066f5] hover:underline">
+                  <button type="button" onClick={() => setUseOtpMode(false)} className="btn-text-link">
                     Use Password
                   </button>
                 </div>
@@ -599,62 +578,62 @@ function LoginContent() {
             )
           ) : (
             /* ===================== MODE 3: DEFAULT SMART LOGIN ===================== */
-            <form onSubmit={handleSmartLogin} className="space-y-5">
+            <form onSubmit={handleSmartLogin} className="form-wrapper">
               {/* Email / Username / Phone Input */}
-              <div className="relative">
-                <label className="block text-xs font-medium text-slate-500 mb-1">
+              <div className="field-group">
+                <label className="field-label" htmlFor="userIdentifier">
                   Email, Username, or Phone
                 </label>
-                <div className="relative flex items-center">
-                  <span className="absolute left-3 text-slate-400">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                  </span>
+                <div className="field-input-wrap">
+                  <svg className="field-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
                   <input
+                    id="userIdentifier"
                     type="text"
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
                     placeholder="name@example.com or admin"
                     autoComplete="username"
+                    autoCapitalize="none"
+                    spellCheck="false"
                     required
-                    className="w-full pl-9 pr-4 py-2.5 bg-transparent border-b border-slate-300 focus:border-[#0066f5] text-slate-900 text-sm outline-none transition placeholder:text-slate-400"
+                    className="clean-text-input"
                   />
                 </div>
               </div>
 
               {/* Password Input */}
-              <div className="relative pt-1">
-                <label className="block text-xs font-medium text-slate-500 mb-1">
+              <div className="field-group">
+                <label className="field-label" htmlFor="userPassword">
                   Senha / Password
                 </label>
-                <div className="relative flex items-center">
-                  <span className="absolute left-3 text-slate-400">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                  </span>
+                <div className="field-input-wrap">
+                  <svg className="field-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
                   <input
+                    id="userPassword"
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
                     autoComplete="current-password"
                     required
-                    className="w-full pl-9 pr-10 py-2.5 bg-transparent border-b border-slate-300 focus:border-[#0066f5] text-slate-900 text-sm outline-none transition placeholder:text-slate-400"
+                    className="clean-text-input"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-2 text-slate-400 hover:text-slate-600 p-1"
+                    className="eye-toggle-btn"
                     title={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? (
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="eye-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
                       </svg>
                     ) : (
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="eye-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                       </svg>
@@ -664,47 +643,40 @@ function LoginContent() {
               </div>
 
               {/* Remember me & Forgot Password Row */}
-              <div className="flex items-center justify-between text-xs pt-1">
-                <label className="flex items-center gap-2 cursor-pointer select-none text-slate-500 hover:text-slate-800">
+              <div className="options-row">
+                <label className="checkbox-label">
                   <input
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="w-3.5 h-3.5 rounded border-slate-300 text-[#0066f5] focus:ring-0 focus:outline-none"
+                    className="custom-checkbox"
                   />
                   <span>Manter-me conectado</span>
                 </label>
 
                 <Link
                   href="/account/reset-password"
-                  className="text-slate-400 hover:text-[#0066f5] transition"
+                  className="forgot-link"
                 >
                   Esqueceu a senha?
                 </Link>
               </div>
 
               {/* Primary Action Button: Pill with Green Circle Arrow */}
-              <div className="pt-2">
+              <div className="submit-row">
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full h-12 rounded-full bg-[#0066f5] hover:bg-blue-700 active:scale-[0.99] text-white font-bold text-sm uppercase tracking-wider flex items-center justify-center gap-3 shadow-lg shadow-blue-500/25 transition disabled:opacity-60"
+                  className="btn-pill-submit"
                 >
-                  <span className="w-7 h-7 rounded-full bg-[#22c55e] flex items-center justify-center text-white text-xs font-black shadow-inner">
-                    →
-                  </span>
+                  <span className="btn-circle-arrow">→</span>
                   <span>{isSubmitting ? "SIGNING IN..." : "ENTRAR"}</span>
                 </button>
               </div>
 
               {/* Divider */}
-              <div className="relative my-4 flex items-center justify-center">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-slate-200"></div>
-                </div>
-                <span className="relative bg-white px-3 text-[11px] uppercase tracking-wider font-semibold text-slate-400">
-                  OU
-                </span>
+              <div className="or-divider">
+                <span>OU</span>
               </div>
 
               {/* Google Sign-In Button */}
@@ -712,10 +684,9 @@ function LoginContent() {
                 type="button"
                 onClick={handleGoogleClick}
                 disabled={isSubmitting}
-                className="w-full h-11 rounded-full border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold text-xs flex items-center justify-center gap-2.5 transition active:scale-[0.99]"
+                className="btn-google-auth"
               >
-                {/* Official Google G Logo */}
-                <svg className="w-4 h-4" viewBox="0 0 24 24">
+                <svg className="google-icon" viewBox="0 0 24 24">
                   <path
                     fill="#4285F4"
                     d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3h3.88c2.27-2.09 3.665-5.17 3.665-9.09z"
@@ -737,22 +708,19 @@ function LoginContent() {
               </button>
 
               {/* Customer Mobile SMS OTP Alternative Link */}
-              <div className="pt-2 text-center">
+              <div className="otp-toggle-row">
                 <button
                   type="button"
                   onClick={() => setUseOtpMode(true)}
-                  className="text-xs text-slate-500 hover:text-[#0066f5] font-medium transition"
+                  className="btn-otp-toggle"
                 >
                   📱 Use Bangladesh Mobile SMS OTP instead
                 </button>
               </div>
 
               {/* Create Account Link */}
-              <div className="pt-3 text-center">
-                <Link
-                  href="/register"
-                  className="text-xs text-[#0066f5] hover:underline font-semibold"
-                >
+              <div className="signup-footer-box">
+                <Link href="/register" className="btn-signup-link">
                   Criar uma conta
                 </Link>
               </div>
@@ -762,17 +730,728 @@ function LoginContent() {
       </div>
 
       {/* Footer copyright */}
-      <div className="mt-8 text-center text-xs text-slate-500 flex items-center justify-center gap-4">
+      <footer className="login-footer">
         <span>© {new Date().getFullYear()} NCAMart • Nawabpur Complex</span>
-        <span>•</span>
-        <Link href="/" className="hover:text-slate-300">
-          Storefront Home
-        </Link>
-        <span>•</span>
-        <Link href="/admin" className="hover:text-slate-300">
-          Admin Backoffice
-        </Link>
-      </div>
+        <span className="dot-sep">•</span>
+        <Link href="/" className="footer-link">Storefront Home</Link>
+        <span className="dot-sep">•</span>
+        <Link href="/admin" className="footer-link">Admin Backoffice</Link>
+      </footer>
+
+      {/* Explicit Dedicated Scoped CSS */}
+      <style jsx>{`
+        .login-root-container {
+          min-height: 100vh;
+          width: 100vw;
+          max-width: 100%;
+          background-color: #16181d;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 24px 16px;
+          position: relative;
+          overflow-x: hidden;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+          box-sizing: border-box;
+        }
+
+        .bg-canvas-accents {
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          opacity: 0.2;
+          overflow: hidden;
+        }
+
+        .accent-doodle-svg {
+          width: 100%;
+          height: 100%;
+          display: block;
+        }
+
+        /* Main Login Card */
+        .login-main-card {
+          position: relative;
+          z-index: 10;
+          width: 100%;
+          max-width: 960px;
+          min-height: 520px;
+          background: #ffffff;
+          border-radius: 36px;
+          box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.08);
+          overflow: hidden;
+          display: flex;
+          flex-direction: row;
+        }
+
+        /* Left Side: Modern Blue Wave & Graphic */
+        .login-illustration-pane {
+          flex: 1.1;
+          background: linear-gradient(135deg, #0066f5 0%, #0050d0 100%);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          position: relative;
+          padding: 32px;
+          overflow: hidden;
+        }
+
+        .illustration-wrapper {
+          width: 100%;
+          max-width: 440px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .banner-illustration-svg {
+          width: 100%;
+          height: auto;
+          max-height: 480px;
+          display: block;
+          filter: drop-shadow(0 14px 20px rgba(0, 20, 60, 0.35));
+        }
+
+        .illustration-caption {
+          position: absolute;
+          bottom: 16px;
+          left: 24px;
+          right: 24px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          font-size: 11px;
+          color: rgba(255, 255, 255, 0.85);
+          letter-spacing: 0.02em;
+        }
+
+        .caption-brand {
+          font-weight: 700;
+          color: #ffffff;
+        }
+
+        .caption-pill {
+          background: rgba(255, 255, 255, 0.2);
+          backdrop-filter: blur(8px);
+          padding: 3px 10px;
+          border-radius: 999px;
+          font-weight: 600;
+          font-size: 10px;
+        }
+
+        /* Right Side: Clean White Login Form */
+        .login-form-pane {
+          flex: 0.9;
+          background: #ffffff;
+          padding: 44px 40px;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          color: #1e293b;
+        }
+
+        /* Brand Logo & Header */
+        .brand-header-area {
+          margin-bottom: 24px;
+        }
+
+        .brand-logo-link {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          text-decoration: none;
+        }
+
+        .brand-logo-icon {
+          width: 38px;
+          height: 38px;
+          border-radius: 12px;
+          background: #0066f5;
+          color: #ffffff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 900;
+          font-size: 20px;
+          box-shadow: 0 4px 10px rgba(0, 102, 245, 0.3);
+        }
+
+        .brand-logo-texts {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .brand-title {
+          font-size: 22px;
+          font-weight: 900;
+          letter-spacing: -0.03em;
+          color: #0f172a;
+          line-height: 1;
+        }
+
+        .brand-dot {
+          color: #0066f5;
+        }
+
+        .brand-tagline {
+          font-size: 10px;
+          font-weight: 700;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: #94a3b8;
+          margin-top: 3px;
+        }
+
+        .form-heading {
+          font-size: 22px;
+          font-weight: 800;
+          color: #1e293b;
+          margin-top: 18px;
+          margin-bottom: 4px;
+          letter-spacing: -0.01em;
+        }
+
+        .form-subheading {
+          font-size: 13px;
+          color: #64748b;
+          line-height: 1.4;
+        }
+
+        /* Active Session Alert */
+        .active-session-banner {
+          margin-bottom: 20px;
+          padding: 12px 14px;
+          border-radius: 14px;
+          background: #ecfdf5;
+          border: 1px solid #a7f3d0;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+          font-size: 12px;
+        }
+
+        .session-user-info {
+          color: #065f46;
+        }
+
+        .role-tag {
+          margin-left: 6px;
+          font-size: 10px;
+          font-weight: 700;
+          padding: 2px 7px;
+          border-radius: 999px;
+          background: #d1fae5;
+          color: #047857;
+        }
+
+        .session-actions {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .btn-continue {
+          padding: 6px 12px;
+          border-radius: 8px;
+          background: #0066f5;
+          color: #ffffff;
+          font-weight: 700;
+          font-size: 11px;
+          text-decoration: none;
+        }
+
+        .btn-signout {
+          background: none;
+          border: none;
+          color: #64748b;
+          font-size: 11px;
+          font-weight: 600;
+          cursor: pointer;
+        }
+
+        .btn-signout:hover {
+          color: #e11d48;
+        }
+
+        /* Error Alert */
+        .error-alert-banner {
+          margin-bottom: 18px;
+          padding: 12px 14px;
+          border-radius: 12px;
+          background: #fef2f2;
+          border: 1px solid #fecaca;
+          color: #b91c1c;
+          font-size: 12px;
+          font-weight: 600;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .error-icon {
+          width: 18px !important;
+          height: 18px !important;
+          min-width: 18px !important;
+          color: #ef4444;
+          display: block;
+        }
+
+        /* Form Controls */
+        .form-wrapper {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .field-group {
+          margin-bottom: 18px;
+        }
+
+        .field-label {
+          display: block;
+          font-size: 12px;
+          font-weight: 600;
+          color: #64748b;
+          margin-bottom: 4px;
+        }
+
+        .field-input-wrap {
+          position: relative;
+          display: flex;
+          align-items: center;
+          border-bottom: 1.5px solid #cbd5e1;
+          transition: border-color 0.2s ease;
+          padding-bottom: 4px;
+        }
+
+        .field-input-wrap:focus-within {
+          border-bottom-color: #0066f5;
+        }
+
+        /* Strict icon dimensions to prevent global SVG blowup */
+        .field-icon {
+          width: 18px !important;
+          height: 18px !important;
+          min-width: 18px !important;
+          max-width: 18px !important;
+          color: #94a3b8;
+          margin-right: 8px;
+          display: block;
+        }
+
+        .clean-text-input {
+          flex: 1;
+          width: 100%;
+          border: none;
+          background: transparent;
+          font-size: 14px;
+          color: #0f172a;
+          outline: none;
+          padding: 8px 0;
+          font-weight: 500;
+        }
+
+        .clean-text-input::placeholder {
+          color: #94a3b8;
+          font-weight: 400;
+        }
+
+        .eye-toggle-btn {
+          background: none;
+          border: none;
+          padding: 4px;
+          cursor: pointer;
+          color: #94a3b8;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .eye-toggle-btn:hover {
+          color: #475569;
+        }
+
+        .eye-icon {
+          width: 18px !important;
+          height: 18px !important;
+          min-width: 18px !important;
+          display: block;
+        }
+
+        .prefix-padded {
+          padding-left: 6px;
+        }
+
+        .phone-prefix {
+          font-size: 13px;
+          font-weight: 700;
+          color: #64748b;
+          margin-right: 6px;
+        }
+
+        /* Options Row: Remember Me & Forgot */
+        .options-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          font-size: 12px;
+          color: #64748b;
+          margin-top: 4px;
+          margin-bottom: 22px;
+        }
+
+        .checkbox-label {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          cursor: pointer;
+          user-select: none;
+        }
+
+        .custom-checkbox {
+          width: 15px;
+          height: 15px;
+          accent-color: #0066f5;
+          cursor: pointer;
+        }
+
+        .forgot-link {
+          color: #94a3b8;
+          text-decoration: none;
+          transition: color 0.15s ease;
+        }
+
+        .forgot-link:hover {
+          color: #0066f5;
+        }
+
+        /* Pill Action Button matching the Mockup */
+        .submit-row {
+          margin-top: 4px;
+        }
+
+        .btn-pill-submit {
+          width: 100%;
+          height: 48px;
+          border-radius: 999px;
+          background: #0066f5;
+          color: #ffffff;
+          border: none;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
+          font-size: 13px;
+          font-weight: 800;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          cursor: pointer;
+          box-shadow: 0 10px 22px -6px rgba(0, 102, 245, 0.45);
+          transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .btn-pill-submit:hover:not(:disabled) {
+          background: #0056d6;
+          box-shadow: 0 14px 28px -6px rgba(0, 102, 245, 0.55);
+        }
+
+        .btn-pill-submit:active:not(:disabled) {
+          transform: scale(0.99);
+        }
+
+        .btn-pill-submit:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
+        .btn-circle-arrow {
+          width: 26px;
+          height: 26px;
+          border-radius: 50%;
+          background: #22c55e;
+          color: #ffffff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 13px;
+          font-weight: 900;
+          box-shadow: inset 0 -1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Divider */
+        .or-divider {
+          position: relative;
+          text-align: center;
+          margin: 18px 0;
+        }
+
+        .or-divider::before {
+          content: "";
+          position: absolute;
+          top: 50%;
+          left: 0;
+          right: 0;
+          height: 1px;
+          background: #e2e8f0;
+        }
+
+        .or-divider span {
+          position: relative;
+          background: #ffffff;
+          padding: 0 12px;
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: #94a3b8;
+        }
+
+        /* Google Button */
+        .btn-google-auth {
+          width: 100%;
+          height: 44px;
+          border-radius: 999px;
+          border: 1px solid #e2e8f0;
+          background: #ffffff;
+          color: #334155;
+          font-size: 13px;
+          font-weight: 600;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          cursor: pointer;
+          transition: background 0.15s ease, border-color 0.15s ease;
+        }
+
+        .btn-google-auth:hover:not(:disabled) {
+          background: #f8fafc;
+          border-color: #cbd5e1;
+        }
+
+        .google-icon {
+          width: 18px !important;
+          height: 18px !important;
+          min-width: 18px !important;
+          display: block;
+        }
+
+        /* Customer OTP / Alternate Links */
+        .otp-toggle-row {
+          margin-top: 12px;
+          text-align: center;
+        }
+
+        .btn-otp-toggle {
+          background: none;
+          border: none;
+          color: #64748b;
+          font-size: 12px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: color 0.15s ease;
+        }
+
+        .btn-otp-toggle:hover {
+          color: #0066f5;
+        }
+
+        .signup-footer-box {
+          margin-top: 14px;
+          text-align: center;
+        }
+
+        .btn-signup-link {
+          font-size: 12px;
+          font-weight: 700;
+          color: #0066f5;
+          text-decoration: none;
+        }
+
+        .btn-signup-link:hover {
+          text-decoration: underline;
+        }
+
+        /* 2FA Authenticator UI */
+        .totp-info-box {
+          padding: 12px 14px;
+          background: #eff6ff;
+          border: 1px solid #bfdbfe;
+          border-radius: 14px;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-bottom: 18px;
+        }
+
+        .totp-shield-badge {
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          background: #2563eb;
+          color: #ffffff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 16px;
+          flex-shrink: 0;
+        }
+
+        .totp-title {
+          font-size: 12px;
+          font-weight: 700;
+          color: #1e3a8a;
+        }
+
+        .totp-desc {
+          font-size: 11px;
+          color: #3b82f6;
+          margin-top: 2px;
+          line-height: 1.3;
+        }
+
+        .totp-large-input {
+          width: 100%;
+          text-align: center;
+          letter-spacing: 0.35em;
+          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+          font-size: 24px;
+          font-weight: 900;
+          padding: 12px 14px;
+          background: #f8fafc;
+          border: 2px solid #93c5fd;
+          border-radius: 14px;
+          outline: none;
+          color: #0f172a;
+          box-sizing: border-box;
+          transition: border-color 0.2s ease;
+        }
+
+        .totp-large-input:focus {
+          border-color: #0066f5;
+        }
+
+        .button-group {
+          margin-top: 18px;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .btn-link-back {
+          background: none;
+          border: none;
+          color: #64748b;
+          font-size: 12px;
+          font-weight: 600;
+          cursor: pointer;
+          text-align: center;
+          padding: 6px;
+        }
+
+        .btn-link-back:hover {
+          color: #1e293b;
+        }
+
+        .center-link-box {
+          margin-top: 14px;
+          text-align: center;
+        }
+
+        .btn-text-link {
+          background: none;
+          border: none;
+          color: #0066f5;
+          font-size: 12px;
+          font-weight: 600;
+          cursor: pointer;
+        }
+
+        .btn-text-link:hover {
+          text-decoration: underline;
+        }
+
+        .otp-actions-row {
+          margin-top: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          font-size: 12px;
+        }
+
+        .btn-subtle {
+          background: none;
+          border: none;
+          color: #64748b;
+          font-size: 12px;
+          font-weight: 600;
+          cursor: pointer;
+        }
+
+        .btn-subtle:hover {
+          color: #0f172a;
+        }
+
+        /* Footer */
+        .login-footer {
+          margin-top: 24px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
+          font-size: 12px;
+          color: #64748b;
+        }
+
+        .dot-sep {
+          color: #475569;
+        }
+
+        .footer-link {
+          color: #94a3b8;
+          text-decoration: none;
+        }
+
+        .footer-link:hover {
+          color: #ffffff;
+        }
+
+        /* Responsive Breakpoint: Mobile Screen (matches the mobile mockup in screenshot) */
+        @media (max-width: 860px) {
+          .login-main-card {
+            flex-direction: column;
+            border-radius: 28px;
+            max-width: 440px;
+          }
+
+          .login-illustration-pane {
+            min-height: 240px;
+            padding: 20px;
+          }
+
+          .banner-illustration-svg {
+            max-height: 200px;
+          }
+
+          .illustration-caption {
+            display: none;
+          }
+
+          .login-form-pane {
+            padding: 32px 24px;
+          }
+
+          .brand-header-area {
+            margin-bottom: 20px;
+          }
+
+          .form-heading {
+            font-size: 20px;
+          }
+        }
+      `}</style>
     </div>
   );
 }
@@ -781,8 +1460,8 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#14161a] flex items-center justify-center text-white">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+        <div style={{ minHeight: "100vh", backgroundColor: "#16181d", display: "flex", alignItems: "center", justifyContent: "center", color: "#ffffff" }}>
+          <div>Loading Login Portal...</div>
         </div>
       }
     >
