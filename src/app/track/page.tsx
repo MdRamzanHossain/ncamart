@@ -5,27 +5,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { StorefrontShell } from "@/components/layout";
 
-const SAMPLE_ORDERS = [
-  {
-    orderNumber: "NCA-2026-84920",
-    label: "In Transit with Steadfast Courier",
-    desc: "Anker 67W GaN + Baseus 100W Cable (Dhaka Hub)",
-  },
-  {
-    orderNumber: "NCA-2026-PICKUP-42",
-    label: "Showroom Counter Pickup Ready",
-    desc: "Shop 42 Nawabpur Complex — 6-Digit PIN Issued",
-  },
-  {
-    orderNumber: "NCA-2026-STOCKOUT-09",
-    label: "Partial Stall Stockout Resolution",
-    desc: "Runner sourcing color alternative at Nawabpur stall",
-  },
-];
-
 export default function TrackConsignmentPage() {
   const router = useRouter();
-  const [orderInput, setOrderInput] = useState("NCA-2026-84920");
+  const [orderInput, setOrderInput] = useState("");
 
   const handleTrackSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,7 +70,7 @@ export default function TrackConsignmentPage() {
           </h1>
 
           <p style={{ fontSize: "var(--font-size-sm)", color: "var(--text-secondary)", marginBottom: "var(--space-xl)" }}>
-            Enter your NCAMart Order Number (e.g., <code>NCA-2026-84920</code>) to view real-time runner stall sourcing,
+            Enter your NCAMart Order Number (sent via SMS & WhatsApp invoice) to view real-time runner stall sourcing,
             Godown bench QC seal minting, and Pathao / Steadfast / RedX rider telemetry.
           </p>
 
@@ -105,7 +87,7 @@ export default function TrackConsignmentPage() {
               type="text"
               value={orderInput}
               onChange={(e) => setOrderInput(e.target.value)}
-              placeholder="Enter Order # (e.g. NCA-2026-84920)"
+              placeholder="Enter Order # (e.g. NCA-2026-XXXXX)"
               aria-label="Order Number"
               required
               style={{
@@ -138,60 +120,33 @@ export default function TrackConsignmentPage() {
             </button>
           </form>
 
-          {/* Sample Demo Orders */}
-          <div style={{ borderTop: "1px solid var(--border-subtle)", paddingTop: "var(--space-lg)" }}>
-            <div
+          <div
+            style={{
+              borderTop: "1px solid var(--border-subtle)",
+              paddingTop: "var(--space-lg)",
+              display: "flex",
+              flexWrap: "wrap",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "var(--space-md)",
+              fontSize: "var(--font-size-xs)",
+              color: "var(--text-secondary)",
+            }}
+          >
+            <span>
+              Where is my Order Number? Check your order confirmation SMS/WhatsApp message or sign in to view your full order history.
+            </span>
+            <Link
+              href="/account/orders"
               style={{
-                fontSize: "11px",
-                fontWeight: "800",
-                textTransform: "uppercase",
-                letterSpacing: "0.05em",
-                color: "var(--text-tertiary)",
-                marginBottom: "var(--space-md)",
+                color: "var(--color-brand-primary)",
+                fontWeight: "700",
+                textDecoration: "none",
+                whiteSpace: "nowrap",
               }}
             >
-              Quick Demo Consignments (Click to Inspect)
-            </div>
-
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-                gap: "var(--space-md)",
-              }}
-            >
-              {SAMPLE_ORDERS.map((sample) => (
-                <Link
-                  key={sample.orderNumber}
-                  href={`/account/orders/${sample.orderNumber}`}
-                  style={{
-                    padding: "var(--space-md)",
-                    borderRadius: "var(--radius-lg)",
-                    backgroundColor: "var(--bg-surface-elevated)",
-                    border: "1px solid var(--border-default)",
-                    textDecoration: "none",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "4px",
-                  }}
-                >
-                  <span
-                    style={{
-                      fontFamily: "var(--font-family-mono)",
-                      fontWeight: "800",
-                      fontSize: "var(--font-size-xs)",
-                      color: "var(--tier-authentic-gold)",
-                    }}
-                  >
-                    #{sample.orderNumber}
-                  </span>
-                  <span style={{ fontWeight: "700", fontSize: "var(--font-size-sm)", color: "var(--text-primary)" }}>
-                    {sample.label}
-                  </span>
-                  <span style={{ fontSize: "11px", color: "var(--text-tertiary)" }}>{sample.desc}</span>
-                </Link>
-              ))}
-            </div>
+              View My Orders →
+            </Link>
           </div>
         </div>
       </div>

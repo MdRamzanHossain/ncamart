@@ -79,17 +79,6 @@ export function VerifyPortalView() {
                 </svg>
                 <span>Scan QR Code on Holographic Seal</span>
               </button>
-
-              {/* Sample IDs for instant testing */}
-              <div className="quick-samples">
-                <span className="samples-lbl">Quick Demo Seals:</span>
-                <Link href="/verify/NCA-9X4K-2M7B" className="sample-link valid-link">
-                  ✓ Genuine: NCA-9X4K-2M7B
-                </Link>
-                <Link href="/verify/NCA-VOID-7721" className="sample-link void-link">
-                  ⚠ Voided: NCA-VOID-7721
-                </Link>
-              </div>
             </div>
           </div>
         </section>

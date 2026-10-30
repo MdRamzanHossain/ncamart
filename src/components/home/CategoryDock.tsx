@@ -8,19 +8,18 @@ interface CategoryDockItem {
   name: string;
   icon: string;
   slug: string;
-  count: number;
-  badge?: string;
+  tint: string;
 }
 
 const CATEGORIES: CategoryDockItem[] = [
-  { id: "tools", name: "Tools & Meters", icon: "🛠️", slug: "engineering-tools", count: 230, badge: "Wholesale" },
-  { id: "gan", name: "GaN & Power", icon: "⚡", slug: "chargers-power", count: 141, badge: "Fast Ship" },
-  { id: "cables", name: "Cables & Bus", icon: "🔌", slug: "cables-adapters", count: 185 },
-  { id: "audio", name: "Audio & DACs", icon: "🎧", slug: "audio-dacs", count: 72 },
-  { id: "cctv", name: "CCTV & Security", icon: "📹", slug: "cctv-surveillance", count: 120 },
-  { id: "wearables", name: "Wearables & Tech", icon: "⌚", slug: "smart-wearables", count: 94 },
-  { id: "scopes", name: "Oscilloscopes", icon: "🔬", slug: "scopes-test", count: 48, badge: "Pro Lab" },
-  { id: "all", name: "Browse All", icon: "➔", slug: "catalog", count: 890 },
+  { id: "tools", name: "Tools & Meters", icon: "🛠️", slug: "engineering-tools", tint: "#fff1f2" },
+  { id: "electronics", name: "Electronics", icon: "🎧", slug: "audio-dacs", tint: "#eff6ff" },
+  { id: "gan", name: "GaN & Power", icon: "⚡", slug: "chargers-power", tint: "#fdf2f8" },
+  { id: "scopes", name: "Bench & Lab", icon: "🔬", slug: "scopes-test", tint: "#ecfeff" },
+  { id: "cables", name: "Cables & Bus", icon: "🔌", slug: "cables-adapters", tint: "#f5f3ff" },
+  { id: "cctv", name: "CCTV & IoT", icon: "📹", slug: "cctv-surveillance", tint: "#f0f9ff" },
+  { id: "wearables", name: "Wearables", icon: "⌚", slug: "smart-wearables", tint: "#fffbeb" },
+  { id: "all", name: "More", icon: "⊞", slug: "catalog", tint: "#eef2ff" },
 ];
 
 export function CategoryDock() {
@@ -30,132 +29,87 @@ export function CategoryDock() {
     <section
       aria-label="Popular Categories Dock"
       style={{
-        padding: "var(--space-md) var(--space-md)",
-        maxWidth: "1400px",
-        margin: "0 auto",
+        padding: "0 20px",
+        maxWidth: "1340px",
+        margin: "-44px auto 12px",
+        position: "relative",
+        zIndex: 25,
       }}
     >
       <div
         style={{
+          backgroundColor: "#ffffff",
+          borderRadius: "22px",
+          padding: "20px 24px",
+          boxShadow: "0 14px 36px rgba(15, 23, 42, 0.09)",
+          border: "1px solid rgba(226, 232, 240, 0.9)",
           display: "flex",
           alignItems: "center",
-          gap: "var(--space-md)",
+          justifyContent: "space-between",
+          gap: "16px",
           overflowX: "auto",
-          padding: "var(--space-sm) var(--space-xs) var(--space-md)",
           scrollbarWidth: "none",
           WebkitOverflowScrolling: "touch",
-          justifyContent: "flex-start",
         }}
       >
         {CATEGORIES.map((cat) => {
           const isHovered = hoveredId === cat.id;
+          const isMore = cat.id === "all";
 
           return (
             <Link
               key={cat.id}
-              href={cat.id === "all" ? "/catalog" : `/categories/${cat.slug}`}
+              href={isMore ? "/catalog" : `/categories/${cat.slug}`}
               onMouseEnter={() => setHoveredId(cat.id)}
               onMouseLeave={() => setHoveredId(null)}
               style={{
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
-                gap: "8px",
+                gap: "10px",
                 textDecoration: "none",
-                minWidth: "90px",
-                position: "relative",
+                minWidth: "96px",
+                flex: 1,
                 cursor: "pointer",
                 transition: "transform var(--duration-fast) var(--ease-spring)",
-                transform: isHovered ? "scale(1.08) translateY(-4px)" : "scale(1)",
+                transform: isHovered ? "translateY(-4px)" : "translateY(0)",
               }}
             >
-              {/* Circular Icon Container */}
+              {/* Circular Pastel Icon Bubble */}
               <div
                 style={{
-                  width: "60px",
-                  height: "60px",
+                  width: "66px",
+                  height: "66px",
                   borderRadius: "50%",
-                  backgroundColor: isHovered ? "var(--bg-surface-active)" : "var(--bg-surface-elevated)",
-                  border: isHovered ? "2px solid var(--tier-authentic-gold)" : "1.5px solid var(--border-default)",
+                  backgroundColor: cat.tint,
+                  border: isHovered ? "2px solid #6366f1" : "1px solid rgba(15, 23, 42, 0.06)",
                   boxShadow: isHovered
-                    ? "0 0 16px rgba(245, 158, 11, 0.4), 0 8px 16px rgba(0, 0, 0, 0.3)"
-                    : "0 4px 12px rgba(0, 0, 0, 0.2)",
+                    ? "0 8px 20px rgba(99, 102, 241, 0.22)"
+                    : "0 4px 10px rgba(15, 23, 42, 0.04)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: "24px",
-                  position: "relative",
+                  fontSize: isMore ? "26px" : "28px",
+                  color: isMore ? "#6366f1" : "#0f172a",
+                  fontWeight: isMore ? "900" : "400",
                   transition: "all var(--duration-fast) ease",
                 }}
               >
                 <span>{cat.icon}</span>
-
-                {cat.badge && (
-                  <span
-                    style={{
-                      position: "absolute",
-                      top: "-4px",
-                      right: "-6px",
-                      backgroundColor: "var(--tier-authentic-gold)",
-                      color: "#000000",
-                      fontSize: "8px",
-                      fontWeight: "800",
-                      padding: "1px 5px",
-                      borderRadius: "var(--radius-full)",
-                      letterSpacing: "0.02em",
-                    }}
-                  >
-                    {cat.badge}
-                  </span>
-                )}
               </div>
 
-              {/* Title & Item Count */}
-              <div style={{ textAlign: "center" }}>
-                <div
-                  style={{
-                    fontSize: "var(--font-size-xs)",
-                    fontWeight: "var(--font-weight-bold)",
-                    color: isHovered ? "var(--tier-authentic-gold)" : "var(--text-primary)",
-                    whiteSpace: "nowrap",
-                    transition: "color var(--duration-fast) ease",
-                  }}
-                >
-                  {cat.name}
-                </div>
-                <div
-                  style={{
-                    fontSize: "10px",
-                    color: "var(--text-tertiary)",
-                    marginTop: "1px",
-                  }}
-                >
-                  {cat.count}+ items
-                </div>
+              {/* Clean Category Label */}
+              <div
+                style={{
+                  fontSize: "12.5px",
+                  fontWeight: "600",
+                  color: isHovered ? "#4f46e5" : "#1e293b",
+                  whiteSpace: "nowrap",
+                  textAlign: "center",
+                }}
+              >
+                {cat.name}
               </div>
-
-              {/* Tooltip on Hover */}
-              {isHovered && (
-                <div
-                  style={{
-                    position: "absolute",
-                    bottom: "-24px",
-                    backgroundColor: "var(--bg-surface)",
-                    border: "1px solid var(--border-default)",
-                    borderRadius: "var(--radius-xs)",
-                    padding: "2px 8px",
-                    fontSize: "9px",
-                    color: "var(--text-secondary)",
-                    whiteSpace: "nowrap",
-                    zIndex: 20,
-                    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
-                    pointerEvents: "none",
-                    animation: "fadeIn 0.15s ease-out",
-                  }}
-                >
-                  Explore {cat.name}
-                </div>
-              )}
             </Link>
           );
         })}
@@ -163,3 +117,4 @@ export function CategoryDock() {
     </section>
   );
 }
+

@@ -307,6 +307,12 @@ img, picture, video, canvas, svg {
   }
 }
 
+@media (max-width: 1024px) {
+  .triple-grid-container {
+    grid-template-columns: 1fr !important;
+  }
+}
+
 @media (max-width: 900px) {
   .desktop-only-float {
     display: none !important;
@@ -361,12 +367,14 @@ img, picture, video, canvas, svg {
   }
 
   /* Sticky Navbar */
-  .navbar-root {
-    padding: 8px 12px !important;
+  .navbar-container {
+    padding: 10px 12px !important;
+    gap: 8px !important;
   }
 
-  .navbar-container {
-    gap: 8px !important;
+  .navbar-search-center {
+    flex: 0 0 auto !important;
+    max-width: none !important;
   }
 
   .navbar-left-group {
@@ -375,14 +383,14 @@ img, picture, video, canvas, svg {
   }
 
   .navbar-logo-box {
-    width: 32px !important;
-    height: 32px !important;
+    width: 30px !important;
+    height: 30px !important;
     font-size: 15px !important;
     flex-shrink: 0;
   }
 
   .navbar-brand-title {
-    font-size: 17px !important;
+    font-size: 16px !important;
   }
 
   .navbar-brand-subtitle {
@@ -410,35 +418,16 @@ img, picture, video, canvas, svg {
     display: none !important;
   }
 
-  .navbar-cart-btn {
-    padding: 0 10px !important;
-    height: 36px !important;
-  }
-
-  .navbar-cart-label {
-    display: none !important;
-  }
-
-  .navbar-account-label {
-    display: none !important;
-  }
-
-  .navbar-login-btn {
-    padding: 6px 10px !important;
-    font-size: 11px !important;
-    white-space: nowrap;
-  }
-
   /* Hero Section */
   .hero-portal-section {
     min-height: auto !important;
-    padding: 28px 14px 32px !important;
+    padding: 28px 16px 68px !important;
   }
 
   .hero-trust-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
+    grid-template-columns: repeat(4, 1fr) !important;
     gap: 12px !important;
-    margin-top: 20px !important;
+    width: 100%;
   }
 
   /* Product Detail Page */

@@ -2,7 +2,6 @@
 
 import React, { useState, useRef } from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 
 export function HeroPortal() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -17,9 +16,8 @@ export function HeroPortal() {
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
 
-    // Damped 3D rotation angle (max 12 degrees)
-    const rotateX = ((y - centerY) / centerY) * -10;
-    const rotateY = ((x - centerX) / centerX) * 10;
+    const rotateX = ((y - centerY) / centerY) * -8;
+    const rotateY = ((x - centerX) / centerX) * 8;
 
     setRotate({ x: rotateX, y: rotateY });
   };
@@ -40,362 +38,452 @@ export function HeroPortal() {
       style={{
         position: "relative",
         overflow: "hidden",
-        backgroundColor: "var(--bg-canvas)",
-        backgroundImage: "radial-gradient(circle at 50% 30%, rgba(245, 158, 11, 0.08) 0%, rgba(13, 148, 136, 0.05) 45%, transparent 70%)",
-        padding: "calc(var(--space-2xl) + 12px) var(--space-md) var(--space-2xl)",
+        background: "linear-gradient(130deg, #070b22 0%, #0f1742 42%, #1d1252 75%, #0b1136 100%)",
+        padding: "44px 24px 86px",
         perspective: "1200px",
-        minHeight: "560px",
+        minHeight: "520px",
         display: "flex",
-        flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
+        color: "#ffffff",
       }}
     >
-      {/* Background Hologram Portal Ring */}
+      {/* Ambient Cosmic Neon Glows */}
       <div
         style={{
           position: "absolute",
-          top: "45%",
-          left: "50%",
-          width: "min(680px, 90vw)",
-          height: "min(680px, 90vw)",
+          top: "-10%",
+          right: "15%",
+          width: "520px",
+          height: "520px",
           borderRadius: "50%",
-          transform: `translate(-50%, -50%) rotateX(${rotate.x * 0.4}deg) rotateY(${rotate.y * 0.4}deg)`,
-          background: "radial-gradient(circle, rgba(245, 158, 11, 0.15) 0%, rgba(20, 184, 166, 0.12) 35%, rgba(11, 15, 25, 0.02) 70%, transparent 100%)",
-          border: "1.5px solid rgba(245, 158, 11, 0.2)",
-          boxShadow: "0 0 80px rgba(245, 158, 11, 0.18), inset 0 0 60px rgba(20, 184, 166, 0.12)",
+          background: "radial-gradient(circle, rgba(56, 189, 248, 0.22) 0%, rgba(168, 85, 247, 0.14) 45%, transparent 70%)",
+          filter: "blur(30px)",
           pointerEvents: "none",
-          transition: isHovered ? "transform 0.1s ease-out" : "transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)",
-          zIndex: 1,
         }}
-      >
-        {/* Inner concentric ring */}
-        <div
-          style={{
-            position: "absolute",
-            inset: "40px",
-            borderRadius: "50%",
-            border: "1px dashed rgba(20, 184, 166, 0.3)",
-            animation: "spin 40s linear infinite",
-          }}
-        />
-      </div>
-
-      {/* Floating 3D Category Preview Cards reacting to mouse */}
+      />
       <div
         style={{
           position: "absolute",
-          inset: 0,
+          bottom: "-15%",
+          left: "5%",
+          width: "420px",
+          height: "420px",
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(99, 102, 241, 0.18) 0%, transparent 70%)",
+          filter: "blur(30px)",
           pointerEvents: "none",
-          zIndex: 2,
         }}
-      >
-        {/* Floating Card 1: GaN Fast Chargers */}
-        <div
-          style={{
-            position: "absolute",
-            top: "12%",
-            left: "max(5%, 20px)",
-            backgroundColor: "rgba(18, 24, 38, 0.85)",
-            backdropFilter: "blur(12px)",
-            border: "1px solid rgba(245, 158, 11, 0.3)",
-            borderRadius: "var(--radius-lg)",
-            padding: "10px 14px",
-            boxShadow: "0 12px 28px rgba(0, 0, 0, 0.4)",
-            display: "flex",
-            alignItems: "center",
-            gap: "10px",
-            transform: `translate3d(${rotate.y * 1.8}px, ${rotate.x * 1.5}px, 40px)`,
-            transition: isHovered ? "transform 0.1s ease-out" : "transform 0.6s ease",
-          }}
-          className="desktop-only-float"
-        >
-          <div
-            style={{
-              width: "32px",
-              height: "32px",
-              borderRadius: "var(--radius-md)",
-              backgroundColor: "var(--tier-authentic-gold-bg)",
-              color: "var(--tier-authentic-gold)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "16px",
-            }}
-          >
-            ⚡
-          </div>
-          <div>
-            <div style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-primary)" }}>
-              65W–140W GaN
-            </div>
-            <div style={{ fontSize: "9px", color: "var(--tier-authentic-gold)", fontWeight: "600" }}>
-              Official Warranty
-            </div>
-          </div>
-        </div>
+      />
 
-        {/* Floating Card 2: Soldering & Bench */}
-        <div
-          style={{
-            position: "absolute",
-            top: "16%",
-            right: "max(5%, 20px)",
-            backgroundColor: "rgba(18, 24, 38, 0.85)",
-            backdropFilter: "blur(12px)",
-            border: "1px solid rgba(20, 184, 166, 0.3)",
-            borderRadius: "var(--radius-lg)",
-            padding: "10px 14px",
-            boxShadow: "0 12px 28px rgba(0, 0, 0, 0.4)",
-            display: "flex",
-            alignItems: "center",
-            gap: "10px",
-            transform: `translate3d(${rotate.y * -1.8}px, ${rotate.x * 1.8}px, 30px)`,
-            transition: isHovered ? "transform 0.1s ease-out" : "transform 0.6s ease",
-          }}
-          className="desktop-only-float"
-        >
-          <div
-            style={{
-              width: "32px",
-              height: "32px",
-              borderRadius: "var(--radius-md)",
-              backgroundColor: "var(--tier-budget-teal-bg)",
-              color: "var(--tier-budget-teal)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "16px",
-            }}
-          >
-            🔧
-          </div>
-          <div>
-            <div style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-primary)" }}>
-              T12 Soldering
-            </div>
-            <div style={{ fontSize: "9px", color: "var(--tier-budget-teal)", fontWeight: "600" }}>
-              Tested OEM Gear
-            </div>
-          </div>
-        </div>
-
-        {/* Floating Card 3: Tamper-Evident Seal Indicator */}
-        <div
-          style={{
-            position: "absolute",
-            bottom: "16%",
-            left: "max(8%, 30px)",
-            backgroundColor: "rgba(18, 24, 38, 0.85)",
-            backdropFilter: "blur(12px)",
-            border: "1px solid rgba(245, 158, 11, 0.4)",
-            borderRadius: "var(--radius-lg)",
-            padding: "10px 14px",
-            boxShadow: "0 12px 28px rgba(0, 0, 0, 0.4)",
-            display: "flex",
-            alignItems: "center",
-            gap: "10px",
-            transform: `translate3d(${rotate.y * 1.4}px, ${rotate.x * -1.4}px, 25px)`,
-            transition: isHovered ? "transform 0.1s ease-out" : "transform 0.6s ease",
-          }}
-          className="desktop-only-float"
-        >
-          <div
-            style={{
-              width: "32px",
-              height: "32px",
-              borderRadius: "var(--radius-md)",
-              backgroundColor: "var(--tier-authentic-gold-bg)",
-              color: "var(--tier-authentic-gold)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "16px",
-            }}
-          >
-            🛡️
-          </div>
-          <div>
-            <div style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-primary)" }}>
-              100% Sealed
-            </div>
-            <div style={{ fontSize: "9px", color: "var(--text-tertiary)" }}>
-              Crockford Base32
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Center Content Hierarchy */}
+      {/* Main 2-Column Hero Grid matching Reference Design */}
       <div
+        className="hero-inner-grid"
         style={{
           position: "relative",
           zIndex: 10,
-          maxWidth: "880px",
-          textAlign: "center",
-          display: "flex",
-          flexDirection: "column",
+          width: "100%",
+          maxWidth: "1320px",
+          margin: "0 auto",
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 360px), 1fr))",
           alignItems: "center",
-          gap: "var(--space-md)",
+          gap: "40px",
         }}
       >
-        {/* Pill Tagline */}
+        {/* Left Column: Headline, Subtitle, Shop Now Button, 4 Pillars */}
         <div
           style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "6px",
-            padding: "4px 14px",
-            borderRadius: "var(--radius-full)",
-            backgroundColor: "var(--tier-authentic-gold-bg)",
-            border: "1px solid var(--tier-authentic-gold-border)",
-            fontSize: "var(--font-size-xs)",
-            fontWeight: "var(--font-weight-bold)",
-            color: "var(--tier-authentic-gold)",
-            letterSpacing: "0.04em",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "flex-start",
+            gap: "20px",
+            maxWidth: "560px",
           }}
         >
-          <span>✨</span>
-          <span>DIRECT FROM NAWABPUR WHOLESALE TECH HUB</span>
-        </div>
-
-        {/* Display Headline */}
-        <h1
-          style={{
-            fontSize: "clamp(2rem, 5vw, 3.8rem)",
-            fontWeight: "900",
-            fontFamily: "var(--font-family-display)",
-            lineHeight: "1.12",
-            letterSpacing: "-0.04em",
-            color: "var(--text-primary)",
-            margin: 0,
-          }}
-        >
-          Your World Of Tech Shopping{" "}
-          <span
+          <h1
             style={{
-              background: "linear-gradient(135deg, #f59e0b 0%, #14b8a6 60%, #38bdf8 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
+              fontSize: "clamp(2.4rem, 4.8vw, 4.1rem)",
+              fontWeight: "900",
+              fontFamily: "var(--font-family-display)",
+              lineHeight: "1.08",
+              letterSpacing: "-0.03em",
+              color: "#ffffff",
+              margin: 0,
             }}
           >
-            Starts Here.
-          </span>
-        </h1>
+            Your World
+            <br />
+            Of Shopping
+            <br />
+            <span style={{ color: "#ff6e6c" }}>Starts </span>
+            <span style={{ color: "#2dd4bf" }}>Here.</span>
+          </h1>
 
-        {/* Subtitle */}
-        <p
-          style={{
-            fontSize: "clamp(0.95rem, 1.8vw, 1.15rem)",
-            color: "var(--text-secondary)",
-            maxWidth: "680px",
-            lineHeight: "1.6",
-            margin: 0,
-          }}
-        >
-          Explore 100% authentic gear, tested OEM alternatives, and shop smarter with
-          tamper-evident holographic seals directly from Nawabpur Complex.
-        </p>
+          <p
+            style={{
+              fontSize: "clamp(0.95rem, 1.4vw, 1.08rem)",
+              color: "rgba(226, 232, 240, 0.88)",
+              maxWidth: "430px",
+              lineHeight: "1.6",
+              margin: 0,
+            }}
+          >
+            Explore endless choices, discover 100% authentic &amp; tested OEM hardware, and shop smarter in a whole new way.
+          </p>
 
-        {/* Primary Call to Action Button */}
-        <div style={{ display: "flex", gap: "var(--space-md)", marginTop: "var(--space-sm)", flexWrap: "wrap", justifyContent: "center" }}>
-          <Link href="/catalog" style={{ textDecoration: "none" }}>
-            <button
-              type="button"
+          {/* CTA Row */}
+          <div style={{ display: "flex", alignItems: "center", gap: "14px", flexWrap: "wrap", marginTop: "4px" }}>
+            <Link href="/catalog" style={{ textDecoration: "none" }}>
+              <button
+                type="button"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  padding: "13px 30px",
+                  borderRadius: "9999px",
+                  background: "linear-gradient(90deg, #ff5e62 0%, #ff7b54 100%)",
+                  color: "#ffffff",
+                  fontWeight: "700",
+                  fontSize: "15px",
+                  border: "none",
+                  cursor: "pointer",
+                  boxShadow: "0 10px 26px rgba(255, 94, 98, 0.45)",
+                  transition: "all var(--duration-fast) var(--ease-spring)",
+                }}
+                className="interactive-scale"
+              >
+                <span>Shop Now</span>
+                <span style={{ fontSize: "17px" }}>→</span>
+              </button>
+            </Link>
+
+            <Link
+              href="/verify"
               style={{
                 display: "inline-flex",
                 alignItems: "center",
-                gap: "8px",
-                padding: "14px 32px",
-                borderRadius: "var(--radius-full)",
-                background: "linear-gradient(135deg, #ff6b35 0%, #f59e0b 100%)",
-                color: "#ffffff",
-                fontWeight: "800",
-                fontSize: "var(--font-size-base)",
-                border: "none",
-                cursor: "pointer",
-                boxShadow: "0 8px 24px rgba(255, 107, 53, 0.4), 0 0 12px rgba(245, 158, 11, 0.3)",
-                transition: "all var(--duration-fast) var(--ease-spring)",
+                gap: "6px",
+                padding: "12px 20px",
+                borderRadius: "9999px",
+                backgroundColor: "rgba(255, 255, 255, 0.08)",
+                border: "1px solid rgba(255, 255, 255, 0.2)",
+                color: "#fbbf24",
+                fontWeight: "700",
+                fontSize: "13px",
+                textDecoration: "none",
+                backdropFilter: "blur(8px)",
               }}
               className="interactive-scale"
             >
-              <span>Shop Now</span>
-              <span style={{ fontSize: "18px" }}>→</span>
-            </button>
-          </Link>
-
-          <Link href="/verify" style={{ textDecoration: "none" }}>
-            <Button
-              variant="outline"
-              size="lg"
-              style={{
-                borderRadius: "var(--radius-full)",
-                borderColor: "var(--tier-authentic-gold)",
-                color: "var(--tier-authentic-gold)",
-                gap: "6px",
-              }}
-            >
               <span>🛡️</span>
-              <span>Verify Holographic Seal</span>
-            </Button>
-          </Link>
+              <span>Verify Seal</span>
+            </Link>
+          </div>
+
+          {/* 4-Pillar Trust Row (matching Reference Icons below Shop Now) */}
+          <div
+            className="hero-trust-grid"
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(4, auto)",
+              gap: "28px",
+              marginTop: "12px",
+              paddingTop: "8px",
+            }}
+          >
+            {[
+              { icon: "🛍️", line1: "Secure", line2: "Shopping" },
+              { icon: "🚚", line1: "Fast", line2: "Delivery" },
+              { icon: "🔄", line1: "Easy", line2: "Returns" },
+              { icon: "🎧", line1: "24/7", line2: "Support" },
+            ].map((pillar) => (
+              <div
+                key={pillar.line2}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  textAlign: "center",
+                  gap: "6px",
+                }}
+              >
+                <div
+                  style={{
+                    width: "36px",
+                    height: "36px",
+                    borderRadius: "10px",
+                    backgroundColor: "rgba(255, 255, 255, 0.08)",
+                    border: "1px solid rgba(255, 255, 255, 0.16)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "17px",
+                  }}
+                >
+                  {pillar.icon}
+                </div>
+                <div style={{ fontSize: "11px", lineHeight: "1.25", color: "rgba(255, 255, 255, 0.88)", fontWeight: "600" }}>
+                  <div>{pillar.line1}</div>
+                  <div>{pillar.line2}</div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* 4-Pillar Trust Micro-Bar */}
+        {/* Right Column: Futuristic Holographic Cylinder Portal & Floating Product Windows */}
         <div
-          className="hero-trust-grid"
           style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 150px), 1fr))",
-            gap: "var(--space-md)",
-            width: "100%",
-            maxWidth: "840px",
-            marginTop: "var(--space-xl)",
-            paddingTop: "var(--space-lg)",
-            borderTop: "1px solid var(--border-subtle)",
+            position: "relative",
+            height: "410px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            transform: `rotateX(${rotate.x * 0.35}deg) rotateY(${rotate.y * 0.35}deg)`,
+            transition: isHovered ? "transform 0.1s ease-out" : "transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", justifyContent: "center" }}>
-            <span style={{ fontSize: "20px" }}>🛡️</span>
-            <div style={{ textAlign: "left" }}>
-              <div style={{ fontSize: "12px", fontWeight: "700", color: "var(--text-primary)" }}>100% Sealed</div>
-              <div style={{ fontSize: "10px", color: "var(--text-tertiary)" }}>Tamper-evident seals</div>
+          {/* Holographic Cylinder Body */}
+          <div
+            style={{
+              position: "relative",
+              width: "min(360px, 82vw)",
+              height: "350px",
+              borderRadius: "28px",
+              background:
+                "linear-gradient(180deg, rgba(56, 189, 248, 0.24) 0%, rgba(99, 102, 241, 0.10) 50%, rgba(45, 212, 191, 0.28) 100%)",
+              borderLeft: "1.5px solid rgba(56, 189, 248, 0.55)",
+              borderRight: "1.5px solid rgba(56, 189, 248, 0.55)",
+              boxShadow:
+                "0 0 60px rgba(56, 189, 248, 0.25), inset 0 0 50px rgba(56, 189, 248, 0.2)",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            {/* Top Neon Portal Ring */}
+            <div
+              style={{
+                width: "106%",
+                height: "36px",
+                marginTop: "-18px",
+                borderRadius: "50%",
+                border: "2.5px solid #38bdf8",
+                background: "radial-gradient(ellipse at center, rgba(56, 189, 248, 0.45) 0%, rgba(14, 165, 233, 0.1) 70%)",
+                boxShadow: "0 0 24px #38bdf8, inset 0 0 14px #38bdf8",
+              }}
+            />
+
+            {/* Center Shopper / Tech Hub Hologram Core */}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "8px",
+                zIndex: 3,
+              }}
+            >
+              <div
+                style={{
+                  width: "76px",
+                  height: "76px",
+                  borderRadius: "50%",
+                  background: "radial-gradient(circle, rgba(56, 189, 248, 0.35) 0%, rgba(15, 23, 42, 0.85) 100%)",
+                  border: "2px solid rgba(56, 189, 248, 0.7)",
+                  boxShadow: "0 0 28px rgba(56, 189, 248, 0.55)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "34px",
+                }}
+              >
+                🛡️
+              </div>
+              <span
+                style={{
+                  fontSize: "10px",
+                  fontWeight: "800",
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                  padding: "3px 10px",
+                  borderRadius: "9999px",
+                  backgroundColor: "rgba(15, 23, 42, 0.75)",
+                  border: "1px solid rgba(56, 189, 248, 0.5)",
+                  color: "#7dd3fc",
+                }}
+              >
+                Hologram Verified Hub
+              </span>
             </div>
+
+            {/* Bottom Glowing Platform Pedestal */}
+            <div
+              style={{
+                width: "118%",
+                height: "46px",
+                marginBottom: "-22px",
+                borderRadius: "50%",
+                border: "3px solid #38bdf8",
+                background:
+                  "radial-gradient(ellipse at center, rgba(45, 212, 191, 0.55) 0%, rgba(56, 189, 248, 0.25) 55%, rgba(15, 23, 42, 0.9) 100%)",
+                boxShadow: "0 0 36px #38bdf8, 0 10px 30px rgba(45, 212, 191, 0.45), inset 0 0 20px #38bdf8",
+              }}
+            />
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", justifyContent: "center" }}>
-            <span style={{ fontSize: "20px" }}>⚡</span>
-            <div style={{ textAlign: "left" }}>
-              <div style={{ fontSize: "12px", fontWeight: "700", color: "var(--text-primary)" }}>24h Drop-and-Pack</div>
-              <div style={{ fontSize: "10px", color: "var(--text-tertiary)" }}>Same-day dispatch Dhaka</div>
-            </div>
+          {/* Floating Glassmorphic Card 1 — Top Left (GaN Fast Power) */}
+          <Link
+            href="/catalog?category=chargers-power"
+            style={{
+              position: "absolute",
+              top: "14px",
+              left: "4%",
+              width: "118px",
+              padding: "10px",
+              borderRadius: "16px",
+              background: "linear-gradient(145deg, rgba(255, 255, 255, 0.18) 0%, rgba(30, 41, 59, 0.65) 100%)",
+              backdropFilter: "blur(12px)",
+              border: "1.5px solid rgba(125, 211, 252, 0.55)",
+              boxShadow: "0 12px 28px rgba(0, 0, 0, 0.35), 0 0 16px rgba(56, 189, 248, 0.25)",
+              textDecoration: "none",
+              color: "#ffffff",
+              textAlign: "center",
+              transform: `translate3d(${rotate.y * 1.2}px, ${rotate.x * 1.1}px, 30px)`,
+              zIndex: 5,
+            }}
+          >
+            <div style={{ fontSize: "30px", marginBottom: "4px" }}>⚡</div>
+            <div style={{ fontSize: "11px", fontWeight: "700" }}>GaN Power</div>
+            <div style={{ fontSize: "9px", color: "#7dd3fc" }}>65W–140W</div>
+          </Link>
+
+          {/* Floating Glassmorphic Card 2 — Top Right (Electronics & Audio) */}
+          <Link
+            href="/catalog?category=audio-dacs"
+            style={{
+              position: "absolute",
+              top: "10px",
+              right: "4%",
+              width: "126px",
+              padding: "12px 10px",
+              borderRadius: "16px",
+              background: "linear-gradient(145deg, rgba(56, 189, 248, 0.25) 0%, rgba(30, 41, 59, 0.7) 100%)",
+              backdropFilter: "blur(12px)",
+              border: "1.5px solid rgba(56, 189, 248, 0.65)",
+              boxShadow: "0 12px 28px rgba(0, 0, 0, 0.35), 0 0 20px rgba(56, 189, 248, 0.3)",
+              textDecoration: "none",
+              color: "#ffffff",
+              textAlign: "center",
+              transform: `translate3d(${rotate.y * -1.2}px, ${rotate.x * 1.2}px, 40px)`,
+              zIndex: 5,
+            }}
+          >
+            <div style={{ fontSize: "32px", marginBottom: "4px" }}>🎧</div>
+            <div style={{ fontSize: "11px", fontWeight: "700" }}>Electronics</div>
+            <div style={{ fontSize: "9px", color: "#bae6fd" }}>Hi-Res Audio</div>
+          </Link>
+
+          {/* Floating Glassmorphic Card 3 — Middle Left (Bench & Soldering) */}
+          <Link
+            href="/catalog?category=engineering-tools"
+            style={{
+              position: "absolute",
+              top: "42%",
+              left: "-2%",
+              width: "120px",
+              padding: "10px",
+              borderRadius: "16px",
+              background: "linear-gradient(145deg, rgba(244, 114, 182, 0.22) 0%, rgba(30, 41, 59, 0.7) 100%)",
+              backdropFilter: "blur(12px)",
+              border: "1.5px solid rgba(244, 114, 182, 0.5)",
+              boxShadow: "0 12px 28px rgba(0, 0, 0, 0.35)",
+              textDecoration: "none",
+              color: "#ffffff",
+              textAlign: "center",
+              transform: `translate3d(${rotate.y * 1.5}px, ${rotate.x * -1.1}px, 35px)`,
+              zIndex: 5,
+            }}
+          >
+            <div style={{ fontSize: "28px", marginBottom: "4px" }}>🔬</div>
+            <div style={{ fontSize: "11px", fontWeight: "700" }}>Bench Lab</div>
+            <div style={{ fontSize: "9px", color: "#fbcfe8" }}>T12 &amp; Scopes</div>
+          </Link>
+
+          {/* Floating Glassmorphic Card 4 — Middle Right (Smart Gadgets) */}
+          <Link
+            href="/catalog?category=smart-wearables"
+            style={{
+              position: "absolute",
+              top: "44%",
+              right: "-2%",
+              width: "122px",
+              padding: "10px",
+              borderRadius: "16px",
+              background: "linear-gradient(145deg, rgba(251, 191, 36, 0.2) 0%, rgba(30, 41, 59, 0.7) 100%)",
+              backdropFilter: "blur(12px)",
+              border: "1.5px solid rgba(251, 191, 36, 0.5)",
+              boxShadow: "0 12px 28px rgba(0, 0, 0, 0.35)",
+              textDecoration: "none",
+              color: "#ffffff",
+              textAlign: "center",
+              transform: `translate3d(${rotate.y * -1.4}px, ${rotate.x * -1.2}px, 35px)`,
+              zIndex: 5,
+            }}
+          >
+            <div style={{ fontSize: "28px", marginBottom: "4px" }}>⌚</div>
+            <div style={{ fontSize: "11px", fontWeight: "700" }}>Smart Tech</div>
+            <div style={{ fontSize: "9px", color: "#fde68a" }}>Wearables</div>
+          </Link>
+
+          {/* Floating Social/Trust Badges matching Reference (Heart, Thumbs-Up, Cart) */}
+          <div
+            className="desktop-only-float"
+            style={{
+              position: "absolute",
+              bottom: "58px",
+              left: "12%",
+              padding: "6px 10px",
+              borderRadius: "10px",
+              backgroundColor: "rgba(56, 189, 248, 0.22)",
+              border: "1px solid rgba(56, 189, 248, 0.5)",
+              backdropFilter: "blur(8px)",
+              fontSize: "11px",
+              fontWeight: "700",
+              color: "#ffffff",
+              zIndex: 6,
+            }}
+          >
+            👍 99.8% Genuine
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", justifyContent: "center" }}>
-            <span style={{ fontSize: "20px" }}>🔄</span>
-            <div style={{ textAlign: "left" }}>
-              <div style={{ fontSize: "12px", fontWeight: "700", color: "var(--text-primary)" }}>Doorstep RMA Swap</div>
-              <div style={{ fontSize: "10px", color: "var(--text-tertiary)" }}>Zero-hassle returns</div>
-            </div>
-          </div>
-
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", justifyContent: "center" }}>
-            <span style={{ fontSize: "20px" }}>🎧</span>
-            <div style={{ textAlign: "left" }}>
-              <div style={{ fontSize: "12px", fontWeight: "700", color: "var(--text-primary)" }}>24/7 Nawabpur Care</div>
-              <div style={{ fontSize: "10px", color: "var(--text-tertiary)" }}>Direct engineer support</div>
-            </div>
+          <div
+            className="desktop-only-float"
+            style={{
+              position: "absolute",
+              bottom: "64px",
+              right: "14%",
+              width: "34px",
+              height: "34px",
+              borderRadius: "50%",
+              backgroundColor: "rgba(255, 255, 255, 0.9)",
+              color: "#ff5e62",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "16px",
+              boxShadow: "0 6px 16px rgba(255, 94, 98, 0.4)",
+              zIndex: 6,
+            }}
+          >
+            ❤️
           </div>
         </div>
       </div>
-
-      <style jsx global>{`
-        @media (max-width: 900px) {
-          .desktop-only-float {
-            display: none !important;
-          }
-        }
-      `}</style>
     </section>
   );
 }
+

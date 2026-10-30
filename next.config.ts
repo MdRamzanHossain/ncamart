@@ -9,11 +9,9 @@ import type { NextConfig } from "next";
  *    to prevent hydration / decryption mismatch errors when Server Actions execute across replicas.
  * 3. Identical NEXT_DEPLOYMENT_ID (or GIT_SHA) to ensure chunk assets match across all replicas.
  */
-const isWindows = process.platform === "win32";
-
 const nextConfig: NextConfig = {
-  // Standalone output is used in Linux Docker containers; disabled on Windows virtual drives to prevent EINVAL filesystem tracing errors
-  output: isWindows && process.env.DOCKER_BUILD !== "1" ? undefined : "standalone",
+  // Standalone output is enabled only when DOCKER_BUILD=1; standard build is used for ExonHost cPanel (server.js) and local builds
+  output: process.env.DOCKER_BUILD === "1" ? "standalone" : undefined,
   serverExternalPackages: ["bullmq", "ioredis", "pg", "argon2"],
   reactStrictMode: true,
   poweredByHeader: false,

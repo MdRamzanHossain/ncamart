@@ -1,44 +1,38 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { useToast } from "@/components/ui/toast";
 
 interface ReviewCard {
   name: string;
-  role: string;
-  district: string;
   stars: number;
   quote: string;
-  productPurchased: string;
+  icon: string;
+  tint: string;
 }
 
 const REVIEWS: ReviewCard[] = [
   {
-    name: "Tanvir Rahman",
-    role: "Embedded Systems Engineer",
-    district: "Dhaka (Mirpur DOHS)",
+    name: "Tanvir R.",
     stars: 5,
-    quote:
-      "Ordered the Mechanic T12 Pro station at 11 AM; delivered to my lab by 4 PM same day with holographic seal intact. Scanned on /verify and matched the serial instantly.",
-    productPurchased: "Mechanic T12 Pro 72W",
+    quote: "Amazing quality and super fast delivery! NCAMart is now my go-to Nawabpur hardware app.",
+    icon: "🎧",
+    tint: "#e0e7ff",
   },
   {
-    name: "Engr. Nazmul Hossain",
-    role: "Hardware Lab Manager",
-    district: "Chittagong (Agrabad)",
+    name: "Engr. Nazmul H.",
     stars: 5,
-    quote:
-      "For years we had to personally visit Nawabpur wholesale alleys. NCAMart’s drop-and-pack runners test OEM parts and verify authentic stock with zero hassle.",
-    productPurchased: "Fluke 101 Multimeter + 100W GaN",
+    quote: "Love the wide dual-tier variety and the holographic seal verification is fantastic!",
+    icon: "⌚",
+    tint: "#dbeafe",
   },
   {
-    name: "Mahfuz Ahmed",
-    role: "Robotics Instructor",
-    district: "Khulna (KUET Campus)",
+    name: "Mahfuz A.",
     stars: 5,
-    quote:
-      "The Pre-Order tracking with milestone updates kept our department completely assured. Deposit paid via SSLCommerz, remaining paid on delivery. Flawless service.",
-    productPurchased: "Siglent SDS1104X-E Scope",
+    quote: "The wholesale deals are unbeatable and engineer support is so helpful.",
+    icon: "🔬",
+    tint: "#fce7f3",
   },
 ];
 
@@ -74,45 +68,52 @@ export function TestimonialsAndNewsletter() {
     <section
       aria-label="Customer Reviews & Newsletter"
       style={{
-        padding: "var(--space-2xl) var(--space-md)",
-        maxWidth: "1400px",
+        padding: "20px 20px 32px",
+        maxWidth: "1340px",
         margin: "0 auto",
       }}
     >
-      {/* "What Shoppers Say" Header */}
-      <div style={{ textAlign: "center", marginBottom: "var(--space-xl)" }}>
-        <div
-          style={{
-            fontSize: "var(--font-size-xs)",
-            color: "var(--tier-authentic-gold)",
-            fontWeight: "var(--font-weight-bold)",
-            textTransform: "uppercase",
-            letterSpacing: "0.06em",
-            marginBottom: "4px",
-          }}
-        >
-          COMMUNITY & VERIFIED REVIEWS
-        </div>
+      {/* "What Shoppers Say" Header matching Reference Design */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginBottom: "16px",
+        }}
+      >
         <h2
           style={{
-            fontSize: "clamp(1.5rem, 3vw, 2.2rem)",
+            fontSize: "20px",
             fontWeight: "800",
             color: "var(--text-primary)",
             margin: 0,
-            letterSpacing: "-0.03em",
+            letterSpacing: "-0.02em",
           }}
         >
-          What Engineers & Makers Say
+          What Shoppers Say
         </h2>
+
+        <Link
+          href="/catalog"
+          style={{
+            fontSize: "13px",
+            fontWeight: "700",
+            color: "#2563eb",
+            textDecoration: "none",
+          }}
+        >
+          View All Reviews
+        </Link>
       </div>
 
-      {/* 3 Review Cards */}
+      {/* 3 Horizontal Review Cards matching Reference Design */}
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 260px), 1fr))",
-          gap: "var(--space-lg)",
-          marginBottom: "var(--space-2xl)",
+          gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
+          gap: "18px",
+          marginBottom: "22px",
         }}
       >
         {REVIEWS.map((rev) => (
@@ -121,180 +122,124 @@ export function TestimonialsAndNewsletter() {
             style={{
               backgroundColor: "var(--bg-surface)",
               border: "1px solid var(--border-default)",
-              borderRadius: "var(--radius-xl)",
-              padding: "var(--space-lg)",
+              borderRadius: "18px",
+              padding: "16px 18px",
               display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-between",
-              boxShadow: "0 8px 24px rgba(0, 0, 0, 0.2)",
+              alignItems: "center",
+              gap: "14px",
+              boxShadow: "0 6px 18px rgba(15, 23, 42, 0.04)",
             }}
           >
-            <div>
-              {/* Star Rating & Verified Badge */}
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  marginBottom: "var(--space-sm)",
-                }}
-              >
-                <div style={{ color: "var(--tier-authentic-gold)", fontSize: "14px", letterSpacing: "2px" }}>
-                  {"★".repeat(rev.stars)}
-                </div>
-
-                <span
-                  style={{
-                    fontSize: "10px",
-                    fontWeight: "700",
-                    padding: "2px 6px",
-                    borderRadius: "var(--radius-xs)",
-                    backgroundColor: "rgba(16, 185, 129, 0.15)",
-                    color: "var(--color-status-success)",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "3px",
-                  }}
-                >
-                  <span>✓</span>
-                  <span>Verified Buyer</span>
-                </span>
-              </div>
-
-              {/* Quote */}
-              <p
-                style={{
-                  fontSize: "var(--font-size-sm)",
-                  color: "var(--text-secondary)",
-                  lineHeight: "1.6",
-                  fontStyle: "italic",
-                  margin: "0 0 var(--space-md)",
-                }}
-              >
-                &ldquo;{rev.quote}&rdquo;
-              </p>
-            </div>
-
-            {/* Author Info */}
+            {/* Left Circular Product/Reviewer Visual */}
             <div
               style={{
+                width: "56px",
+                height: "56px",
+                borderRadius: "50%",
+                backgroundColor: rev.tint,
                 display: "flex",
                 alignItems: "center",
-                gap: "10px",
-                paddingTop: "var(--space-sm)",
-                borderTop: "1px solid var(--border-subtle)",
+                justifyContent: "center",
+                fontSize: "28px",
+                flexShrink: 0,
               }}
             >
-              <div
+              {rev.icon}
+            </div>
+
+            {/* Right Name, Stars & Quote */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: "13px", fontWeight: "700", color: "var(--text-primary)" }}>
+                {rev.name}
+              </div>
+              <div style={{ color: "#f59e0b", fontSize: "12px", letterSpacing: "1px", margin: "1px 0 4px" }}>
+                {"★".repeat(rev.stars)}
+              </div>
+              <p
                 style={{
-                  width: "36px",
-                  height: "36px",
-                  borderRadius: "50%",
-                  background: "linear-gradient(135deg, #0b0f19 0%, #0d9488 100%)",
-                  border: "1px solid var(--tier-authentic-gold)",
-                  color: "#ffffff",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontWeight: "800",
-                  fontSize: "14px",
+                  fontSize: "11.5px",
+                  color: "var(--text-secondary)",
+                  lineHeight: "1.45",
+                  margin: 0,
                 }}
               >
-                {rev.name[0]}
-              </div>
-
-              <div>
-                <div style={{ fontSize: "var(--font-size-xs)", fontWeight: "700", color: "var(--text-primary)" }}>
-                  {rev.name}
-                </div>
-                <div style={{ fontSize: "10px", color: "var(--text-tertiary)" }}>
-                  {rev.role} • {rev.district}
-                </div>
-              </div>
+                {rev.quote}
+              </p>
             </div>
           </div>
         ))}
       </div>
 
-      {/* "Stay in the Loop" Newsletter Box */}
+      {/* "Stay in the Loop" Horizontal Bar matching Reference Design */}
       <div
         style={{
-          borderRadius: "var(--radius-xl)",
-          background: "linear-gradient(135deg, #18181b 0%, #27272a 100%)",
-          border: "1px solid var(--border-default)",
-          padding: "var(--space-2xl) var(--space-xl)",
+          borderRadius: "18px",
+          backgroundColor: "#ffffff",
+          border: "1px solid #e2e8f0",
+          padding: "16px 24px",
           display: "flex",
-          flexDirection: "column",
           alignItems: "center",
-          textAlign: "center",
-          gap: "var(--space-md)",
-          boxShadow: "0 12px 32px rgba(0, 0, 0, 0.35)",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: "18px",
+          boxShadow: "0 6px 20px rgba(15, 23, 42, 0.04)",
         }}
       >
-        <div
-          style={{
-            width: "48px",
-            height: "48px",
-            borderRadius: "50%",
-            backgroundColor: "rgba(245, 158, 11, 0.15)",
-            border: "1px solid var(--tier-authentic-gold)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: "22px",
-          }}
-        >
-          📬
-        </div>
-
-        <div>
-          <h3
+        {/* Left: Envelope Icon + Stay in the Loop */}
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div
             style={{
-              fontSize: "clamp(1.3rem, 2.5vw, 1.8rem)",
-              fontWeight: "800",
-              color: "var(--text-primary)",
-              margin: "0 0 6px",
+              width: "40px",
+              height: "40px",
+              borderRadius: "10px",
+              backgroundColor: "#eff6ff",
+              color: "#1e3a8a",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "20px",
+              flexShrink: 0,
             }}
           >
-            Stay in the Loop
-          </h3>
-          <p
-            style={{
-              fontSize: "var(--font-size-sm)",
-              color: "var(--text-secondary)",
-              maxWidth: "520px",
-              margin: 0,
-            }}
-          >
-            Be the first to get wholesale clearance announcements, pre-order import batches, and engineering tutorials.
-          </p>
+            ✉️
+          </div>
+          <div>
+            <div style={{ fontSize: "14px", fontWeight: "800", color: "#0f172a" }}>
+              Stay in the Loop
+            </div>
+            <div style={{ fontSize: "11.5px", color: "#64748b" }}>
+              Get exclusive deals, new arrivals, and more.
+            </div>
+          </div>
         </div>
 
-        {/* Input Form */}
+        {/* Center: Connected Email Input + Coral Subscribe Button */}
         <form
           onSubmit={handleSubscribe}
           className="newsletter-form"
           style={{
             display: "flex",
-            gap: "var(--space-xs)",
-            width: "100%",
-            maxWidth: "460px",
-            marginTop: "var(--space-xs)",
+            alignItems: "center",
+            flex: 1,
+            maxWidth: "430px",
+            borderRadius: "10px",
+            border: "1px solid #cbd5e1",
+            backgroundColor: "#f8fafc",
+            overflow: "hidden",
           }}
         >
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="Enter your email address..."
+            placeholder="Enter your email"
             style={{
               flex: 1,
-              backgroundColor: "var(--bg-canvas)",
-              border: "1px solid var(--border-default)",
-              borderRadius: "var(--radius-full)",
-              padding: "10px 16px",
-              color: "var(--text-primary)",
-              fontSize: "var(--font-size-sm)",
+              backgroundColor: "transparent",
+              border: "none",
+              padding: "10px 14px",
+              color: "#0f172a",
+              fontSize: "12.5px",
               outline: "none",
             }}
             required
@@ -305,25 +250,56 @@ export function TestimonialsAndNewsletter() {
             disabled={isSubscribing}
             style={{
               padding: "10px 22px",
-              borderRadius: "var(--radius-full)",
-              background: "linear-gradient(135deg, #ff6b35 0%, #f43f5e 100%)",
+              background: "linear-gradient(90deg, #ff5e62 0%, #ff7b54 100%)",
               color: "#ffffff",
               border: "none",
               fontWeight: "700",
-              fontSize: "var(--font-size-sm)",
+              fontSize: "12.5px",
               cursor: isSubscribing ? "not-allowed" : "pointer",
-              boxShadow: "0 4px 12px rgba(244, 63, 94, 0.35)",
+              whiteSpace: "nowrap",
             }}
-            className="interactive-scale"
           >
             {isSubscribing ? "Joining..." : "Subscribe"}
           </button>
         </form>
 
-        <div style={{ fontSize: "11px", color: "var(--text-tertiary)" }}>
-          No spam, ever. Unsubscribe at any time with one click.
+        {/* Right: Follow Us + 5 Social Icons */}
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <span style={{ fontSize: "12px", fontWeight: "700", color: "#0f172a", marginRight: "4px" }}>
+            Follow Us
+          </span>
+          {[
+            { label: "Instagram", icon: "📷" },
+            { label: "TikTok", icon: "🎵" },
+            { label: "YouTube", icon: "▶️" },
+            { label: "Facebook", icon: "f" },
+            { label: "Twitter", icon: "𝕏" },
+          ].map((soc) => (
+            <a
+              key={soc.label}
+              href="#footer"
+              aria-label={soc.label}
+              style={{
+                width: "30px",
+                height: "30px",
+                borderRadius: "50%",
+                backgroundColor: "#f1f5f9",
+                border: "1px solid #e2e8f0",
+                color: "#334155",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "12px",
+                fontWeight: "700",
+                textDecoration: "none",
+              }}
+            >
+              {soc.icon}
+            </a>
+          ))}
         </div>
       </div>
     </section>
   );
 }
+

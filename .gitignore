@@ -2,11 +2,14 @@
 node_modules
 .pnpm-store
 
-# Next.js
-.next
+# Next.js (Track production .next build for cPanel, ignore heavy build cache & traces)
+.next/cache/
+.next/trace
+.next/diagnostics/
 out
 build
 dist
+*.zip
 
 # Environment variables
 .env

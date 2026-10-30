@@ -137,25 +137,20 @@ export function MegaMenu() {
         style={{
           display: "flex",
           alignItems: "center",
-          gap: "var(--space-xs)",
-          padding: "var(--space-sm) var(--space-md)",
+          gap: "6px",
+          padding: "4px 6px",
           borderRadius: "var(--radius-sm)",
-          color: isOpen ? "var(--color-brand-primary)" : "var(--text-primary)",
-          fontWeight: "var(--font-weight-semibold)",
-          fontSize: "var(--font-size-sm)",
+          color: isOpen ? "#ff5e62" : "rgba(255, 255, 255, 0.82)",
+          fontWeight: "500",
+          fontSize: "13px",
           transition: "color var(--duration-fast) ease",
           cursor: "pointer",
         }}
       >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <line x1="4" x2="20" y1="12" y2="12" />
-          <line x1="4" x2="20" y1="6" y2="6" />
-          <line x1="4" x2="20" y1="18" y2="18" />
-        </svg>
-        <span>Categories (ক্যাটাগরি)</span>
+        <span>Categories</span>
         <svg
-          width="14"
-          height="14"
+          width="13"
+          height="13"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"

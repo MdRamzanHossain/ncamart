@@ -53,15 +53,15 @@ export default function CheckoutPage() {
 
   // Shipping address state
   const [address, setAddress] = useState<ShippingAddressData>({
-    recipientName: user?.name || "Tanvir Rahman",
-    phone: user?.phone || "01712345678",
+    recipientName: user?.name || "",
+    phone: user?.phone || "",
     divisionId: "div-dhaka",
     divisionName: "Dhaka",
     districtId: "dist-dhaka",
     districtName: "Dhaka City",
     thanaId: "thana-kotwali",
     thanaName: "Kotwali (Nawabpur)",
-    streetAddress: "House 12, Road 4, Sector 3",
+    streetAddress: "",
     isPickupCounter: false,
   });
 

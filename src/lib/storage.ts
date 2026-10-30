@@ -1,4 +1,6 @@
 import crypto from "node:crypto";
+import fs from "node:fs/promises";
+import path from "node:path";
 import {
   S3Client,
   PutObjectCommand,
@@ -17,6 +19,23 @@ import { env } from "./env";
 const globalForS3 = globalThis as unknown as {
   s3Client?: S3Client;
 };
+
+/**
+ * Checks whether Local Disk Storage mode is active (e.g., on ExonHost cPanel without Cloudflare R2).
+ */
+export function isLocalDiskStorage(): boolean {
+  return (
+    env.S3_ENDPOINT === "local" ||
+    env.S3_ACCESS_KEY_ID === "local" ||
+    (process.env.NODE_ENV === "production" && env.S3_ENDPOINT.includes("localhost"))
+  );
+}
+
+export function getLocalFilePath(bucket: string, key: string): string {
+  const safeBucket = bucket.replace(/[^a-zA-Z0-9._-]/g, "_");
+  const safeKey = key.replace(/\.\./g, "").replace(/^\/+/, "");
+  return path.join(process.cwd(), "public", "uploads", safeBucket, safeKey);
+}
 
 // In-Memory Fallback Store for offline environments & unit tests
 interface MemStoredObject {
@@ -69,6 +88,10 @@ export interface PresignPutParams extends PresignParams {
 }
 
 export async function presignPut(params: PresignPutParams): Promise<string> {
+  if (isLocalDiskStorage()) {
+    return `/api/v1/media/local-upload?bucket=${encodeURIComponent(params.bucket)}&key=${encodeURIComponent(params.key)}&contentType=${encodeURIComponent(params.contentType)}`;
+  }
+
   const client = getS3Client();
   const command = new PutObjectCommand({
     Bucket: params.bucket,
@@ -83,6 +106,10 @@ export async function presignPut(params: PresignPutParams): Promise<string> {
 }
 
 export async function presignGet(params: PresignParams): Promise<string> {
+  if (isLocalDiskStorage()) {
+    return `/api/v1/media/local-upload?bucket=${encodeURIComponent(params.bucket)}&key=${encodeURIComponent(params.key)}`;
+  }
+
   const client = getS3Client();
   const command = new GetObjectCommand({
     Bucket: params.bucket,
@@ -108,6 +135,10 @@ export async function createMultipartUpload(
     contentType,
     parts: new Map(),
   });
+
+  if (isLocalDiskStorage()) {
+    return uploadId;
+  }
 
   try {
     const client = getS3Client();
@@ -140,6 +171,10 @@ export async function presignUploadPart(params: {
   partNumber: number;
   expiresIn?: number;
 }): Promise<string> {
+  if (isLocalDiskStorage()) {
+    return `/api/v1/media/local-upload?bucket=${encodeURIComponent(params.bucket)}&key=${encodeURIComponent(params.key)}&uploadId=${encodeURIComponent(params.uploadId)}&partNumber=${params.partNumber}`;
+  }
+
   const client = getS3Client();
   const command = new UploadPartCommand({
     Bucket: params.bucket,
@@ -173,6 +208,10 @@ export async function completeMultipartUpload(params: {
   });
   memMultipart.delete(params.uploadId);
 
+  if (isLocalDiskStorage()) {
+    return;
+  }
+
   try {
     const client = getS3Client();
     const command = new CompleteMultipartUploadCommand({
@@ -195,6 +234,9 @@ export async function abortMultipartUpload(
   uploadId: string
 ): Promise<void> {
   memMultipart.delete(uploadId);
+  if (isLocalDiskStorage()) {
+    return;
+  }
   try {
     const client = getS3Client();
     const command = new AbortMultipartUploadCommand({
@@ -227,6 +269,13 @@ export async function putObject(
     contentType,
   });
 
+  if (isLocalDiskStorage()) {
+    const filePath = getLocalFilePath(bucket, key);
+    await fs.mkdir(path.dirname(filePath), { recursive: true });
+    await fs.writeFile(filePath, buf);
+    return;
+  }
+
   try {
     const client = getS3Client();
     const command = new PutObjectCommand({
@@ -245,6 +294,20 @@ export async function getObject(
   bucket: string,
   key: string
 ): Promise<{ body: Buffer; contentType: string } | null> {
+  if (isLocalDiskStorage()) {
+    try {
+      const filePath = getLocalFilePath(bucket, key);
+      const body = await fs.readFile(filePath);
+      const mem = memStorage.get(`${bucket}/${key}`);
+      return {
+        body,
+        contentType: mem?.contentType || "application/octet-stream",
+      };
+    } catch {
+      // Fall through to memory
+    }
+  }
+
   try {
     const client = getS3Client();
     const command = new GetObjectCommand({
@@ -277,10 +340,25 @@ export async function headObject(
   bucket: string,
   key: string
 ): Promise<{ exists: boolean; contentLength?: number; contentType?: string }> {
+  if (isLocalDiskStorage()) {
+    try {
+      const filePath = getLocalFilePath(bucket, key);
+      const stat = await fs.stat(filePath);
+      const mem = memStorage.get(`${bucket}/${key}`);
+      return {
+        exists: true,
+        contentLength: stat.size,
+        contentType: mem?.contentType,
+      };
+    } catch {
+      // Fall through to memory check
+    }
+  }
+
   try {
     const client = getS3Client();
     const command = new HeadObjectCommand({
-      Bucket: bucket,
+      Bucket: paramsBucket(bucket),
       Key: key,
     });
     const res = await client.send(command);
@@ -307,8 +385,21 @@ export async function headObject(
   return { exists: false };
 }
 
+function paramsBucket(bucket: string): string {
+  return bucket;
+}
+
 export async function deleteObject(bucket: string, key: string): Promise<void> {
   memStorage.delete(`${bucket}/${key}`);
+  if (isLocalDiskStorage()) {
+    try {
+      const filePath = getLocalFilePath(bucket, key);
+      await fs.unlink(filePath);
+    } catch {
+      // Ignore if file already removed
+    }
+    return;
+  }
   try {
     const client = getS3Client();
     const command = new DeleteObjectCommand({

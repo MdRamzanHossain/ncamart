@@ -1,0 +1,73 @@
+name: cPanel Production Build (.next)
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - ".next/**"
+      - "docs/**"
+      - "*.md"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cpanel-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-for-cpanel:
+    name: Build .next & Commit to Repository
+    if: "!contains(github.event.head_commit.message, '[skip ci]') && github.actor != 'github-actions[bot]'"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+          run_install: false
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "pnpm"
+
+      - name: Install Dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Build Next.js Production Bundle
+        env:
+          NODE_ENV: production
+          NEXT_PUBLIC_APP_URL: https://ncamart.com
+          NEXT_PUBLIC_API_BASE_URL: https://ncamart.com/api/v1
+          APP_BASE_URL: https://ncamart.com
+          MOCK_EXTERNAL_SERVICES: "false"
+        run: pnpm build
+
+      - name: Remove Heavy Build Cache & Set Permissions
+        run: |
+          rm -rf .next/cache .next/trace .next/diagnostics
+          chmod -R u+rwX,go+rX .next public src scripts
+
+      - name: Commit & Push Built .next Directory to main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f .next
+          if git diff --staged --quiet; then
+            echo "No changes in .next build output."
+          else
+            git commit -m "chore(build): update .next production build for cPanel [skip ci]"
+            git pull --rebase -X ours origin main
+            git push origin HEAD:main
+          fi
+

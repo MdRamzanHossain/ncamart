@@ -10,34 +10,36 @@ export function TripleGridSection() {
     <section
       aria-label="Trending, Campaign and Flash Offers"
       style={{
-        padding: "var(--space-2xl) var(--space-md)",
-        maxWidth: "1400px",
+        padding: "20px 20px 12px",
+        maxWidth: "1340px",
         margin: "0 auto",
       }}
     >
       <div
+        className="triple-grid-container"
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 300px), 1fr))",
-          gap: "var(--space-lg)",
+          gridTemplateColumns: "1fr 1.6fr 1fr",
+          gap: "18px",
           alignItems: "stretch",
         }}
       >
         {/* Col 1: Trending Now Ranked Leaderboard */}
-        <div style={{ minHeight: "420px" }}>
+        <div style={{ minHeight: "280px" }}>
           <TrendingLeaderboard />
         </div>
 
         {/* Col 2: Featured Campaign Banner */}
-        <div style={{ minHeight: "420px" }}>
+        <div style={{ minHeight: "280px" }}>
           <FeaturedCampaignBanner />
         </div>
 
         {/* Col 3: Flash Offers with Live Countdown Clock */}
-        <div style={{ minHeight: "420px" }}>
+        <div style={{ minHeight: "280px" }}>
           <FlashOffersCard />
         </div>
       </div>
     </section>
   );
 }
+

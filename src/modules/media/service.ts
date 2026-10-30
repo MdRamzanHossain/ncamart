@@ -20,6 +20,7 @@ import {
   putObject,
   deleteObject,
   clearMemoryStorageForTesting,
+  isLocalDiskStorage,
 } from "@/lib/storage";
 import { mediaRepo, clearMemoryMediaForTesting } from "./repo";
 import {
@@ -499,8 +500,14 @@ export const mediaService = {
       throw new NotFoundError(`Media asset '${mediaId}' has been deleted`);
     }
 
-    // Public media -> Public CDN URL directly
+    // Public media -> Local cPanel disk URL or Public CDN URL directly
     if (media.isPublic) {
+      if (isLocalDiskStorage()) {
+        return {
+          url: `/uploads/${media.bucket}/${media.storageKey}`,
+          is_public: true,
+        };
+      }
       const cdnBase = env.S3_PUBLIC_DOMAIN.replace(/\/+$/, "");
       return {
         url: `${cdnBase}/${media.storageKey}`,

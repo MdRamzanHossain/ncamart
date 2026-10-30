@@ -15,32 +15,32 @@ import {
 export default function HomePage() {
   return (
     <StorefrontShell>
-      {/* 1. Futuristic Hero Shopping Portal with 3D Parallax & Hologram Ring */}
+      {/* 1. Futuristic Hero Shopping Portal with 3D Parallax & Hologram Cylinder */}
       <HeroPortal />
 
-      {/* 2. Circular Category Dock with Glassmorphic Icons & Spring Scale */}
+      {/* 2. Floating White Category Dock Overlapping Hero Bottom */}
       <CategoryDock />
 
-      {/* 3. Interactive Collections (4-Card Grid with Expansion Morphing) */}
+      {/* 3. Interactive Collections (4 Pastel Cards) */}
       <CollectionsGrid />
 
-      {/* 4. Dual-Tier Recommended For You Carousel */}
+      {/* 4. Recommended For You 6-Card Carousel */}
       <RecommendedCarousel />
 
-      {/* 5. Triple-Grid Power Section: Trending, Campaign Banner & Flash Offers */}
+      {/* 5. Triple-Grid Section: Trending Now, Refresh Sale Banner & Flash Offers */}
       <TripleGridSection />
 
-      {/* 6. Nawabpur Tech Corridor Interactive Map & Drop-and-Pack Sourcing */}
-      <NawabpurMarketMap />
-
-      {/* 7. Authorized Brand Authenticity & Credentials Hub */}
-      <BrandAuthenticityHub />
-
-      {/* 8. Rewards & 4-Pillar Engineering Trust Strip */}
+      {/* 6. Rewards & 4-Pillar Horizontal Indigo Strip */}
       <RewardsTrustStrip />
 
-      {/* 9. Verified Community Testimonials & Newsletter */}
+      {/* 7. What Shoppers Say & Stay in the Loop Bar */}
       <TestimonialsAndNewsletter />
+
+      {/* 8. Nawabpur Tech Corridor Interactive Map & Drop-and-Pack Sourcing */}
+      <NawabpurMarketMap />
+
+      {/* 9. Authorized Brand Authenticity & Credentials Hub */}
+      <BrandAuthenticityHub />
     </StorefrontShell>
   );
 }

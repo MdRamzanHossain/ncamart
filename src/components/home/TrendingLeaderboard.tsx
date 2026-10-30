@@ -2,17 +2,12 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { formatPaisa } from "@/lib/money";
 
 interface RankedProduct {
   rank: number;
   slug: string;
   title: string;
-  category: string;
-  pricePaisa: number;
   rating: number;
-  reviews: number;
-  rankBadgeColor: string;
   icon: string;
 }
 
@@ -20,34 +15,22 @@ const RANKED_ITEMS: RankedProduct[] = [
   {
     rank: 1,
     slug: "mechanic-t12-pro-smart-soldering-station",
-    title: "Mechanic T12 Pro Smart Soldering Station 72W",
-    category: "Bench Tools",
-    pricePaisa: 480000,
-    rating: 4.9,
-    reviews: 312,
-    rankBadgeColor: "#3b82f6", // 1 in blue
-    icon: "🔥",
+    title: "Mechanic T12 Pro Smart Soldering Station",
+    rating: 4.8,
+    icon: "🎧",
   },
   {
     rank: 2,
     slug: "anker-737-power-bank-24000mah-140w",
     title: "Anker 737 GaN 140W PowerCore 24K",
-    category: "GaN Fast Power",
-    pricePaisa: 1125000,
-    rating: 4.9,
-    reviews: 245,
-    rankBadgeColor: "#64748b", // 2 in slate
+    rating: 4.6,
     icon: "⚡",
   },
   {
     rank: 3,
     slug: "ugreen-100w-usb-c-braided-cable-2m",
-    title: "UGREEN 100W USB-C E-Marker Kevlar Cable",
-    category: "Cables & Bus",
-    pricePaisa: 115000,
-    rating: 4.8,
-    reviews: 189,
-    rankBadgeColor: "#78716c", // 3 in neutral
+    title: "UGREEN 100W USB-C E-Marker Cable",
+    rating: 4.7,
     icon: "🔌",
   },
 ];
@@ -58,175 +41,143 @@ export function TrendingLeaderboard() {
   return (
     <div
       style={{
-        backgroundColor: "var(--bg-surface)",
-        border: "1px solid var(--border-default)",
-        borderRadius: "var(--radius-xl)",
-        padding: "var(--space-lg)",
+        backgroundColor: "#f1f5f9",
+        border: "1px solid #e2e8f0",
+        borderRadius: "20px",
+        padding: "20px",
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
         height: "100%",
-        boxShadow: "0 8px 24px rgba(0, 0, 0, 0.25)",
+        boxShadow: "0 6px 18px rgba(15, 23, 42, 0.04)",
       }}
     >
-      <div>
-        {/* Header */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: "var(--space-md)",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <span style={{ fontSize: "16px" }}>📈</span>
-            <span
-              style={{
-                fontSize: "var(--font-size-sm)",
-                fontWeight: "800",
-                color: "var(--text-primary)",
-                letterSpacing: "-0.02em",
-              }}
-            >
-              Trending Now
-            </span>
-          </div>
-
-          <Link
-            href="/catalog?sort=POPULAR"
-            style={{
-              fontSize: "11px",
-              fontWeight: "700",
-              color: "var(--tier-authentic-gold)",
-              textDecoration: "none",
-            }}
-          >
-            See All →
-          </Link>
-        </div>
-
-        {/* Ranked Items List */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-xs)" }}>
-          {RANKED_ITEMS.map((item) => {
-            const isHovered = hoveredRank === item.rank;
-
-            return (
-              <Link
-                key={item.rank}
-                href={`/products/${item.slug}`}
-                onMouseEnter={() => setHoveredRank(item.rank)}
-                onMouseLeave={() => setHoveredRank(null)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "var(--space-sm)",
-                  padding: "10px",
-                  borderRadius: "var(--radius-lg)",
-                  backgroundColor: isHovered ? "var(--bg-surface-elevated)" : "transparent",
-                  border: "1px solid",
-                  borderColor: isHovered ? "var(--border-default)" : "transparent",
-                  textDecoration: "none",
-                  transform: isHovered ? "translateX(4px)" : "translateX(0)",
-                  transition: "all var(--duration-fast) var(--ease-spring)",
-                }}
-              >
-                {/* Number Badge */}
-                <div
-                  style={{
-                    width: "28px",
-                    height: "28px",
-                    borderRadius: "var(--radius-md)",
-                    backgroundColor: item.rankBadgeColor,
-                    color: "#ffffff",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontWeight: "900",
-                    fontSize: "12px",
-                    flexShrink: 0,
-                    boxShadow: `0 2px 8px ${item.rankBadgeColor}66`,
-                  }}
-                >
-                  #{item.rank}
-                </div>
-
-                {/* Compact Product Icon/Thumb */}
-                <div
-                  style={{
-                    width: "42px",
-                    height: "42px",
-                    borderRadius: "var(--radius-md)",
-                    backgroundColor: "var(--bg-canvas)",
-                    border: "1px solid var(--border-subtle)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "20px",
-                    flexShrink: 0,
-                  }}
-                >
-                  {item.icon}
-                </div>
-
-                {/* Details */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div
-                    style={{
-                      fontSize: "var(--font-size-xs)",
-                      fontWeight: "700",
-                      color: "var(--text-primary)",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {item.title}
-                  </div>
-
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "2px" }}>
-                    <span style={{ fontSize: "10px", color: "var(--tier-authentic-gold)" }}>
-                      ★ {item.rating}
-                    </span>
-                    <span style={{ fontSize: "10px", color: "var(--text-tertiary)" }}>
-                      ({item.reviews})
-                    </span>
-                  </div>
-                </div>
-
-                {/* Price */}
-                <div
-                  style={{
-                    fontFamily: "var(--font-family-mono)",
-                    fontSize: "var(--font-size-xs)",
-                    fontWeight: "800",
-                    color: "var(--tier-authentic-gold)",
-                    flexShrink: 0,
-                  }}
-                >
-                  ৳{formatPaisa(item.pricePaisa)}
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Footer Stat */}
+      {/* Header matching Reference Design */}
       <div
         style={{
-          marginTop: "var(--space-md)",
-          paddingTop: "var(--space-sm)",
-          borderTop: "1px solid var(--border-subtle)",
-          fontSize: "10px",
-          color: "var(--text-tertiary)",
           display: "flex",
+          alignItems: "center",
           justifyContent: "space-between",
+          marginBottom: "14px",
         }}
       >
-        <span>Updated Every 60 Mins</span>
-        <span>Real-Time Nawabpur Volume</span>
+        <span
+          style={{
+            fontSize: "17px",
+            fontWeight: "800",
+            color: "#0f172a",
+            letterSpacing: "-0.02em",
+          }}
+        >
+          Trending Now
+        </span>
+
+        <Link
+          href="/catalog?sort=POPULAR"
+          style={{
+            fontSize: "12.5px",
+            fontWeight: "700",
+            color: "#2563eb",
+            textDecoration: "none",
+          }}
+        >
+          See All
+        </Link>
+      </div>
+
+      {/* Ranked Items List (1, 2, 3) */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "10px", flex: 1, justifyContent: "center" }}>
+        {RANKED_ITEMS.map((item) => {
+          const isHovered = hoveredRank === item.rank;
+
+          return (
+            <Link
+              key={item.rank}
+              href={`/products/${item.slug}`}
+              onMouseEnter={() => setHoveredRank(item.rank)}
+              onMouseLeave={() => setHoveredRank(null)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                padding: "8px 10px",
+                borderRadius: "14px",
+                backgroundColor: isHovered ? "#ffffff" : "rgba(255, 255, 255, 0.55)",
+                textDecoration: "none",
+                transform: isHovered ? "translateX(3px)" : "translateX(0)",
+                transition: "all var(--duration-fast) ease",
+              }}
+            >
+              {/* Rank Number */}
+              <span
+                style={{
+                  fontWeight: "800",
+                  fontSize: "14px",
+                  color: item.rank === 1 ? "#2563eb" : "#1e293b",
+                  width: "14px",
+                  textAlign: "center",
+                  flexShrink: 0,
+                }}
+              >
+                {item.rank}
+              </span>
+
+              {/* White Square Product Thumbnail */}
+              <div
+                style={{
+                  width: "46px",
+                  height: "46px",
+                  borderRadius: "12px",
+                  backgroundColor: "#ffffff",
+                  boxShadow: "0 2px 8px rgba(15, 23, 42, 0.06)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "24px",
+                  flexShrink: 0,
+                }}
+              >
+                {item.icon}
+              </div>
+
+              {/* Title */}
+              <div
+                style={{
+                  flex: 1,
+                  fontSize: "12.5px",
+                  fontWeight: "600",
+                  color: "#1e293b",
+                  lineHeight: "1.35",
+                  display: "-webkit-box",
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                }}
+              >
+                {item.title}
+              </div>
+
+              {/* Blue Star Rating on Right */}
+              <div
+                style={{
+                  fontSize: "11.5px",
+                  fontWeight: "700",
+                  color: "#1e3a8a",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "3px",
+                  flexShrink: 0,
+                  alignSelf: "flex-end",
+                }}
+              >
+                <span style={{ color: "#2563eb" }}>★</span>
+                <span>{item.rating.toFixed(1)}</span>
+              </div>
+            </Link>
+          );
+        })}
       </div>
     </div>
   );
 }
+

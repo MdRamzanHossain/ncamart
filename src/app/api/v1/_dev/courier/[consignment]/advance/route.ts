@@ -5,6 +5,18 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ consignment: string }> }
 ) {
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json(
+      {
+        error: {
+          code: "ERR_NOT_FOUND",
+          message: "Dev courier simulation endpoint is disabled in production.",
+        },
+      },
+      { status: 404 }
+    );
+  }
+
   const { consignment } = await params;
   let targetStatus: string | undefined;
   try {

@@ -7,140 +7,108 @@ export function FeaturedCampaignBanner() {
   return (
     <div
       style={{
-        borderRadius: "var(--radius-xl)",
-        background: "linear-gradient(135deg, #1e1b4b 0%, #312e81 40%, #042f2e 100%)",
-        border: "1px solid rgba(245, 158, 11, 0.3)",
-        boxShadow: "0 12px 32px rgba(0, 0, 0, 0.4), inset 0 0 40px rgba(245, 158, 11, 0.15)",
-        padding: "var(--space-xl)",
+        borderRadius: "20px",
+        background: "linear-gradient(125deg, #0b1642 0%, #102a71 48%, #0284c7 100%)",
+        border: "1px solid rgba(56, 189, 248, 0.4)",
+        boxShadow: "0 12px 30px rgba(11, 22, 66, 0.25)",
+        padding: "26px 28px",
         display: "flex",
-        flexDirection: "column",
+        alignItems: "center",
         justifyContent: "space-between",
+        gap: "16px",
         height: "100%",
         position: "relative",
         overflow: "hidden",
       }}
     >
-      {/* Decorative Glow Orb */}
+      {/* Neon Cyan Frame Accent on Right (matching Reference Center Banner) */}
       <div
         style={{
           position: "absolute",
-          top: "-30px",
-          right: "-30px",
-          width: "180px",
-          height: "180px",
-          borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(245, 158, 11, 0.35) 0%, transparent 70%)",
-          filter: "blur(20px)",
+          right: "22px",
+          top: "18px",
+          bottom: "18px",
+          width: "160px",
+          borderRadius: "14px",
+          border: "2.5px solid #38bdf8",
+          boxShadow: "0 0 24px rgba(56, 189, 248, 0.65), inset 0 0 18px rgba(56, 189, 248, 0.35)",
+          background: "linear-gradient(160deg, rgba(56, 189, 248, 0.18) 0%, rgba(168, 85, 247, 0.28) 100%)",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "6px",
           pointerEvents: "none",
         }}
-      />
-
-      {/* Top Banner Tag */}
-      <div>
-        <div
+      >
+        <div style={{ fontSize: "52px", filter: "drop-shadow(0 6px 14px rgba(0,0,0,0.4))" }}>⚡</div>
+        <span
           style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "6px",
-            padding: "4px 10px",
-            borderRadius: "var(--radius-full)",
-            backgroundColor: "rgba(245, 158, 11, 0.18)",
-            border: "1px solid rgba(245, 158, 11, 0.4)",
             fontSize: "10px",
             fontWeight: "800",
-            color: "var(--tier-authentic-gold)",
-            letterSpacing: "0.06em",
-            textTransform: "uppercase",
-            marginBottom: "var(--space-md)",
+            color: "#ffffff",
+            backgroundColor: "rgba(15, 23, 42, 0.65)",
+            padding: "3px 8px",
+            borderRadius: "9999px",
+            border: "1px solid rgba(56, 189, 248, 0.5)",
           }}
         >
-          <span>🔥</span>
-          <span>SPECIAL CAMPAIGN EVENT</span>
-        </div>
+          100% Sealed
+        </span>
+      </div>
 
+      {/* Left Content Hierarchy */}
+      <div style={{ position: "relative", zIndex: 2, maxWidth: "250px" }}>
         <h3
           style={{
-            fontSize: "clamp(1.4rem, 2.5vw, 1.8rem)",
+            fontSize: "clamp(1.6rem, 2.4vw, 2.1rem)",
             fontWeight: "900",
             color: "#ffffff",
-            lineHeight: "1.2",
-            margin: "0 0 var(--space-sm)",
+            lineHeight: "1.1",
+            margin: "0 0 10px",
             letterSpacing: "-0.03em",
           }}
         >
-          Nawabpur Tech Clearance
+          Nawabpur
+          <br />
+          Refresh
+          <br />
+          Sale
         </h3>
 
-        <p
+        <div
           style={{
-            fontSize: "var(--font-size-sm)",
-            color: "rgba(255, 255, 255, 0.8)",
-            lineHeight: "1.5",
-            margin: "0 0 var(--space-md)",
+            fontSize: "15px",
+            fontWeight: "700",
+            color: "rgba(255, 255, 255, 0.92)",
+            marginBottom: "18px",
           }}
         >
-          Up to 50% Off authentic GaN chargers, multimeter leads, and bench soldering gear.
-          All items backed by 100% destructive holographic seals.
-        </p>
-
-        {/* Feature Highlights Pills */}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "var(--space-md)" }}>
-          <span
-            style={{
-              fontSize: "10px",
-              padding: "2px 8px",
-              borderRadius: "var(--radius-xs)",
-              backgroundColor: "rgba(255, 255, 255, 0.12)",
-              color: "#ffffff",
-              fontWeight: "600",
-            }}
-          >
-            ✓ Authentic Distributor Stock
-          </span>
-          <span
-            style={{
-              fontSize: "10px",
-              padding: "2px 8px",
-              borderRadius: "var(--radius-xs)",
-              backgroundColor: "rgba(255, 255, 255, 0.12)",
-              color: "#ffffff",
-              fontWeight: "600",
-            }}
-          >
-            ✓ Same-Day Dhaka Dispatch
-          </span>
+          Up to 50% Off
         </div>
-      </div>
 
-      {/* Primary Action Button */}
-      <div>
         <Link href="/catalog?campaign=clearance" style={{ textDecoration: "none" }}>
           <button
             type="button"
             style={{
-              width: "100%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "8px",
-              padding: "12px 20px",
-              borderRadius: "var(--radius-full)",
-              background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
-              color: "#0b0f19",
-              fontWeight: "800",
-              fontSize: "var(--font-size-sm)",
+              padding: "11px 24px",
+              borderRadius: "9999px",
+              background: "linear-gradient(90deg, #ff5e62 0%, #ff7b54 100%)",
+              color: "#ffffff",
+              fontWeight: "700",
+              fontSize: "13px",
               border: "none",
               cursor: "pointer",
-              boxShadow: "0 4px 16px rgba(245, 158, 11, 0.4)",
+              boxShadow: "0 6px 18px rgba(255, 94, 98, 0.45)",
               transition: "transform var(--duration-fast) var(--ease-spring)",
             }}
             className="interactive-scale"
           >
-            <span>Shop The Sale</span>
-            <span>→</span>
+            Shop The Sale
           </button>
         </Link>
       </div>
     </div>
   );
 }
+

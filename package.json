@@ -15,14 +15,15 @@
     "test:unit": "vitest run --project=unit",
     "test:int": "vitest run --project=integration",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "tsx src/db/migrate.ts",
+    "db:migrate": "node scripts/migrate.cjs",
     "db:seed": "tsx src/db/seed.ts",
     "db:studio": "drizzle-kit studio",
     "search:reindex": "tsx src/modules/search/reindex.ts",
     "openapi:generate": "tsx src/lib/openapi.ts && tsx scripts/generate-postman.ts",
     "openapi:check": "tsx src/lib/openapi/check.ts",
     "postman:generate": "tsx scripts/generate-postman.ts",
-    "staff:create-admin": "tsx src/modules/identity/scripts/createAdmin.ts",
+    "staff:create-admin": "node scripts/create-admin.cjs",
+    "git:pull": "node scripts/git-pull.cjs",
     "dev:scenario": "tsx src/db/scenarios/runner.ts"
   },
   "dependencies": {

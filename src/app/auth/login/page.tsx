@@ -18,7 +18,7 @@ function LoginPortalContent() {
   );
 
   // Customer OTP states
-  const [phone, setPhone] = useState("+8801712345678");
+  const [phone, setPhone] = useState("");
   const [otpStep, setOtpStep] = useState<"PHONE" | "VERIFY">("PHONE");
   const [otpCode, setOtpCode] = useState("");
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -26,9 +26,9 @@ function LoginPortalContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Staff login states
-  const [staffIdentifier, setStaffIdentifier] = useState("mahmudul@ncamart.com");
-  const [staffPassword, setStaffPassword] = useState("Nawabpur@2026!");
-  const [staffTotp, setStaffTotp] = useState("123456");
+  const [staffIdentifier, setStaffIdentifier] = useState("");
+  const [staffPassword, setStaffPassword] = useState("");
+  const [staffTotp, setStaffTotp] = useState("");
   const [staffTempToken, setStaffTempToken] = useState<string | null>(null);
   const [targetPortal, setTargetPortal] = useState<"/admin" | "/pos" | "/runner">("/admin");
 
@@ -47,7 +47,7 @@ function LoginPortalContent() {
     try {
       const res = await sendCustomerOtp(cleanedPhone);
       setOtpStep("VERIFY");
-      setOtpCode(res.demoOtp || "123456");
+      setOtpCode(res.demoOtp || "");
       setStatusMessage(res.message || "6-digit verification code sent via SMS / WhatsApp.");
     } catch (err: unknown) {
       setErrorMessage(err instanceof Error ? err.message : "Failed to send OTP.");
@@ -493,49 +493,6 @@ function LoginPortalContent() {
                 >
                   {isSubmitting ? "Sending OTP..." : "Send 6-Digit OTP →"}
                 </button>
-
-                <div
-                  style={{
-                    marginTop: "var(--space-xs)",
-                    padding: "12px",
-                    borderRadius: "var(--radius-md)",
-                    backgroundColor: "var(--bg-surface-elevated)",
-                    border: "1px dashed var(--border-default)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: "8px",
-                  }}
-                >
-                  <span style={{ fontSize: "11px", color: "var(--text-tertiary)" }}>
-                    Instant Demo Customer Login (Engr. Tanvir Ahmed)
-                  </span>
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      setIsSubmitting(true);
-                      try {
-                        await verifyCustomerOtp("+8801712345678", "123456");
-                        router.push(redirectUrl || "/account");
-                      } finally {
-                        setIsSubmitting(false);
-                      }
-                    }}
-                    style={{
-                      padding: "6px 10px",
-                      borderRadius: "var(--radius-sm)",
-                      backgroundColor: "var(--tier-budget-teal-bg)",
-                      color: "var(--tier-budget-teal)",
-                      border: "1px solid var(--tier-budget-teal-border)",
-                      fontSize: "11px",
-                      fontWeight: "700",
-                      cursor: "pointer",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    ⚡ Instant Demo Sign In
-                  </button>
-                </div>
               </form>
             ) : (
               <form onSubmit={handleVerifyOtp} style={{ display: "flex", flexDirection: "column", gap: "var(--space-md)" }}>

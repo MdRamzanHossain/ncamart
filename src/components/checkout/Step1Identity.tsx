@@ -68,18 +68,26 @@ export function Step1Identity({ initialPhone = "", onComplete }: Step1IdentityPr
       setTimeout(() => {
         digitInputRefs.current[0]?.focus();
       }, 100);
-    } catch {
-      // In local dev without live SMS gateway, allow demo fallback
-      setIsOtpSent(true);
-      setCountdown(60);
-      toast({
-        title: "Test OTP Mode",
-        description: "Dev environment: Use 123456 as verification code.",
-        variant: "info",
-      });
-      setTimeout(() => {
-        digitInputRefs.current[0]?.focus();
-      }, 100);
+    } catch (err: unknown) {
+      if (process.env.NODE_ENV !== "production") {
+        // In local dev without live SMS gateway, allow demo fallback
+        setIsOtpSent(true);
+        setCountdown(60);
+        toast({
+          title: "Test OTP Mode",
+          description: "Dev environment: Use 123456 as verification code.",
+          variant: "info",
+        });
+        setTimeout(() => {
+          digitInputRefs.current[0]?.focus();
+        }, 100);
+      } else {
+        toast({
+          title: "Failed to Send OTP",
+          description: err instanceof Error ? err.message : "Could not send verification SMS. Please try again.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -142,8 +150,8 @@ export function Step1Identity({ initialPhone = "", onComplete }: Step1IdentityPr
           isAuthenticated: true,
         });
       } catch {
-        // Fallback for dev code "123456"
-        if (code === "123456") {
+        // Fallback for dev code "123456" only in non-production
+        if (process.env.NODE_ENV !== "production" && code === "123456") {
           toast({
             title: "Phone Verified (Dev)",
             description: "Dev mock OTP verified.",
