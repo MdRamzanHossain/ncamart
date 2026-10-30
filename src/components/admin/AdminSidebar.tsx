@@ -174,12 +174,26 @@ export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
 interface AdminSidebarProps {
   currentRole?: AdminRole;
   onRoleChange?: (newRole: AdminRole) => void;
+  staffProfile?: {
+    name?: string;
+    email?: string;
+    assignedLocation?: string;
+  } | null;
 }
 
-export function AdminSidebar({ currentRole = "SUPER_ADMIN", onRoleChange }: AdminSidebarProps) {
+export function AdminSidebar({ currentRole = "SUPER_ADMIN", onRoleChange, staffProfile }: AdminSidebarProps) {
   const pathname = usePathname();
   const [activeRole, setActiveRole] = useState<AdminRole>(currentRole);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+
+  const displayName = staffProfile?.name || DEFAULT_ADMIN_STAFF.name;
+  const displayLocation = staffProfile?.assignedLocation || staffProfile?.email || DEFAULT_ADMIN_STAFF.assignedLocation;
+  const initials = displayName
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() || "")
+    .join("") || "AD";
 
   const handleRoleSelect = (role: AdminRole) => {
     setActiveRole(role);
@@ -215,10 +229,10 @@ export function AdminSidebar({ currentRole = "SUPER_ADMIN", onRoleChange }: Admi
       {/* Staff Profile & Interactive RBAC Role Switcher */}
       <div className="staff-profile-card">
         <div className="staff-avatar-row">
-          <div className="staff-avatar">MH</div>
+          <div className="staff-avatar">{initials}</div>
           <div className="staff-info">
-            <span className="staff-name">{DEFAULT_ADMIN_STAFF.name}</span>
-            <span className="staff-loc">{DEFAULT_ADMIN_STAFF.assignedLocation}</span>
+            <span className="staff-name">{displayName}</span>
+            <span className="staff-loc">{displayLocation}</span>
           </div>
         </div>
 

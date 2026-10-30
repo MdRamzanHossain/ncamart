@@ -20,7 +20,7 @@ export function Navbar({
   const { user, isAuthenticated, cartCount } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(2);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [wishlistCount] = useState(0);
 
   // Compress navbar on scroll

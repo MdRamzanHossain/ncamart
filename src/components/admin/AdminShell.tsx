@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import { AdminSidebar } from "./AdminSidebar";
 import type { AdminRole } from "./types";
 
@@ -8,9 +9,122 @@ interface AdminShellProps {
   children: React.ReactNode;
 }
 
+interface StoredStaffUser {
+  id?: string;
+  name?: string;
+  email?: string;
+  role?: AdminRole;
+  isStaff?: boolean;
+}
+
 export function AdminShell({ children }: AdminShellProps) {
   const [activeRole, setActiveRole] = useState<AdminRole>("SUPER_ADMIN");
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [authStatus, setAuthStatus] = useState<"SSR_OR_CHECKING" | "AUTHENTICATED" | "UNAUTHENTICATED">(
+    "SSR_OR_CHECKING"
+  );
+  const [staffUser, setStaffUser] = useState<StoredStaffUser | null>(null);
+
+  useEffect(() => {
+    try {
+      const rawUser = localStorage.getItem("nca_user");
+      if (!rawUser) {
+        setAuthStatus("UNAUTHENTICATED");
+        window.location.replace("/auth/login?mode=staff&redirect=/admin");
+        return;
+      }
+      const parsed = JSON.parse(rawUser) as StoredStaffUser;
+      if (!parsed || !parsed.isStaff) {
+        setAuthStatus("UNAUTHENTICATED");
+        window.location.replace("/auth/login?mode=staff&redirect=/admin");
+        return;
+      }
+      setStaffUser(parsed);
+      if (parsed.role) {
+        setActiveRole(parsed.role);
+      }
+      setAuthStatus("AUTHENTICATED");
+    } catch {
+      setAuthStatus("UNAUTHENTICATED");
+      window.location.replace("/auth/login?mode=staff&redirect=/admin");
+    }
+  }, []);
+
+  const handleStaffSignOut = () => {
+    localStorage.removeItem("nca_token");
+    localStorage.removeItem("nca_user");
+    window.location.href = "/auth/login?mode=staff";
+  };
+
+  if (authStatus === "UNAUTHENTICATED") {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          backgroundColor: "#f4f6fb",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "24px",
+          fontFamily: "var(--font-sans, system-ui, sans-serif)",
+        }}
+      >
+        <div
+          style={{
+            maxWidth: "440px",
+            width: "100%",
+            backgroundColor: "#ffffff",
+            border: "1px solid #e2e8f0",
+            borderRadius: "20px",
+            padding: "32px",
+            textAlign: "center",
+            boxShadow: "0 12px 32px rgba(15, 23, 42, 0.08)",
+          }}
+        >
+          <div
+            style={{
+              width: "56px",
+              height: "56px",
+              borderRadius: "16px",
+              backgroundColor: "#fef3c7",
+              color: "#d97706",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "28px",
+              margin: "0 auto 16px",
+            }}
+          >
+            🔐
+          </div>
+          <h1 style={{ fontSize: "20px", fontWeight: "800", color: "#0f172a", margin: "0 0 8px" }}>
+            Staff Authentication Required
+          </h1>
+          <p style={{ fontSize: "13.5px", color: "#475569", lineHeight: 1.5, margin: "0 0 24px" }}>
+            Default admin auto-login is disabled for security. Please sign in with your authorized staff credentials to access the NCAMart Backoffice.
+          </p>
+          <Link
+            href="/auth/login?mode=staff&redirect=/admin"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "100%",
+              padding: "12px 20px",
+              borderRadius: "12px",
+              backgroundColor: "#2563eb",
+              color: "#ffffff",
+              fontWeight: "700",
+              fontSize: "14px",
+              textDecoration: "none",
+            }}
+          >
+            Go to Staff Login →
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="admin-shell-layout" data-testid="admin-shell">
@@ -30,7 +144,19 @@ export function AdminShell({ children }: AdminShellProps) {
 
       {/* Persistent Left RBAC Sidebar */}
       <div className={`admin-sidebar-wrapper ${isMobileSidebarOpen ? "open" : ""}`}>
-        <AdminSidebar currentRole={activeRole} onRoleChange={setActiveRole} />
+        <AdminSidebar
+          currentRole={activeRole}
+          onRoleChange={setActiveRole}
+          staffProfile={
+            staffUser
+              ? {
+                  name: staffUser.name,
+                  email: staffUser.email,
+                  assignedLocation: "Nawabpur Central Godown & HQ",
+                }
+              : null
+          }
+        />
       </div>
 
       {/* Main Content Area */}
@@ -66,6 +192,22 @@ export function AdminShell({ children }: AdminShellProps) {
               >
                 🔔
                 <span className="bell-badge">3</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleStaffSignOut}
+                style={{
+                  padding: "6px 12px",
+                  borderRadius: "8px",
+                  backgroundColor: "rgba(239, 68, 68, 0.14)",
+                  border: "1px solid rgba(239, 68, 68, 0.3)",
+                  color: "#fca5a5",
+                  fontSize: "11.5px",
+                  fontWeight: "700",
+                  cursor: "pointer",
+                }}
+              >
+                Sign Out
               </button>
             </div>
           </div>

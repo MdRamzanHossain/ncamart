@@ -191,24 +191,26 @@ function LoginPortalContent() {
         {/* Left Column: Nawabpur Identity & Security Info */}
         <div
           style={{
-            borderRadius: "var(--radius-xl)",
-            background: "linear-gradient(145deg, rgba(15, 23, 42, 0.95) 0%, rgba(11, 15, 25, 0.98) 100%)",
-            border: "1px solid var(--border-default)",
-            padding: "var(--space-2xl)",
+            borderRadius: "20px",
+            background: "linear-gradient(145deg, #0f172a 0%, #1e1b4b 100%)",
+            border: "1px solid #1e293b",
+            padding: "32px",
             display: "flex",
             flexDirection: "column",
             justifyContent: "space-between",
-            gap: "var(--space-xl)",
+            gap: "24px",
+            color: "#f8fafc",
+            boxShadow: "0 16px 36px rgba(15, 23, 42, 0.14)",
           }}
         >
           <div>
-            <div style={{ display: "flex", alignItems: "center", gap: "var(--space-xs)", marginBottom: "var(--space-md)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
               <AuthenticBadge size="sm" pulse={false} />
               <span
                 style={{
                   fontSize: "11px",
                   fontWeight: "700",
-                  color: "var(--text-tertiary)",
+                  color: "#94a3b8",
                   textTransform: "uppercase",
                   letterSpacing: "0.05em",
                 }}
@@ -219,37 +221,37 @@ function LoginPortalContent() {
 
             <h1
               style={{
-                fontSize: "clamp(1.6rem, 2.5vw, 2.2rem)",
+                fontSize: "clamp(1.6rem, 2.5vw, 2.1rem)",
                 fontWeight: "900",
-                color: "var(--text-primary)",
+                color: "#ffffff",
                 letterSpacing: "-0.03em",
                 lineHeight: 1.2,
-                marginBottom: "var(--space-sm)",
+                marginBottom: "12px",
               }}
             >
               Nawabpur Direct Wholesale & Retail Identity
             </h1>
 
-            <p style={{ fontSize: "var(--font-size-sm)", color: "var(--text-secondary)", lineHeight: 1.6 }}>
+            <p style={{ fontSize: "14px", color: "#cbd5e1", lineHeight: 1.6 }}>
               Sign in with your verified Bangladesh mobile number to track courier consignments, manage holographic seal
               warranties, settle pre-order balances, and access your Store Credit Wallet.
             </p>
 
             <div
               style={{
-                marginTop: "var(--space-xl)",
+                marginTop: "24px",
                 display: "flex",
                 flexDirection: "column",
-                gap: "var(--space-md)",
+                gap: "16px",
               }}
             >
               <div style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
                 <span style={{ fontSize: "20px" }}>🛡️</span>
                 <div>
-                  <div style={{ fontWeight: "700", fontSize: "var(--font-size-sm)", color: "var(--text-primary)" }}>
+                  <div style={{ fontWeight: "700", fontSize: "14px", color: "#ffffff" }}>
                     Holographic Seal Warranty Binding
                   </div>
-                  <div style={{ fontSize: "var(--font-size-xs)", color: "var(--text-tertiary)" }}>
+                  <div style={{ fontSize: "12.5px", color: "#94a3b8", marginTop: "2px" }}>
                     Every 100% Authentic item is cryptographically linked to your phone number upon Godown QC dispatch.
                   </div>
                 </div>
@@ -258,10 +260,10 @@ function LoginPortalContent() {
               <div style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
                 <span style={{ fontSize: "20px" }}>💳</span>
                 <div>
-                  <div style={{ fontWeight: "700", fontSize: "var(--font-size-sm)", color: "var(--text-primary)" }}>
+                  <div style={{ fontWeight: "700", fontSize: "14px", color: "#ffffff" }}>
                     Instant Store Credit & Pre-Order Ledger
                   </div>
-                  <div style={{ fontSize: "var(--font-size-xs)", color: "var(--text-tertiary)" }}>
+                  <div style={{ fontSize: "12.5px", color: "#94a3b8", marginTop: "2px" }}>
                     Manage 15% import deposits, 7-day arrival windows, and instant RMA wallet refunds.
                   </div>
                 </div>
@@ -270,10 +272,10 @@ function LoginPortalContent() {
               <div style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
                 <span style={{ fontSize: "20px" }}>🏪</span>
                 <div>
-                  <div style={{ fontWeight: "700", fontSize: "var(--font-size-sm)", color: "var(--text-primary)" }}>
+                  <div style={{ fontWeight: "700", fontSize: "14px", color: "#ffffff" }}>
                     Showroom Counter 6-Digit Pickup PIN
                   </div>
-                  <div style={{ fontSize: "var(--font-size-xs)", color: "var(--text-tertiary)" }}>
+                  <div style={{ fontSize: "12.5px", color: "#94a3b8", marginTop: "2px" }}>
                     Collect orders directly at Shop 42, Nawabpur Complex, Sundarban Square Market, Dhaka.
                   </div>
                 </div>
@@ -284,42 +286,42 @@ function LoginPortalContent() {
           {/* Quick Portal Links */}
           <div
             style={{
-              paddingTop: "var(--space-lg)",
-              borderTop: "1px solid var(--border-subtle)",
+              paddingTop: "18px",
+              borderTop: "1px solid rgba(255, 255, 255, 0.12)",
               display: "flex",
               flexWrap: "wrap",
-              gap: "var(--space-sm)",
+              gap: "10px",
             }}
           >
             <Link
               href="/verify"
               style={{
                 fontSize: "12px",
-                color: "var(--tier-authentic-gold)",
+                color: "#fbbf24",
                 textDecoration: "none",
                 fontWeight: "700",
               }}
             >
               🛡️ Verify Seal →
             </Link>
-            <span style={{ color: "var(--border-default)" }}>•</span>
+            <span style={{ color: "rgba(255, 255, 255, 0.25)" }}>•</span>
             <Link
               href="/track"
               style={{
                 fontSize: "12px",
-                color: "var(--text-secondary)",
+                color: "#cbd5e1",
                 textDecoration: "none",
                 fontWeight: "600",
               }}
             >
               📦 Track Consignment →
             </Link>
-            <span style={{ color: "var(--border-default)" }}>•</span>
+            <span style={{ color: "rgba(255, 255, 255, 0.25)" }}>•</span>
             <Link
               href="/pre-orders"
               style={{
                 fontSize: "12px",
-                color: "var(--text-secondary)",
+                color: "#cbd5e1",
                 textDecoration: "none",
                 fontWeight: "600",
               }}
@@ -631,7 +633,7 @@ function LoginPortalContent() {
                     htmlFor="staff-totp"
                     style={{ fontSize: "var(--font-size-xs)", fontWeight: "700", color: "var(--text-secondary)" }}
                   >
-                    2FA TOTP Code
+                    2FA TOTP Code (Optional)
                   </label>
                   <input
                     id="staff-totp"
@@ -639,7 +641,7 @@ function LoginPortalContent() {
                     maxLength={6}
                     value={staffTotp}
                     onChange={(e) => setStaffTotp(e.target.value)}
-                    placeholder="123456"
+                    placeholder="If 2FA enabled"
                     style={{
                       padding: "10px 14px",
                       borderRadius: "var(--radius-md)",

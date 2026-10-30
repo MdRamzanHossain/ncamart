@@ -13,13 +13,13 @@ interface CategoryDockItem {
 
 const CATEGORIES: CategoryDockItem[] = [
   { id: "tools", name: "Tools & Meters", icon: "🛠️", slug: "engineering-tools", tint: "#fff1f2" },
-  { id: "electronics", name: "Electronics", icon: "🎧", slug: "audio-dacs", tint: "#eff6ff" },
+  { id: "electronics", name: "Audio & DACs", icon: "🎧", slug: "audio-dacs", tint: "#eff6ff" },
   { id: "gan", name: "GaN & Power", icon: "⚡", slug: "chargers-power", tint: "#fdf2f8" },
   { id: "scopes", name: "Bench & Lab", icon: "🔬", slug: "scopes-test", tint: "#ecfeff" },
-  { id: "cables", name: "Cables & Bus", icon: "🔌", slug: "cables-adapters", tint: "#f5f3ff" },
+  { id: "cables", name: "Cables & Hubs", icon: "🔌", slug: "cables-adapters", tint: "#f5f3ff" },
   { id: "cctv", name: "CCTV & IoT", icon: "📹", slug: "cctv-surveillance", tint: "#f0f9ff" },
   { id: "wearables", name: "Wearables", icon: "⌚", slug: "smart-wearables", tint: "#fffbeb" },
-  { id: "all", name: "More", icon: "⊞", slug: "catalog", tint: "#eef2ff" },
+  { id: "all", name: "All Catalog", icon: "⊞", slug: "catalog", tint: "#eef2ff" },
 ];
 
 export function CategoryDock() {
@@ -29,9 +29,9 @@ export function CategoryDock() {
     <section
       aria-label="Popular Categories Dock"
       style={{
-        padding: "0 20px",
-        maxWidth: "1340px",
-        margin: "-44px auto 12px",
+        padding: "0 24px",
+        maxWidth: "1320px",
+        margin: "-44px auto 28px",
         position: "relative",
         zIndex: 25,
       }}
@@ -40,9 +40,9 @@ export function CategoryDock() {
         style={{
           backgroundColor: "#ffffff",
           borderRadius: "22px",
-          padding: "20px 24px",
-          boxShadow: "0 14px 36px rgba(15, 23, 42, 0.09)",
-          border: "1px solid rgba(226, 232, 240, 0.9)",
+          padding: "22px 28px",
+          boxShadow: "0 16px 38px rgba(15, 23, 42, 0.08)",
+          border: "1px solid #e2e8f0",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -71,28 +71,28 @@ export function CategoryDock() {
                 minWidth: "96px",
                 flex: 1,
                 cursor: "pointer",
-                transition: "transform var(--duration-fast) var(--ease-spring)",
+                transition: "transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
                 transform: isHovered ? "translateY(-4px)" : "translateY(0)",
               }}
             >
               {/* Circular Pastel Icon Bubble */}
               <div
                 style={{
-                  width: "66px",
-                  height: "66px",
+                  width: "64px",
+                  height: "64px",
                   borderRadius: "50%",
                   backgroundColor: cat.tint,
-                  border: isHovered ? "2px solid #6366f1" : "1px solid rgba(15, 23, 42, 0.06)",
+                  border: isHovered ? "2px solid #2563eb" : "1px solid rgba(15, 23, 42, 0.07)",
                   boxShadow: isHovered
-                    ? "0 8px 20px rgba(99, 102, 241, 0.22)"
+                    ? "0 8px 20px rgba(37, 99, 235, 0.18)"
                     : "0 4px 10px rgba(15, 23, 42, 0.04)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: isMore ? "26px" : "28px",
-                  color: isMore ? "#6366f1" : "#0f172a",
+                  fontSize: isMore ? "24px" : "27px",
+                  color: isMore ? "#2563eb" : "#0f172a",
                   fontWeight: isMore ? "900" : "400",
-                  transition: "all var(--duration-fast) ease",
+                  transition: "all 0.15s ease",
                 }}
               >
                 <span>{cat.icon}</span>
@@ -102,8 +102,8 @@ export function CategoryDock() {
               <div
                 style={{
                   fontSize: "12.5px",
-                  fontWeight: "600",
-                  color: isHovered ? "#4f46e5" : "#1e293b",
+                  fontWeight: "700",
+                  color: isHovered ? "#2563eb" : "#1e293b",
                   whiteSpace: "nowrap",
                   textAlign: "center",
                 }}
@@ -117,4 +117,3 @@ export function CategoryDock() {
     </section>
   );
 }
-

@@ -16,7 +16,10 @@ export function MobileBottomNav({ onOpenCategories, onCartClick }: MobileBottomN
 
   const isHome = pathname === "/";
   const isVerify = pathname.startsWith("/verify");
-  const isWishlist = pathname.startsWith("/account/wishlist") || pathname.startsWith("/customer/wishlist") || pathname === "/wishlist";
+  const isWishlist =
+    pathname.startsWith("/account/wishlist") ||
+    pathname.startsWith("/customer/wishlist") ||
+    pathname === "/wishlist";
   const isCart = pathname.startsWith("/cart");
 
   return (
@@ -27,12 +30,12 @@ export function MobileBottomNav({ onOpenCategories, onCartClick }: MobileBottomN
         bottom: 0,
         left: 0,
         right: 0,
-        zIndex: "var(--z-index-sticky)",
-        backgroundColor: "rgba(11, 15, 25, 0.92)",
-        backdropFilter: "blur(20px)",
-        WebkitBackdropFilter: "blur(20px)",
-        borderTop: "1px solid var(--border-subtle)",
-        boxShadow: "0 -4px 20px rgba(0, 0, 0, 0.35)",
+        zIndex: 850,
+        backgroundColor: "rgba(255, 255, 255, 0.96)",
+        backdropFilter: "blur(16px)",
+        WebkitBackdropFilter: "blur(16px)",
+        borderTop: "1px solid #e2e8f0",
+        boxShadow: "0 -4px 20px rgba(15, 23, 42, 0.08)",
         paddingBottom: "max(env(safe-area-inset-bottom, 8px), 8px)",
         paddingTop: "6px",
       }}
@@ -45,8 +48,8 @@ export function MobileBottomNav({ onOpenCategories, onCartClick }: MobileBottomN
           justifyContent: "space-around",
           maxWidth: "600px",
           margin: "0 auto",
-          paddingLeft: "var(--space-xs)",
-          paddingRight: "var(--space-xs)",
+          paddingLeft: "4px",
+          paddingRight: "4px",
         }}
       >
         {/* 1. Home Tab */}
@@ -58,10 +61,10 @@ export function MobileBottomNav({ onOpenCategories, onCartClick }: MobileBottomN
             alignItems: "center",
             gap: "3px",
             textDecoration: "none",
-            color: isHome ? "var(--color-brand-primary)" : "var(--text-tertiary)",
-            transition: "all var(--duration-fast) ease",
+            color: isHome ? "#2563eb" : "#64748b",
+            transition: "all 0.15s ease",
             padding: "4px 10px",
-            borderRadius: "var(--radius-md)",
+            borderRadius: "10px",
             minWidth: "56px",
           }}
           className="interactive-scale"
@@ -70,7 +73,7 @@ export function MobileBottomNav({ onOpenCategories, onCartClick }: MobileBottomN
             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
             <polyline points="9 22 9 12 15 12 15 22" />
           </svg>
-          <span style={{ fontSize: "10px", fontWeight: isHome ? "700" : "500" }}>Home</span>
+          <span style={{ fontSize: "10px", fontWeight: isHome ? "700" : "600" }}>Home</span>
         </Link>
 
         {/* 2. Categories Tab */}
@@ -84,10 +87,10 @@ export function MobileBottomNav({ onOpenCategories, onCartClick }: MobileBottomN
             gap: "3px",
             background: "none",
             border: "none",
-            color: "var(--text-tertiary)",
+            color: "#64748b",
             cursor: "pointer",
             padding: "4px 10px",
-            borderRadius: "var(--radius-md)",
+            borderRadius: "10px",
             minWidth: "56px",
           }}
           className="interactive-scale"
@@ -98,7 +101,7 @@ export function MobileBottomNav({ onOpenCategories, onCartClick }: MobileBottomN
             <rect x="14" y="14" width="7" height="7" rx="1.5" />
             <rect x="3" y="14" width="7" height="7" rx="1.5" />
           </svg>
-          <span style={{ fontSize: "10px", fontWeight: "500" }}>Catalog</span>
+          <span style={{ fontSize: "10px", fontWeight: "600" }}>Catalog</span>
         </button>
 
         {/* 3. Center Highlight: Verify Seal (/verify) */}
@@ -121,16 +124,15 @@ export function MobileBottomNav({ onOpenCategories, onCartClick }: MobileBottomN
               height: "48px",
               borderRadius: "50%",
               background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
-              boxShadow: "0 0 18px rgba(245, 158, 11, 0.55), 0 4px 12px rgba(0, 0, 0, 0.4)",
-              border: "2px solid rgba(255, 255, 255, 0.25)",
+              boxShadow: "0 6px 16px rgba(217, 119, 6, 0.35)",
+              border: "3px solid #ffffff",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#0b0f19",
-              transition: "transform var(--duration-fast) var(--ease-spring)",
+              color: "#ffffff",
             }}
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
             </svg>
           </div>
@@ -138,7 +140,7 @@ export function MobileBottomNav({ onOpenCategories, onCartClick }: MobileBottomN
             style={{
               fontSize: "10px",
               fontWeight: "700",
-              color: isVerify ? "var(--tier-authentic-gold)" : "var(--text-secondary)",
+              color: isVerify ? "#d97706" : "#334155",
               marginTop: "2px",
             }}
           >
@@ -155,10 +157,10 @@ export function MobileBottomNav({ onOpenCategories, onCartClick }: MobileBottomN
             alignItems: "center",
             gap: "3px",
             textDecoration: "none",
-            color: isWishlist ? "var(--color-brand-primary)" : "var(--text-tertiary)",
-            transition: "all var(--duration-fast) ease",
+            color: isWishlist ? "#2563eb" : "#64748b",
+            transition: "all 0.15s ease",
             padding: "4px 10px",
-            borderRadius: "var(--radius-md)",
+            borderRadius: "10px",
             minWidth: "56px",
           }}
           className="interactive-scale"
@@ -166,7 +168,7 @@ export function MobileBottomNav({ onOpenCategories, onCartClick }: MobileBottomN
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={isWishlist ? "2.5" : "2"}>
             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
           </svg>
-          <span style={{ fontSize: "10px", fontWeight: isWishlist ? "700" : "500" }}>Wishlist</span>
+          <span style={{ fontSize: "10px", fontWeight: isWishlist ? "700" : "600" }}>Wishlist</span>
         </Link>
 
         {/* 5. Cart Tab with Live Counter */}
@@ -181,10 +183,10 @@ export function MobileBottomNav({ onOpenCategories, onCartClick }: MobileBottomN
             background: "none",
             border: "none",
             cursor: "pointer",
-            color: isCart ? "var(--color-brand-primary)" : "var(--text-tertiary)",
-            transition: "all var(--duration-fast) ease",
+            color: isCart ? "#2563eb" : "#64748b",
+            transition: "all 0.15s ease",
             padding: "4px 10px",
-            borderRadius: "var(--radius-md)",
+            borderRadius: "10px",
             minWidth: "56px",
             position: "relative",
           }}
@@ -202,8 +204,8 @@ export function MobileBottomNav({ onOpenCategories, onCartClick }: MobileBottomN
                   position: "absolute",
                   top: "-5px",
                   right: "-10px",
-                  backgroundColor: "var(--tier-authentic-gold)",
-                  color: "#000000",
+                  backgroundColor: "#ff5e62",
+                  color: "#ffffff",
                   fontSize: "9px",
                   fontWeight: "800",
                   width: "16px",
@@ -212,14 +214,13 @@ export function MobileBottomNav({ onOpenCategories, onCartClick }: MobileBottomN
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  boxShadow: "0 0 8px rgba(245, 158, 11, 0.6)",
                 }}
               >
                 {cartCount > 99 ? "99+" : cartCount}
               </span>
             )}
           </div>
-          <span style={{ fontSize: "10px", fontWeight: isCart ? "700" : "500" }}>Cart</span>
+          <span style={{ fontSize: "10px", fontWeight: isCart ? "700" : "600" }}>Cart</span>
         </button>
       </div>
 

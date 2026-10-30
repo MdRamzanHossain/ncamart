@@ -10,7 +10,9 @@ interface ProductCardData {
   titleEn: string;
   tier: "AUTHENTIC" | "BUDGET_SMART";
   pricePaisa: number;
+  mrpPaisa: number;
   rating: number;
+  reviewsCount: number;
   icon: string;
   stageBg: string;
 }
@@ -22,39 +24,47 @@ const RECOMMENDED_PRODUCTS: ProductCardData[] = [
     titleEn: "Baseus GaN5 Pro 65W Fast Charger",
     tier: "AUTHENTIC",
     pricePaisa: 345000,
+    mrpPaisa: 395000,
     rating: 4.8,
-    icon: "🎧",
-    stageBg: "linear-gradient(145deg, #e0e7ff 0%, #ede9fe 100%)",
+    reviewsCount: 42,
+    icon: "⚡",
+    stageBg: "linear-gradient(145deg, #eef2ff 0%, #e0e7ff 100%)",
   },
   {
     id: "p2",
     slug: "mechanic-t12-pro-smart-soldering-station",
-    titleEn: "Smart Fitness Watch & Bench Meter",
+    titleEn: "Mechanic T12 Pro Smart Soldering Station",
     tier: "AUTHENTIC",
     pricePaisa: 480000,
+    mrpPaisa: 550000,
     rating: 4.9,
-    icon: "⌚",
-    stageBg: "linear-gradient(145deg, #dbeafe 0%, #e0f2fe 100%)",
+    reviewsCount: 64,
+    icon: "🔥",
+    stageBg: "linear-gradient(145deg, #eff6ff 0%, #dbeafe 100%)",
   },
   {
     id: "p3",
     slug: "oem-t12-replacement-iron-tips-set-5pcs",
-    titleEn: "T12 Precision Soldering Iron Tips",
+    titleEn: "T12 Precision Soldering Iron Tips (5-Pack)",
     tier: "BUDGET_SMART",
     pricePaisa: 125000,
+    mrpPaisa: 160000,
     rating: 4.7,
-    icon: "🔥",
-    stageBg: "linear-gradient(145deg, #fce7f3 0%, #ffe4e6 100%)",
+    reviewsCount: 29,
+    icon: "🛠️",
+    stageBg: "linear-gradient(145deg, #f0fdf4 0%, #ccfbf1 100%)",
   },
   {
     id: "p4",
     slug: "ugreen-100w-usb-c-braided-cable-2m",
-    titleEn: "UGREEN 100W Braided Desk Cable",
+    titleEn: "UGREEN 100W Braided E-Marker Cable (2m)",
     tier: "AUTHENTIC",
     pricePaisa: 115000,
-    rating: 4.6,
+    mrpPaisa: 140000,
+    rating: 4.8,
+    reviewsCount: 51,
     icon: "🔌",
-    stageBg: "linear-gradient(145deg, #ffedd5 0%, #fef3c7 100%)",
+    stageBg: "linear-gradient(145deg, #fffbeb 0%, #fef3c7 100%)",
   },
   {
     id: "p5",
@@ -62,19 +72,23 @@ const RECOMMENDED_PRODUCTS: ProductCardData[] = [
     titleEn: "Fluke 101 Pocket Digital Multimeter",
     tier: "AUTHENTIC",
     pricePaisa: 495000,
+    mrpPaisa: 560000,
     rating: 4.9,
+    reviewsCount: 37,
     icon: "🔬",
-    stageBg: "linear-gradient(145deg, #f3e8ff 0%, #fae8ff 100%)",
+    stageBg: "linear-gradient(145deg, #faf5ff 0%, #f3e8ff 100%)",
   },
   {
     id: "p6",
     slug: "oem-usb-c-pd-trigger-tester-board",
-    titleEn: "RGB LED Bench Diffuser & Tester",
+    titleEn: "USB-C PD Trigger & Load Tester Module",
     tier: "BUDGET_SMART",
     pricePaisa: 145000,
+    mrpPaisa: 185000,
     rating: 4.6,
+    reviewsCount: 19,
     icon: "💡",
-    stageBg: "linear-gradient(145deg, #e0f2fe 0%, #ede9fe 100%)",
+    stageBg: "linear-gradient(145deg, #f0f9ff 0%, #e0f2fe 100%)",
   },
 ];
 
@@ -90,13 +104,13 @@ export function RecommendedCarousel() {
 
   const scrollLeft = () => {
     if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: -260, behavior: "smooth" });
+      scrollContainerRef.current.scrollBy({ left: -280, behavior: "smooth" });
     }
   };
 
   const scrollRight = () => {
     if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: 260, behavior: "smooth" });
+      scrollContainerRef.current.scrollBy({ left: 280, behavior: "smooth" });
     }
   };
 
@@ -104,109 +118,152 @@ export function RecommendedCarousel() {
     <section
       aria-label="Recommended Hardware For You"
       style={{
-        padding: "20px 20px 12px",
-        maxWidth: "1340px",
+        padding: "8px 24px 28px",
+        maxWidth: "1320px",
         margin: "0 auto",
         position: "relative",
       }}
     >
-      {/* Header matching Reference Design ("Recommended For You" + "See All") */}
+      {/* Section Header with Integrated Carousel Controls */}
       <div
         style={{
           display: "flex",
-          alignItems: "center",
+          alignItems: "flex-end",
           justifyContent: "space-between",
-          marginBottom: "16px",
+          marginBottom: "18px",
+          flexWrap: "wrap",
+          gap: "12px",
         }}
       >
-        <h2
-          style={{
-            fontSize: "20px",
-            fontWeight: "800",
-            color: "var(--text-primary)",
-            margin: 0,
-            letterSpacing: "-0.02em",
-          }}
-        >
-          Recommended For You
-        </h2>
+        <div>
+          <div
+            style={{
+              fontSize: "11px",
+              fontWeight: "800",
+              color: "#d97706",
+              textTransform: "uppercase",
+              letterSpacing: "0.06em",
+              marginBottom: "3px",
+            }}
+          >
+            DUAL-TIER VERIFIED PICKS
+          </div>
+          <h2
+            style={{
+              fontSize: "22px",
+              fontWeight: "800",
+              color: "#0f172a",
+              margin: 0,
+              letterSpacing: "-0.02em",
+            }}
+          >
+            Recommended For You
+          </h2>
+        </div>
 
-        <Link
-          href="/catalog"
-          style={{
-            fontSize: "13px",
-            fontWeight: "700",
-            color: "#2563eb",
-            textDecoration: "none",
-          }}
-        >
-          See All
-        </Link>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <button
+            type="button"
+            onClick={scrollLeft}
+            aria-label="Previous recommended products"
+            style={{
+              width: "34px",
+              height: "34px",
+              borderRadius: "50%",
+              backgroundColor: "#ffffff",
+              border: "1px solid #cbd5e1",
+              color: "#0f172a",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              fontSize: "16px",
+              fontWeight: "800",
+              boxShadow: "0 2px 6px rgba(15, 23, 42, 0.05)",
+            }}
+          >
+            ‹
+          </button>
+          <button
+            type="button"
+            onClick={scrollRight}
+            aria-label="Next recommended products"
+            style={{
+              width: "34px",
+              height: "34px",
+              borderRadius: "50%",
+              backgroundColor: "#ffffff",
+              border: "1px solid #cbd5e1",
+              color: "#0f172a",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              fontSize: "16px",
+              fontWeight: "800",
+              boxShadow: "0 2px 6px rgba(15, 23, 42, 0.05)",
+            }}
+          >
+            ›
+          </button>
+          <Link
+            href="/catalog"
+            style={{
+              fontSize: "13px",
+              fontWeight: "700",
+              color: "#2563eb",
+              textDecoration: "none",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "4px",
+              padding: "6px 14px",
+              borderRadius: "9999px",
+              backgroundColor: "#eff6ff",
+              border: "1px solid #bfdbfe",
+            }}
+          >
+            <span>See All</span>
+            <span>→</span>
+          </Link>
+        </div>
       </div>
 
-      {/* Carousel Wrapper with Left/Right Side Floating Buttons */}
-      <div style={{ position: "relative" }}>
-        <button
-          type="button"
-          onClick={scrollLeft}
-          aria-label="Previous recommended products"
-          style={{
-            position: "absolute",
-            left: "-14px",
-            top: "44%",
-            transform: "translateY(-50%)",
-            zIndex: 15,
-            width: "34px",
-            height: "34px",
-            borderRadius: "50%",
-            backgroundColor: "#ffffff",
-            border: "1px solid #e2e8f0",
-            boxShadow: "0 4px 12px rgba(15, 23, 42, 0.12)",
-            color: "#1e293b",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            cursor: "pointer",
-            fontSize: "18px",
-            fontWeight: "700",
-          }}
-        >
-          ‹
-        </button>
+      {/* Product Cards Grid / Horizontal Carousel */}
+      <div
+        ref={scrollContainerRef}
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(6, minmax(195px, 1fr))",
+          gap: "16px",
+          overflowX: "auto",
+          paddingBottom: "8px",
+          scrollbarWidth: "none",
+          WebkitOverflowScrolling: "touch",
+        }}
+      >
+        {RECOMMENDED_PRODUCTS.map((prod) => {
+          const isWishlisted = !!wishlistState[prod.id];
+          const isAuthentic = prod.tier === "AUTHENTIC";
 
-        <div
-          ref={scrollContainerRef}
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(6, minmax(185px, 1fr))",
-            gap: "14px",
-            overflowX: "auto",
-            paddingBottom: "8px",
-            scrollbarWidth: "none",
-            WebkitOverflowScrolling: "touch",
-          }}
-        >
-          {RECOMMENDED_PRODUCTS.map((prod) => {
-            const isWishlisted = !!wishlistState[prod.id];
-
-            return (
-              <Link
-                key={prod.id}
-                href={`/products/${prod.slug}`}
-                style={{
-                  backgroundColor: "var(--bg-surface)",
-                  border: "1px solid var(--border-default)",
-                  borderRadius: "18px",
-                  padding: "10px",
-                  textDecoration: "none",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between",
-                  boxShadow: "0 6px 18px rgba(15, 23, 42, 0.05)",
-                  transition: "transform var(--duration-fast) var(--ease-spring)",
-                }}
-                className="interactive-scale"
-              >
+          return (
+            <Link
+              key={prod.id}
+              href={`/products/${prod.slug}`}
+              style={{
+                backgroundColor: "#ffffff",
+                border: "1px solid #e2e8f0",
+                borderRadius: "18px",
+                padding: "12px",
+                textDecoration: "none",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+                boxShadow: "0 6px 18px rgba(15, 23, 42, 0.04)",
+                transition: "transform 0.15s ease, box-shadow 0.15s ease",
+              }}
+              className="interactive-scale"
+            >
+              <div>
                 {/* Pastel Product Stage */}
                 <div
                   style={{
@@ -216,12 +273,30 @@ export function RecommendedCarousel() {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontSize: "54px",
+                    fontSize: "50px",
                     position: "relative",
                     marginBottom: "10px",
                   }}
                 >
                   <span>{prod.icon}</span>
+
+                  {/* Dual-Tier Badge at Top Left */}
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: "8px",
+                      left: "8px",
+                      fontSize: "9.5px",
+                      fontWeight: "800",
+                      padding: "2px 7px",
+                      borderRadius: "9999px",
+                      backgroundColor: isAuthentic ? "#fef3c7" : "#ccfbf1",
+                      color: isAuthentic ? "#92400e" : "#0f766e",
+                      border: isAuthentic ? "1px solid #fcd34d" : "1px solid #5eead4",
+                    }}
+                  >
+                    {isAuthentic ? "✨ Authentic" : "⚡ Budget OEM"}
+                  </span>
 
                   {/* Subtle Heart Icon at Top Right */}
                   <button
@@ -232,17 +307,17 @@ export function RecommendedCarousel() {
                       position: "absolute",
                       top: "8px",
                       right: "8px",
-                      width: "26px",
-                      height: "26px",
+                      width: "28px",
+                      height: "28px",
                       borderRadius: "50%",
-                      backgroundColor: "rgba(255, 255, 255, 0.75)",
-                      border: "none",
-                      color: isWishlisted ? "#ff5e62" : "#94a3b8",
+                      backgroundColor: "rgba(255, 255, 255, 0.9)",
+                      border: "1px solid rgba(15, 23, 42, 0.08)",
+                      color: isWishlisted ? "#ef4444" : "#64748b",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       cursor: "pointer",
-                      fontSize: "13px",
+                      fontSize: "14px",
                     }}
                   >
                     {isWishlisted ? "♥" : "♡"}
@@ -252,87 +327,86 @@ export function RecommendedCarousel() {
                 {/* Title */}
                 <h3
                   style={{
-                    fontSize: "12.5px",
-                    fontWeight: "600",
-                    color: "var(--text-primary)",
+                    fontSize: "13px",
+                    fontWeight: "700",
+                    color: "#0f172a",
                     lineHeight: "1.35",
-                    margin: "0 0 10px",
+                    margin: "0 0 6px",
                     display: "-webkit-box",
                     WebkitLineClamp: 2,
                     WebkitBoxOrient: "vertical",
                     overflow: "hidden",
-                    minHeight: "34px",
+                    minHeight: "35px",
                   }}
                 >
                   {prod.titleEn}
                 </h3>
 
-                {/* Bottom Row: Price on Left + Star Rating on Right */}
+                {/* Rating Row */}
                 <div
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "space-between",
+                    gap: "4px",
+                    fontSize: "11px",
+                    color: "#64748b",
+                    marginBottom: "10px",
                   }}
                 >
-                  <span
+                  <span style={{ color: "#f59e0b", fontWeight: "800" }}>★</span>
+                  <span style={{ fontWeight: "700", color: "#334155" }}>{prod.rating.toFixed(1)}</span>
+                  <span>({prod.reviewsCount})</span>
+                </div>
+              </div>
+
+              {/* Bottom Row: Price on Left + Action Pill on Right */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  paddingTop: "8px",
+                  borderTop: "1px solid #f1f5f9",
+                }}
+              >
+                <div>
+                  <div
                     style={{
-                      fontSize: "14px",
+                      fontSize: "14.5px",
                       fontWeight: "800",
-                      color: "var(--text-primary)",
+                      color: "#0f172a",
                     }}
                   >
                     ৳{formatPaisa(prod.pricePaisa)}
-                  </span>
-
-                  <span
+                  </div>
+                  <div
                     style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "3px",
-                      fontSize: "11px",
-                      fontWeight: "700",
-                      color: "var(--text-secondary)",
+                      fontSize: "10.5px",
+                      color: "#94a3b8",
+                      textDecoration: "line-through",
                     }}
                   >
-                    <span style={{ color: "#f59e0b" }}>★</span>
-                    <span>{prod.rating.toFixed(1)}</span>
-                  </span>
+                    ৳{formatPaisa(prod.mrpPaisa)}
+                  </div>
                 </div>
-              </Link>
-            );
-          })}
-        </div>
 
-        <button
-          type="button"
-          onClick={scrollRight}
-          aria-label="Next recommended products"
-          style={{
-            position: "absolute",
-            right: "-14px",
-            top: "44%",
-            transform: "translateY(-50%)",
-            zIndex: 15,
-            width: "34px",
-            height: "34px",
-            borderRadius: "50%",
-            backgroundColor: "#ffffff",
-            border: "1px solid #e2e8f0",
-            boxShadow: "0 4px 12px rgba(15, 23, 42, 0.12)",
-            color: "#1e293b",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            cursor: "pointer",
-            fontSize: "18px",
-            fontWeight: "700",
-          }}
-        >
-          ›
-        </button>
+                <span
+                  style={{
+                    fontSize: "11px",
+                    fontWeight: "700",
+                    color: "#2563eb",
+                    backgroundColor: "#eff6ff",
+                    padding: "5px 10px",
+                    borderRadius: "8px",
+                  }}
+                >
+                  View →
+                </span>
+              </div>
+            </Link>
+          );
+        })}
       </div>
     </section>
   );
 }
-

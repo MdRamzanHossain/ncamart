@@ -68,8 +68,8 @@ export function TestimonialsAndNewsletter() {
     <section
       aria-label="Customer Reviews & Newsletter"
       style={{
-        padding: "20px 20px 32px",
-        maxWidth: "1340px",
+        padding: "16px 24px 40px",
+        maxWidth: "1320px",
         margin: "0 auto",
       }}
     >
@@ -86,7 +86,7 @@ export function TestimonialsAndNewsletter() {
           style={{
             fontSize: "20px",
             fontWeight: "800",
-            color: "var(--text-primary)",
+            color: "#0f172a",
             margin: 0,
             letterSpacing: "-0.02em",
           }}
@@ -120,8 +120,8 @@ export function TestimonialsAndNewsletter() {
           <div
             key={rev.name}
             style={{
-              backgroundColor: "var(--bg-surface)",
-              border: "1px solid var(--border-default)",
+              backgroundColor: "#ffffff",
+              border: "1px solid #e2e8f0",
               borderRadius: "18px",
               padding: "16px 18px",
               display: "flex",

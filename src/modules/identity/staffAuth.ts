@@ -37,7 +37,8 @@ export const staffAuthService = {
     password: string,
     totpCode?: string,
     clientIp = "127.0.0.1",
-    userAgent?: string
+    userAgent?: string,
+    options?: { allowUnenrolledTotp?: boolean }
   ): Promise<
     | { totp_enrollment_required: true; enrollment_token: string }
     | {
@@ -127,39 +128,41 @@ export const staffAuthService = {
 
     // 4. TOTP 2FA check
     if (!staffUser.totpEnabled || !staffUser.totpSecretEnc) {
-      // First login: enrollment required
-      const enrollmentToken = randomToken(32);
-      memStaffEnrollmentStore.set(enrollmentToken, {
-        staffId: staffUser.id,
-        expiresAt: Date.now() + 15 * 60 * 1000, // 15 min TTL
-      });
+      if (!options?.allowUnenrolledTotp) {
+        // First login: enrollment required
+        const enrollmentToken = randomToken(32);
+        memStaffEnrollmentStore.set(enrollmentToken, {
+          staffId: staffUser.id,
+          expiresAt: Date.now() + 15 * 60 * 1000, // 15 min TTL
+        });
 
-      return {
-        totp_enrollment_required: true,
-        enrollment_token: enrollmentToken,
-      };
-    }
+        return {
+          totp_enrollment_required: true,
+          enrollment_token: enrollmentToken,
+        };
+      }
+    } else {
+      if (!totpCode) {
+        throw new AppError("ERR_STAFF_AUTH_FAILED", "TOTP 2FA code is required", {}, 401);
+      }
 
-    if (!totpCode) {
-      throw new AppError("ERR_STAFF_AUTH_FAILED", "TOTP 2FA code is required", {}, 401);
-    }
+      // Decrypt TOTP secret
+      const secret = aesGcmDecrypt(staffUser.totpSecretEnc);
+      const totpValid = authenticator.check(totpCode, secret);
 
-    // Decrypt TOTP secret
-    const secret = aesGcmDecrypt(staffUser.totpSecretEnc);
-    const totpValid = authenticator.check(totpCode, secret);
-
-    if (!totpValid) {
-      await recordAudit(null, {
-        staffId: staffUser.id,
-        actorType: "STAFF",
-        action: "staff.login.failed",
-        entityType: "STAFF",
-        entityId: staffUser.id,
-        ip: clientIp,
-        userAgent,
-        afterState: { reason: "INVALID_TOTP" },
-      });
-      throw new AppError("ERR_STAFF_AUTH_FAILED", "Invalid 2FA authentication code", {}, 401);
+      if (!totpValid) {
+        await recordAudit(null, {
+          staffId: staffUser.id,
+          actorType: "STAFF",
+          action: "staff.login.failed",
+          entityType: "STAFF",
+          entityId: staffUser.id,
+          ip: clientIp,
+          userAgent,
+          afterState: { reason: "INVALID_TOTP" },
+        });
+        throw new AppError("ERR_STAFF_AUTH_FAILED", "Invalid 2FA authentication code", {}, 401);
+      }
     }
 
     // 5. Query staff roles

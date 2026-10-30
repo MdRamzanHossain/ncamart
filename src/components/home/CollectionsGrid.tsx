@@ -1,14 +1,16 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
 
 interface CollectionCard {
   id: string;
+  badge: string;
   title: string;
   subtitle: string;
   gradient: string;
   borderColor: string;
+  accentColor: string;
   icons: string[];
   link: string;
   items: string[];
@@ -17,40 +19,48 @@ interface CollectionCard {
 const COLLECTIONS: CollectionCard[] = [
   {
     id: "tech-essentials",
+    badge: "DAILY POWER",
     title: "Tech Essentials",
-    subtitle: "Upgrade Your World",
-    gradient: "linear-gradient(135deg, #c7d2fe 0%, #e0e7ff 55%, #dbeafe 100%)",
-    borderColor: "rgba(129, 140, 248, 0.35)",
+    subtitle: "GaN Chargers & Braided Cables",
+    gradient: "linear-gradient(145deg, #eef2ff 0%, #e0e7ff 55%, #dbeafe 100%)",
+    borderColor: "#c7d2fe",
+    accentColor: "#3730a3",
     icons: ["⌚", "🎧", "⚡"],
-    link: "/catalog?category=tech-essentials",
+    link: "/catalog?category=chargers-power",
     items: ["Thunderbolt 4 Docks", "USB-C 100W GaN", "Braided Kevlar Cables", "Magnetic Powerbanks"],
   },
   {
     id: "bench-soldering",
+    badge: "100% AUTHENTIC",
     title: "Bench & Soldering",
-    subtitle: "100% Authentic Picks",
-    gradient: "linear-gradient(135deg, #f9a8d4 0%, #fbcfe8 55%, #fce7f3 100%)",
-    borderColor: "rgba(244, 114, 182, 0.35)",
+    subtitle: "Hologram Sealed Lab Gear",
+    gradient: "linear-gradient(145deg, #fdf2f8 0%, #fce7f3 55%, #ffe4e6 100%)",
+    borderColor: "#fbcfe8",
+    accentColor: "#9d174d",
     icons: ["🔥", "🔬", "🛠️"],
     link: "/catalog?tier=AUTHENTIC&category=engineering-tools",
     items: ["Mechanic T12 Pro", "Hakko Soldering Tips", "Kaisi Microscope 4K", "Relife Solder Paste"],
   },
   {
     id: "nawabpur-sourced",
+    badge: "SAME-DAY SLA",
     title: "Nawabpur Sourced",
-    subtitle: "Same-Day Drop & Pack",
-    gradient: "linear-gradient(135deg, #fed7aa 0%, #ffedd5 55%, #fef3c7 100%)",
-    borderColor: "rgba(251, 146, 60, 0.35)",
+    subtitle: "Direct Wholesale Drop & Pack",
+    gradient: "linear-gradient(145deg, #fffbeb 0%, #fef3c7 55%, #ffedd5 100%)",
+    borderColor: "#fde68a",
+    accentColor: "#92400e",
     icons: ["📦", "🔌", "🔋"],
     link: "/catalog?fulfillment=REGULAR_DROP_PACK",
     items: ["Wholesale DC Jacks", "Fluke Multimeters", "Heat-Shrink Tubing", "Banana Plug Leads"],
   },
   {
     id: "preorder-direct",
+    badge: "FACTORY AIR-FREIGHT",
     title: "Pre-Order Direct",
-    subtitle: "Direct Air-Freight Gear",
-    gradient: "linear-gradient(135deg, #d8b4fe 0%, #e9d5ff 50%, #dbeafe 100%)",
-    borderColor: "rgba(168, 85, 247, 0.35)",
+    subtitle: "15% Deposit · 7-Day Arrival",
+    gradient: "linear-gradient(145deg, #f3e8ff 0%, #e9d5ff 55%, #e0e7ff 100%)",
+    borderColor: "#d8b4fe",
+    accentColor: "#5b21b6",
     icons: ["✈️", "📡", "💻"],
     link: "/pre-orders",
     items: ["Siglent Oscilloscope", "Thermal Imaging Cams", "SMD Rework Stations", "High-Voltage Probes"],
@@ -58,43 +68,51 @@ const COLLECTIONS: CollectionCard[] = [
 ];
 
 export function CollectionsGrid() {
-  const [expandedCard, setExpandedCard] = useState<string | null>(null);
-
-  const toggleCard = (id: string) => {
-    setExpandedCard((prev) => (prev === id ? null : id));
-  };
-
   return (
     <section
       aria-label="Featured Collections"
       style={{
-        padding: "20px 20px 12px",
-        maxWidth: "1340px",
+        padding: "8px 24px 28px",
+        maxWidth: "1320px",
         margin: "0 auto",
       }}
     >
-      {/* Section Header matching Reference Design */}
+      {/* Section Header */}
       <div
         style={{
           display: "flex",
-          alignItems: "center",
+          alignItems: "flex-end",
           justifyContent: "space-between",
-          marginBottom: "16px",
+          marginBottom: "18px",
           flexWrap: "wrap",
           gap: "12px",
         }}
       >
-        <h2
-          style={{
-            fontSize: "20px",
-            fontWeight: "800",
-            color: "var(--text-primary)",
-            margin: 0,
-            letterSpacing: "-0.02em",
-          }}
-        >
-          Interactive Collections
-        </h2>
+        <div>
+          <div
+            style={{
+              fontSize: "11px",
+              fontWeight: "800",
+              color: "#2563eb",
+              textTransform: "uppercase",
+              letterSpacing: "0.06em",
+              marginBottom: "3px",
+            }}
+          >
+            CURATED COLLECTIONS
+          </div>
+          <h2
+            style={{
+              fontSize: "22px",
+              fontWeight: "800",
+              color: "#0f172a",
+              margin: 0,
+              letterSpacing: "-0.02em",
+            }}
+          >
+            Interactive Collections
+          </h2>
+        </div>
 
         <Link
           href="/catalog"
@@ -103,10 +121,18 @@ export function CollectionsGrid() {
             fontWeight: "700",
             color: "#2563eb",
             textDecoration: "none",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "4px",
+            padding: "6px 14px",
+            borderRadius: "9999px",
+            backgroundColor: "#eff6ff",
+            border: "1px solid #bfdbfe",
           }}
           className="interactive-scale"
         >
-          View All
+          <span>View All</span>
+          <span>→</span>
         </Link>
       </div>
 
@@ -114,158 +140,156 @@ export function CollectionsGrid() {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 260px), 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 270px), 1fr))",
           gap: "18px",
         }}
       >
-        {COLLECTIONS.map((col) => {
-          const isExpanded = expandedCard === col.id;
-
-          return (
-            <div
-              key={col.id}
-              style={{
-                borderRadius: "20px",
-                background: col.gradient,
-                border: `1px solid ${col.borderColor}`,
-                padding: "20px",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-between",
-                minHeight: isExpanded ? "260px" : "200px",
-                position: "relative",
-                overflow: "hidden",
-                boxShadow: "0 8px 22px rgba(15, 23, 42, 0.06)",
-                transition: "all var(--duration-normal) var(--ease-spring)",
-                cursor: "pointer",
-              }}
-              onClick={() => toggleCard(col.id)}
-            >
-              {/* Top-Left Title & Subtitle */}
-              <div style={{ position: "relative", zIndex: 2 }}>
-                <h3
-                  style={{
-                    fontSize: "17px",
-                    fontWeight: "800",
-                    color: "#0f172a",
-                    margin: "0 0 2px",
-                    letterSpacing: "-0.02em",
-                  }}
-                >
-                  {col.title}
-                </h3>
-                <p
-                  style={{
-                    fontSize: "12.5px",
-                    color: "#334155",
-                    margin: 0,
-                    fontWeight: "500",
-                  }}
-                >
-                  {col.subtitle}
-                </p>
-              </div>
-
-              {/* Visual Product Cluster Stage */}
-              <div
+        {COLLECTIONS.map((col) => (
+          <div
+            key={col.id}
+            style={{
+              borderRadius: "20px",
+              background: col.gradient,
+              border: `1px solid ${col.borderColor}`,
+              padding: "20px",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              minHeight: "235px",
+              position: "relative",
+              overflow: "hidden",
+              boxShadow: "0 8px 22px rgba(15, 23, 42, 0.05)",
+              transition: "transform 0.2s ease, box-shadow 0.2s ease",
+            }}
+          >
+            {/* Top-Left Title & Subtitle */}
+            <div>
+              <span
                 style={{
-                  display: "flex",
-                  alignItems: "flex-end",
-                  justifyContent: "center",
-                  gap: "10px",
-                  marginTop: "14px",
-                  marginBottom: isExpanded ? "10px" : "4px",
-                  transform: isExpanded ? "scale(1.06)" : "scale(1)",
-                  transition: "transform var(--duration-fast) ease",
-                }}
-              >
-                {col.icons.map((ic, idx) => (
-                  <div
-                    key={idx}
-                    style={{
-                      width: idx === 1 ? "64px" : "52px",
-                      height: idx === 1 ? "64px" : "52px",
-                      borderRadius: "16px",
-                      backgroundColor: "rgba(255, 255, 255, 0.65)",
-                      backdropFilter: "blur(6px)",
-                      border: "1px solid rgba(255, 255, 255, 0.85)",
-                      boxShadow: "0 8px 18px rgba(15, 23, 42, 0.08)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: idx === 1 ? "32px" : "24px",
-                    }}
-                  >
-                    {ic}
-                  </div>
-                ))}
-              </div>
-
-              {/* Expanded Quick Filter Pills */}
-              {isExpanded && (
-                <div
-                  style={{
-                    margin: "8px 0 32px",
-                    display: "flex",
-                    flexWrap: "wrap",
-                    gap: "6px",
-                    position: "relative",
-                    zIndex: 3,
-                  }}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {col.items.map((item) => (
-                    <Link
-                      key={item}
-                      href={`/catalog?q=${encodeURIComponent(item)}`}
-                      style={{
-                        fontSize: "11px",
-                        fontWeight: "700",
-                        padding: "4px 9px",
-                        borderRadius: "8px",
-                        backgroundColor: "rgba(255, 255, 255, 0.85)",
-                        color: "#0f172a",
-                        textDecoration: "none",
-                        boxShadow: "0 2px 6px rgba(15, 23, 42, 0.06)",
-                      }}
-                    >
-                      {item}
-                    </Link>
-                  ))}
-                </div>
-              )}
-
-              {/* Bottom-Right White Circular Chevron Button (matching Reference) */}
-              <Link
-                href={col.link}
-                aria-label={`Browse ${col.title}`}
-                onClick={(e) => e.stopPropagation()}
-                style={{
-                  position: "absolute",
-                  bottom: "14px",
-                  right: "14px",
-                  width: "32px",
-                  height: "32px",
-                  borderRadius: "50%",
-                  backgroundColor: "#ffffff",
-                  color: "#0f172a",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  boxShadow: "0 4px 12px rgba(15, 23, 42, 0.12)",
-                  textDecoration: "none",
-                  fontSize: "15px",
+                  display: "inline-block",
+                  fontSize: "10px",
                   fontWeight: "800",
-                  zIndex: 4,
+                  color: col.accentColor,
+                  backgroundColor: "rgba(255, 255, 255, 0.75)",
+                  padding: "2px 8px",
+                  borderRadius: "9999px",
+                  letterSpacing: "0.05em",
+                  marginBottom: "8px",
                 }}
               >
-                ›
-              </Link>
+                {col.badge}
+              </span>
+              <h3
+                style={{
+                  fontSize: "18px",
+                  fontWeight: "800",
+                  color: "#0f172a",
+                  margin: "0 0 3px",
+                  letterSpacing: "-0.02em",
+                }}
+              >
+                {col.title}
+              </h3>
+              <p
+                style={{
+                  fontSize: "12.5px",
+                  color: "#334155",
+                  margin: 0,
+                  fontWeight: "500",
+                }}
+              >
+                {col.subtitle}
+              </p>
             </div>
-          );
-        })}
+
+            {/* Visual Product Cluster Stage */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "flex-start",
+                gap: "10px",
+                margin: "14px 0",
+              }}
+            >
+              {col.icons.map((ic, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    width: idx === 1 ? "54px" : "46px",
+                    height: idx === 1 ? "54px" : "46px",
+                    borderRadius: "14px",
+                    backgroundColor: "rgba(255, 255, 255, 0.8)",
+                    border: "1px solid #ffffff",
+                    boxShadow: "0 4px 12px rgba(15, 23, 42, 0.06)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: idx === 1 ? "26px" : "22px",
+                  }}
+                >
+                  {ic}
+                </div>
+              ))}
+            </div>
+
+            {/* Quick Sub-Category Filter Pills */}
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "6px",
+                paddingRight: "38px",
+              }}
+            >
+              {col.items.slice(0, 3).map((item) => (
+                <Link
+                  key={item}
+                  href={`/catalog?q=${encodeURIComponent(item)}`}
+                  style={{
+                    fontSize: "11px",
+                    fontWeight: "600",
+                    padding: "3px 8px",
+                    borderRadius: "6px",
+                    backgroundColor: "rgba(255, 255, 255, 0.82)",
+                    color: "#1e293b",
+                    textDecoration: "none",
+                    border: "1px solid rgba(255, 255, 255, 0.9)",
+                  }}
+                >
+                  {item}
+                </Link>
+              ))}
+            </div>
+
+            {/* Bottom-Right White Circular Chevron Button */}
+            <Link
+              href={col.link}
+              aria-label={`Browse ${col.title}`}
+              style={{
+                position: "absolute",
+                bottom: "16px",
+                right: "16px",
+                width: "34px",
+                height: "34px",
+                borderRadius: "50%",
+                backgroundColor: "#ffffff",
+                color: "#0f172a",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 4px 12px rgba(15, 23, 42, 0.12)",
+                textDecoration: "none",
+                fontSize: "16px",
+                fontWeight: "800",
+              }}
+              className="interactive-scale"
+            >
+              →
+            </Link>
+          </div>
+        ))}
       </div>
     </section>
   );
 }
-

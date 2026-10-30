@@ -47,8 +47,8 @@ export function RewardsTrustStrip() {
     <section
       aria-label="Rewards & Trust Strip"
       style={{
-        padding: "16px 20px",
-        maxWidth: "1340px",
+        padding: "8px 24px 24px",
+        maxWidth: "1320px",
         margin: "0 auto",
       }}
     >

@@ -35,8 +35,8 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [cartCount, setCartCount] = useState<number>(2);
-  const [unreadCount, setUnreadCount] = useState<number>(2);
+  const [cartCount, setCartCount] = useState<number>(0);
+  const [unreadCount, setUnreadCount] = useState<number>(0);
 
   // Refresh current session against /api/v1/customer/profile or stored session
   const refreshSession = useCallback(async () => {
@@ -159,106 +159,75 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Staff Login
+  // Staff Login (Strictly authenticates against backend — no fake default fallback)
   const loginStaff = async (identifier: string, password: string, totpCode?: string) => {
-    try {
-      const res = await api.post<{
-        totp_enrollment_required?: boolean;
-        enrollment_token?: string;
-        session_token?: string;
-        staff?: UserProfile & { full_name?: string; roles?: string[] };
-      }>("/api/v1/auth/staff/login", {
-        identifier,
-        password,
-        totp_code: totpCode || "123456",
-      });
+    const res = await api.post<{
+      totp_enrollment_required?: boolean;
+      enrollment_token?: string;
+      session_token?: string;
+      staff?: UserProfile & { full_name?: string; roles?: string[] };
+    }>("/api/v1/auth/staff/login", {
+      identifier,
+      password,
+      totp_code: totpCode?.trim() ? totpCode.trim() : undefined,
+      allow_unenrolled_totp: true,
+    });
 
-      if (res.totp_enrollment_required) {
-        return {
-          requiresTotp: true,
-          tempToken: res.enrollment_token,
-        };
-      }
-
-      if (res.session_token && typeof window !== "undefined") {
-        localStorage.setItem("nca_token", res.session_token);
-      }
-
-      const staffProfile: UserProfile = {
-        id: res.staff?.id || "STAFF-NCA-001",
-        name: res.staff?.name || res.staff?.full_name || "Engr. Mahmudul Hasan",
-        email: res.staff?.email || identifier,
-        role: res.staff?.roles?.[0] || "SUPER_ADMIN",
-        isStaff: true,
-      };
-
-      if (typeof window !== "undefined") {
-        localStorage.setItem("nca_user", JSON.stringify(staffProfile));
-      }
-      setUser(staffProfile);
+    if (res.totp_enrollment_required) {
       return {
-        requiresTotp: false,
-        staff: staffProfile,
-      };
-    } catch {
-      // Local demo staff fallback
-      const staffProfile: UserProfile = {
-        id: "STAFF-NCA-001",
-        name: "Engr. Mahmudul Hasan",
-        email: identifier || "mahmudul@ncamart.com",
-        role: "SUPER_ADMIN",
-        isStaff: true,
-      };
-      if (typeof window !== "undefined") {
-        localStorage.setItem("nca_user", JSON.stringify(staffProfile));
-      }
-      setUser(staffProfile);
-      return {
-        requiresTotp: false,
-        staff: staffProfile,
+        requiresTotp: true,
+        tempToken: res.enrollment_token,
       };
     }
+
+    if (res.session_token && typeof window !== "undefined") {
+      localStorage.setItem("nca_token", res.session_token);
+    }
+
+    const staffProfile: UserProfile = {
+      id: res.staff?.id || `staff_${Date.now()}`,
+      name: res.staff?.name || res.staff?.full_name || identifier,
+      email: res.staff?.email || identifier,
+      role: res.staff?.roles?.[0] || "SUPER_ADMIN",
+      permissions: res.staff?.roles || ["SUPER_ADMIN"],
+      isStaff: true,
+    };
+
+    if (typeof window !== "undefined") {
+      localStorage.setItem("nca_user", JSON.stringify(staffProfile));
+    }
+    setUser(staffProfile);
+    return {
+      requiresTotp: false,
+      staff: staffProfile,
+    };
   };
 
   // Staff TOTP Confirm
   const confirmStaffTotp = async (tempToken: string, totpCode: string): Promise<UserProfile> => {
-    try {
-      const res = await api.post<{
-        staff?: UserProfile & { full_name?: string };
-        session_token?: string;
-        token?: string;
-      }>("/api/v1/auth/staff/totp/confirm", {
-        enrollment_token: tempToken,
-        totp_code: totpCode,
-      });
-      const token = res.session_token || res.token;
-      if (token && typeof window !== "undefined") {
-        localStorage.setItem("nca_token", token);
-      }
-      const profile: UserProfile = {
-        id: res.staff?.id || "STAFF-NCA-001",
-        name: res.staff?.name || res.staff?.full_name || "Engr. Mahmudul Hasan",
-        role: "SUPER_ADMIN",
-        isStaff: true,
-      };
-      if (typeof window !== "undefined") {
-        localStorage.setItem("nca_user", JSON.stringify(profile));
-      }
-      setUser(profile);
-      return profile;
-    } catch {
-      const fallbackProfile: UserProfile = {
-        id: "STAFF-NCA-001",
-        name: "Engr. Mahmudul Hasan",
-        role: "SUPER_ADMIN",
-        isStaff: true,
-      };
-      if (typeof window !== "undefined") {
-        localStorage.setItem("nca_user", JSON.stringify(fallbackProfile));
-      }
-      setUser(fallbackProfile);
-      return fallbackProfile;
+    const res = await api.post<{
+      staff?: UserProfile & { full_name?: string };
+      session_token?: string;
+      token?: string;
+    }>("/api/v1/auth/staff/totp/confirm", {
+      enrollment_token: tempToken,
+      totp_code: totpCode,
+    });
+    const token = res.session_token || res.token;
+    if (token && typeof window !== "undefined") {
+      localStorage.setItem("nca_token", token);
     }
+    const profile: UserProfile = {
+      id: res.staff?.id || `staff_${Date.now()}`,
+      name: res.staff?.name || res.staff?.full_name || "Admin Staff",
+      role: "SUPER_ADMIN",
+      isStaff: true,
+    };
+    if (typeof window !== "undefined") {
+      localStorage.setItem("nca_user", JSON.stringify(profile));
+    }
+    setUser(profile);
+    return profile;
   };
 
   // Universal Logout

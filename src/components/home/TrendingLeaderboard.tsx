@@ -9,6 +9,7 @@ interface RankedProduct {
   title: string;
   rating: number;
   icon: string;
+  badgeColor: string;
 }
 
 const RANKED_ITEMS: RankedProduct[] = [
@@ -16,15 +17,17 @@ const RANKED_ITEMS: RankedProduct[] = [
     rank: 1,
     slug: "mechanic-t12-pro-smart-soldering-station",
     title: "Mechanic T12 Pro Smart Soldering Station",
-    rating: 4.8,
-    icon: "🎧",
+    rating: 4.9,
+    icon: "🔥",
+    badgeColor: "#f59e0b",
   },
   {
     rank: 2,
     slug: "anker-737-power-bank-24000mah-140w",
     title: "Anker 737 GaN 140W PowerCore 24K",
-    rating: 4.6,
+    rating: 4.8,
     icon: "⚡",
+    badgeColor: "#64748b",
   },
   {
     rank: 3,
@@ -32,6 +35,7 @@ const RANKED_ITEMS: RankedProduct[] = [
     title: "UGREEN 100W USB-C E-Marker Cable",
     rating: 4.7,
     icon: "🔌",
+    badgeColor: "#d97706",
   },
 ];
 
@@ -41,18 +45,18 @@ export function TrendingLeaderboard() {
   return (
     <div
       style={{
-        backgroundColor: "#f1f5f9",
+        backgroundColor: "#ffffff",
         border: "1px solid #e2e8f0",
         borderRadius: "20px",
-        padding: "20px",
+        padding: "22px",
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
         height: "100%",
-        boxShadow: "0 6px 18px rgba(15, 23, 42, 0.04)",
+        boxShadow: "0 8px 24px rgba(15, 23, 42, 0.05)",
       }}
     >
-      {/* Header matching Reference Design */}
+      {/* Header */}
       <div
         style={{
           display: "flex",
@@ -69,7 +73,7 @@ export function TrendingLeaderboard() {
             letterSpacing: "-0.02em",
           }}
         >
-          Trending Now
+          🔥 Trending Now
         </span>
 
         <Link
@@ -81,7 +85,7 @@ export function TrendingLeaderboard() {
             textDecoration: "none",
           }}
         >
-          See All
+          See All →
         </Link>
       </div>
 
@@ -100,22 +104,28 @@ export function TrendingLeaderboard() {
                 display: "flex",
                 alignItems: "center",
                 gap: "12px",
-                padding: "8px 10px",
+                padding: "10px 12px",
                 borderRadius: "14px",
-                backgroundColor: isHovered ? "#ffffff" : "rgba(255, 255, 255, 0.55)",
+                backgroundColor: isHovered ? "#eff6ff" : "#f8fafc",
+                border: isHovered ? "1px solid #bfdbfe" : "1px solid #f1f5f9",
                 textDecoration: "none",
                 transform: isHovered ? "translateX(3px)" : "translateX(0)",
-                transition: "all var(--duration-fast) ease",
+                transition: "all 0.15s ease",
               }}
             >
-              {/* Rank Number */}
+              {/* Rank Badge */}
               <span
                 style={{
+                  width: "22px",
+                  height: "22px",
+                  borderRadius: "6px",
+                  backgroundColor: item.rank === 1 ? "#fef3c7" : "#e2e8f0",
+                  color: item.rank === 1 ? "#b45309" : "#334155",
                   fontWeight: "800",
-                  fontSize: "14px",
-                  color: item.rank === 1 ? "#2563eb" : "#1e293b",
-                  width: "14px",
-                  textAlign: "center",
+                  fontSize: "12px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                   flexShrink: 0,
                 }}
               >
@@ -125,15 +135,15 @@ export function TrendingLeaderboard() {
               {/* White Square Product Thumbnail */}
               <div
                 style={{
-                  width: "46px",
-                  height: "46px",
+                  width: "44px",
+                  height: "44px",
                   borderRadius: "12px",
                   backgroundColor: "#ffffff",
-                  boxShadow: "0 2px 8px rgba(15, 23, 42, 0.06)",
+                  border: "1px solid #e2e8f0",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: "24px",
+                  fontSize: "22px",
                   flexShrink: 0,
                 }}
               >
@@ -145,8 +155,8 @@ export function TrendingLeaderboard() {
                 style={{
                   flex: 1,
                   fontSize: "12.5px",
-                  fontWeight: "600",
-                  color: "#1e293b",
+                  fontWeight: "700",
+                  color: "#0f172a",
                   lineHeight: "1.35",
                   display: "-webkit-box",
                   WebkitLineClamp: 2,
@@ -157,20 +167,19 @@ export function TrendingLeaderboard() {
                 {item.title}
               </div>
 
-              {/* Blue Star Rating on Right */}
+              {/* Star Rating on Right */}
               <div
                 style={{
                   fontSize: "11.5px",
                   fontWeight: "700",
-                  color: "#1e3a8a",
+                  color: "#0f172a",
                   display: "flex",
                   alignItems: "center",
                   gap: "3px",
                   flexShrink: 0,
-                  alignSelf: "flex-end",
                 }}
               >
-                <span style={{ color: "#2563eb" }}>★</span>
+                <span style={{ color: "#f59e0b" }}>★</span>
                 <span>{item.rating.toFixed(1)}</span>
               </div>
             </Link>
@@ -180,4 +189,3 @@ export function TrendingLeaderboard() {
     </div>
   );
 }
-

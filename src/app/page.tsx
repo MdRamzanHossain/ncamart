@@ -33,14 +33,14 @@ export default function HomePage() {
       {/* 6. Rewards & 4-Pillar Horizontal Indigo Strip */}
       <RewardsTrustStrip />
 
-      {/* 7. What Shoppers Say & Stay in the Loop Bar */}
-      <TestimonialsAndNewsletter />
-
-      {/* 8. Nawabpur Tech Corridor Interactive Map & Drop-and-Pack Sourcing */}
+      {/* 7. Nawabpur Tech Corridor Interactive Map & Drop-and-Pack Sourcing */}
       <NawabpurMarketMap />
 
-      {/* 9. Authorized Brand Authenticity & Credentials Hub */}
+      {/* 8. Authorized Brand Authenticity & Credentials Hub */}
       <BrandAuthenticityHub />
+
+      {/* 9. What Shoppers Say & Stay in the Loop Bar (Directly above Footer) */}
+      <TestimonialsAndNewsletter />
     </StorefrontShell>
   );
 }

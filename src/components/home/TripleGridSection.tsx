@@ -10,8 +10,8 @@ export function TripleGridSection() {
     <section
       aria-label="Trending, Campaign and Flash Offers"
       style={{
-        padding: "20px 20px 12px",
-        maxWidth: "1340px",
+        padding: "8px 24px 24px",
+        maxWidth: "1320px",
         margin: "0 auto",
       }}
     >

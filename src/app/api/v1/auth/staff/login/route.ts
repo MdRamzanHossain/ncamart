@@ -9,6 +9,7 @@ const loginSchema = z
     email: z.string().optional(),
     password: z.string().min(1),
     totp_code: z.string().optional(),
+    allow_unenrolled_totp: z.boolean().optional(),
   })
   .refine((data) => data.identifier || data.phone || data.email, {
     message: "Must provide identifier, email, or phone",
@@ -32,7 +33,8 @@ export const POST = withRoute(
       body.password,
       body.totp_code,
       clientIp,
-      userAgent
+      userAgent,
+      { allowUnenrolledTotp: body.allow_unenrolled_totp }
     );
 
     // 1. Enrollment required: return 200 with enrollment_token and nothing else

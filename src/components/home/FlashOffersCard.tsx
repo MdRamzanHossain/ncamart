@@ -77,70 +77,72 @@ export function FlashOffersCard() {
   return (
     <div
       style={{
-        backgroundColor: "#f1f5f9",
+        backgroundColor: "#ffffff",
         border: "1px solid #e2e8f0",
         borderRadius: "20px",
-        padding: "20px",
+        padding: "22px",
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
         height: "100%",
-        boxShadow: "0 6px 18px rgba(15, 23, 42, 0.04)",
+        boxShadow: "0 8px 24px rgba(15, 23, 42, 0.05)",
       }}
     >
-      {/* Header */}
+      {/* Header & Countdown Row */}
       <div>
-        <div
-          style={{
-            fontSize: "17px",
-            fontWeight: "800",
-            color: "#0f172a",
-            letterSpacing: "-0.02em",
-            marginBottom: "14px",
-          }}
-        >
-          Flash Offers
-        </div>
-
-        {/* 3 Coral-Salmon Countdown Boxes matching Reference Design */}
         <div
           style={{
             display: "flex",
             alignItems: "center",
-            justifyContent: "center",
-            gap: "10px",
-            marginBottom: "18px",
+            justifyContent: "space-between",
+            marginBottom: "14px",
+            gap: "8px",
           }}
         >
-          {[
-            { val: pad(timeLeft.hours), label: "HRS" },
-            { val: pad(timeLeft.minutes), label: "MINS" },
-            { val: pad(timeLeft.seconds), label: "SECS" },
-          ].map((box) => (
-            <div
-              key={box.label}
-              style={{
-                width: "48px",
-                height: "44px",
-                borderRadius: "10px",
-                background: "linear-gradient(180deg, #ff7b72 0%, #ff5e62 100%)",
-                color: "#ffffff",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: "0 4px 10px rgba(255, 94, 98, 0.3)",
-              }}
-            >
-              <span style={{ fontSize: "14px", fontWeight: "800", lineHeight: 1.1 }}>{box.val}</span>
-              <span style={{ fontSize: "7.5px", fontWeight: "700", opacity: 0.9, letterSpacing: "0.04em" }}>
-                {box.label}
-              </span>
-            </div>
-          ))}
+          <span
+            style={{
+              fontSize: "17px",
+              fontWeight: "800",
+              color: "#0f172a",
+              letterSpacing: "-0.02em",
+            }}
+          >
+            ⚡ Flash Offers
+          </span>
+
+          {/* 3 Coral-Salmon Countdown Boxes */}
+          <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+            {[
+              { val: pad(timeLeft.hours), label: "HRS" },
+              { val: pad(timeLeft.minutes), label: "MIN" },
+              { val: pad(timeLeft.seconds), label: "SEC" },
+            ].map((box) => (
+              <div
+                key={box.label}
+                style={{
+                  minWidth: "38px",
+                  height: "36px",
+                  borderRadius: "8px",
+                  background: "linear-gradient(180deg, #ff7b72 0%, #ff5e62 100%)",
+                  color: "#ffffff",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "0 4px",
+                  boxShadow: "0 3px 8px rgba(255, 94, 98, 0.25)",
+                }}
+              >
+                <span style={{ fontSize: "12px", fontWeight: "800", lineHeight: 1.05 }}>{box.val}</span>
+                <span style={{ fontSize: "7px", fontWeight: "700", opacity: 0.92 }}>
+                  {box.label}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Side-by-Side Product Showcase matching Reference Flash Offers Card */}
+        {/* Side-by-Side Product Showcase */}
         <Link
           href={`/products/${deal.slug}`}
           style={{
@@ -148,32 +150,48 @@ export function FlashOffersCard() {
             alignItems: "center",
             gap: "14px",
             textDecoration: "none",
-            padding: "8px",
-            borderRadius: "14px",
-            backgroundColor: "rgba(255, 255, 255, 0.65)",
+            padding: "12px",
+            borderRadius: "16px",
+            backgroundColor: "#f8fafc",
+            border: "1px solid #e2e8f0",
           }}
         >
           <div
             style={{
-              width: "84px",
-              height: "84px",
+              width: "76px",
+              height: "76px",
               borderRadius: "14px",
               backgroundColor: "#ffffff",
+              border: "1px solid #e2e8f0",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: "42px",
+              fontSize: "38px",
               flexShrink: 0,
-              boxShadow: "0 4px 12px rgba(15, 23, 42, 0.06)",
             }}
           >
             {deal.icon}
           </div>
 
           <div style={{ flex: 1, minWidth: 0 }}>
+            <span
+              style={{
+                display: "inline-block",
+                fontSize: "10px",
+                fontWeight: "800",
+                color: "#dc2626",
+                backgroundColor: "#fee2e2",
+                padding: "2px 7px",
+                borderRadius: "9999px",
+                marginBottom: "5px",
+              }}
+            >
+              SAVE {deal.discountPct}%
+            </span>
+
             <div
               style={{
-                fontSize: "13px",
+                fontSize: "13.5px",
                 fontWeight: "700",
                 color: "#0f172a",
                 lineHeight: "1.3",
@@ -190,23 +208,12 @@ export function FlashOffersCard() {
               <span
                 style={{
                   fontSize: "11.5px",
-                  color: "#64748b",
+                  color: "#94a3b8",
                   textDecoration: "line-through",
                 }}
               >
                 ৳{formatPaisa(deal.mrpPaisa)}
               </span>
-            </div>
-
-            <div
-              style={{
-                fontSize: "10.5px",
-                fontWeight: "700",
-                color: "#475569",
-                marginTop: "3px",
-              }}
-            >
-              {deal.discountPct}% OFF
             </div>
           </div>
         </Link>
@@ -218,24 +225,25 @@ export function FlashOffersCard() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          gap: "6px",
+          gap: "8px",
           marginTop: "12px",
         }}
       >
-        {FLASH_DEALS.map((_, idx) => (
+        {FLASH_DEALS.map((d, idx) => (
           <button
-            key={idx}
+            key={d.id}
             type="button"
             onClick={() => setActiveDealIndex(idx)}
             aria-label={`View flash deal ${idx + 1}`}
             style={{
-              width: "7px",
-              height: "7px",
-              borderRadius: "50%",
+              width: idx === activeDealIndex ? "20px" : "8px",
+              height: "8px",
+              borderRadius: "9999px",
               backgroundColor: idx === activeDealIndex ? "#2563eb" : "#cbd5e1",
               border: "none",
               cursor: "pointer",
               padding: 0,
+              transition: "all 0.2s ease",
             }}
           />
         ))}
@@ -243,4 +251,3 @@ export function FlashOffersCard() {
     </div>
   );
 }
-

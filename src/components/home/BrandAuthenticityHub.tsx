@@ -92,8 +92,8 @@ export function BrandAuthenticityHub() {
     <section
       aria-label="Official Brand Authenticity Hub"
       style={{
-        padding: "var(--space-2xl) var(--space-md)",
-        maxWidth: "1400px",
+        padding: "16px 24px 36px",
+        maxWidth: "1320px",
         margin: "0 auto",
       }}
     >
@@ -103,19 +103,19 @@ export function BrandAuthenticityHub() {
           display: "flex",
           alignItems: "flex-end",
           justifyContent: "space-between",
-          marginBottom: "var(--space-xl)",
+          marginBottom: "20px",
           flexWrap: "wrap",
-          gap: "var(--space-md)",
+          gap: "12px",
         }}
       >
         <div>
           <div
             style={{
-              fontSize: "var(--font-size-xs)",
-              color: "var(--tier-authentic-gold)",
-              fontWeight: "var(--font-weight-bold)",
+              fontSize: "11px",
+              color: "#d97706",
+              fontWeight: "800",
               textTransform: "uppercase",
-              letterSpacing: "0.06em",
+              letterSpacing: "0.08em",
               marginBottom: "4px",
             }}
           >
@@ -123,11 +123,11 @@ export function BrandAuthenticityHub() {
           </div>
           <h2
             style={{
-              fontSize: "clamp(1.5rem, 3vw, 2.2rem)",
+              fontSize: "clamp(1.35rem, 2.5vw, 1.85rem)",
               fontWeight: "800",
-              color: "var(--text-primary)",
+              color: "#0f172a",
               margin: 0,
-              letterSpacing: "-0.03em",
+              letterSpacing: "-0.025em",
             }}
           >
             Authorized Brands & Warranty Certificates
@@ -136,9 +136,9 @@ export function BrandAuthenticityHub() {
 
         <span
           style={{
-            fontSize: "var(--font-size-xs)",
-            color: "var(--text-tertiary)",
-            fontStyle: "italic",
+            fontSize: "12.5px",
+            color: "#64748b",
+            fontWeight: "500",
           }}
         >
           Click any brand to inspect authorization certificate
@@ -149,8 +149,8 @@ export function BrandAuthenticityHub() {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-          gap: "var(--space-md)",
+          gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
+          gap: "16px",
         }}
       >
         {BRANDS.map((b) => (
@@ -159,17 +159,17 @@ export function BrandAuthenticityHub() {
             type="button"
             onClick={() => setSelectedBrand(b)}
             style={{
-              backgroundColor: "var(--bg-surface)",
-              border: "1px solid var(--border-default)",
-              borderRadius: "var(--radius-xl)",
-              padding: "var(--space-lg)",
+              backgroundColor: "#ffffff",
+              border: "1px solid #e2e8f0",
+              borderRadius: "18px",
+              padding: "20px 16px",
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
               textAlign: "center",
               cursor: "pointer",
               transition: "all var(--duration-fast) var(--ease-spring)",
-              boxShadow: "0 4px 16px rgba(0, 0, 0, 0.2)",
+              boxShadow: "0 6px 20px rgba(15, 23, 42, 0.04)",
             }}
             className="interactive-scale"
           >
@@ -179,13 +179,13 @@ export function BrandAuthenticityHub() {
                 width: "56px",
                 height: "56px",
                 borderRadius: "50%",
-                backgroundColor: "var(--bg-surface-elevated)",
-                border: "1.5px solid var(--border-subtle)",
+                backgroundColor: "#f8fafc",
+                border: "1.5px solid #e2e8f0",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 fontSize: "26px",
-                marginBottom: "var(--space-sm)",
+                marginBottom: "10px",
               }}
             >
               {b.logo}
@@ -194,9 +194,9 @@ export function BrandAuthenticityHub() {
             {/* Name */}
             <div
               style={{
-                fontSize: "var(--font-size-base)",
+                fontSize: "15px",
                 fontWeight: "800",
-                color: "var(--text-primary)",
+                color: "#0f172a",
               }}
             >
               {b.name}
@@ -205,9 +205,9 @@ export function BrandAuthenticityHub() {
             {/* Warranty Badge */}
             <div
               style={{
-                fontSize: "10px",
+                fontSize: "11px",
                 fontWeight: "700",
-                color: "var(--tier-authentic-gold)",
+                color: "#d97706",
                 marginTop: "4px",
               }}
             >
@@ -217,13 +217,14 @@ export function BrandAuthenticityHub() {
             {/* Certificate Indicator */}
             <div
               style={{
-                fontSize: "9px",
-                color: "var(--text-tertiary)",
-                marginTop: "6px",
-                padding: "2px 6px",
-                borderRadius: "var(--radius-xs)",
-                backgroundColor: "var(--bg-canvas)",
-                border: "1px solid var(--border-subtle)",
+                fontSize: "10px",
+                color: "#475569",
+                fontWeight: "600",
+                marginTop: "8px",
+                padding: "3px 8px",
+                borderRadius: "6px",
+                backgroundColor: "#f8fafc",
+                border: "1px solid #e2e8f0",
               }}
             >
               Cert: {b.certificateNo}

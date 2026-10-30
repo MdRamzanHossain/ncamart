@@ -81,20 +81,20 @@ export function NawabpurMarketMap() {
     <section
       aria-label="Nawabpur Tech Corridor Interactive Map"
       style={{
-        padding: "var(--space-2xl) var(--space-md)",
-        maxWidth: "1400px",
+        padding: "16px 24px 36px",
+        maxWidth: "1320px",
         margin: "0 auto",
       }}
     >
       {/* Header */}
-      <div style={{ textAlign: "center", marginBottom: "var(--space-xl)" }}>
+      <div style={{ textAlign: "center", marginBottom: "24px" }}>
         <div
           style={{
-            fontSize: "var(--font-size-xs)",
-            color: "var(--tier-authentic-gold)",
-            fontWeight: "var(--font-weight-bold)",
+            fontSize: "11px",
+            color: "#d97706",
+            fontWeight: "800",
             textTransform: "uppercase",
-            letterSpacing: "0.06em",
+            letterSpacing: "0.08em",
             marginBottom: "4px",
           }}
         >
@@ -102,21 +102,21 @@ export function NawabpurMarketMap() {
         </div>
         <h2
           style={{
-            fontSize: "clamp(1.5rem, 3vw, 2.2rem)",
+            fontSize: "clamp(1.35rem, 2.5vw, 1.85rem)",
             fontWeight: "800",
-            color: "var(--text-primary)",
+            color: "#0f172a",
             margin: 0,
-            letterSpacing: "-0.03em",
+            letterSpacing: "-0.025em",
           }}
         >
           Nawabpur Tech Corridor Interactive Map
         </h2>
         <p
           style={{
-            fontSize: "var(--font-size-sm)",
-            color: "var(--text-secondary)",
+            fontSize: "14px",
+            color: "#475569",
             maxWidth: "680px",
-            margin: "var(--space-xs) auto 0",
+            margin: "6px auto 0",
           }}
         >
           See how our field runners and QC technicians verify, seal, and pack wholesale tech accessories
@@ -128,31 +128,31 @@ export function NawabpurMarketMap() {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
-          gap: "var(--space-xl)",
-          alignItems: "center",
+          gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))",
+          gap: "24px",
+          alignItems: "stretch",
         }}
       >
-        {/* Stylized Dark Mode Map Canvas */}
+        {/* Clean Light Architectural Blueprint Map Canvas */}
         <div
           style={{
-            backgroundColor: "var(--bg-canvas)",
-            border: "1px solid var(--border-default)",
-            borderRadius: "var(--radius-xl)",
+            background: "linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%)",
+            border: "1px solid #cbd5e1",
+            borderRadius: "20px",
             height: "420px",
             position: "relative",
             overflow: "hidden",
-            boxShadow: "0 16px 40px rgba(0, 0, 0, 0.4)",
+            boxShadow: "0 12px 32px rgba(15, 23, 42, 0.06)",
           }}
         >
-          {/* Subtle Grid Roads Background */}
+          {/* Subtle Blueprint Grid Background */}
           <div
             style={{
               position: "absolute",
               inset: 0,
               backgroundImage: `
-                linear-gradient(rgba(245, 158, 11, 0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(20, 184, 166, 0.05) 1px, transparent 1px)
+                linear-gradient(rgba(37, 99, 235, 0.06) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(37, 99, 235, 0.06) 1px, transparent 1px)
               `,
               backgroundSize: "32px 32px",
             }}
@@ -172,7 +172,7 @@ export function NawabpurMarketMap() {
             <path
               d="M 50 380 Q 200 240 320 200 T 550 80"
               fill="none"
-              stroke="rgba(245, 158, 11, 0.25)"
+              stroke="rgba(217, 119, 6, 0.35)"
               strokeWidth="4"
               strokeDasharray="6 6"
             />
@@ -180,14 +180,14 @@ export function NawabpurMarketMap() {
             <path
               d="M 120 100 L 400 320"
               fill="none"
-              stroke="rgba(20, 184, 166, 0.2)"
+              stroke="rgba(13, 148, 136, 0.3)"
               strokeWidth="3"
             />
             {/* Stadium Market Spur */}
             <path
               d="M 300 340 L 520 220"
               fill="none"
-              stroke="rgba(56, 189, 248, 0.2)"
+              stroke="rgba(37, 99, 235, 0.25)"
               strokeWidth="2.5"
             />
           </svg>
@@ -200,10 +200,14 @@ export function NawabpurMarketMap() {
               left: "16px",
               fontSize: "11px",
               fontWeight: "800",
-              color: "var(--text-tertiary)",
+              color: "#475569",
               letterSpacing: "0.08em",
               textTransform: "uppercase",
               userSelect: "none",
+              backgroundColor: "rgba(255, 255, 255, 0.9)",
+              padding: "4px 10px",
+              borderRadius: "6px",
+              border: "1px solid #e2e8f0",
             }}
           >
             Nawabpur Electronic District • Sector 1
@@ -214,9 +218,14 @@ export function NawabpurMarketMap() {
               position: "absolute",
               bottom: "14px",
               right: "16px",
-              fontSize: "10px",
-              color: "var(--text-tertiary)",
+              fontSize: "10.5px",
+              fontWeight: "600",
+              color: "#475569",
               userSelect: "none",
+              backgroundColor: "rgba(255, 255, 255, 0.9)",
+              padding: "3px 8px",
+              borderRadius: "6px",
+              border: "1px solid #e2e8f0",
             }}
           >
             Coordinates: 23.7196° N, 90.4109° E
@@ -253,11 +262,11 @@ export function NawabpurMarketMap() {
                     inset: "4px",
                     borderRadius: "50%",
                     backgroundColor: hub.type === "SHOWROOM"
-                      ? "var(--tier-authentic-gold)"
+                      ? "#f59e0b"
                       : hub.type === "QC_LAB"
-                      ? "var(--tier-budget-teal)"
-                      : "#38bdf8",
-                    opacity: isSelected ? 0.6 : 0.25,
+                      ? "#0d9488"
+                      : "#2563eb",
+                    opacity: isSelected ? 0.55 : 0.25,
                     animation: "ping 2s cubic-bezier(0, 0, 0.2, 1) infinite",
                   }}
                 />
@@ -265,24 +274,24 @@ export function NawabpurMarketMap() {
                 {/* Beacon Core */}
                 <div
                   style={{
-                    width: isSelected ? "38px" : "30px",
-                    height: isSelected ? "38px" : "30px",
+                    width: isSelected ? "40px" : "32px",
+                    height: isSelected ? "40px" : "32px",
                     borderRadius: "50%",
                     backgroundColor: hub.type === "SHOWROOM"
-                      ? "var(--tier-authentic-gold)"
+                      ? "#f59e0b"
                       : hub.type === "QC_LAB"
-                      ? "var(--tier-budget-teal)"
-                      : "#38bdf8",
-                    color: "#0b0f19",
+                      ? "#0d9488"
+                      : "#2563eb",
+                    color: "#ffffff",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontSize: isSelected ? "18px" : "14px",
+                    fontSize: isSelected ? "18px" : "15px",
                     boxShadow: isSelected
-                      ? "0 0 20px rgba(245, 158, 11, 0.8), 0 4px 12px rgba(0, 0, 0, 0.4)"
-                      : "0 0 10px rgba(0, 0, 0, 0.5)",
-                    border: "2px solid #ffffff",
-                    transition: "all var(--duration-fast) var(--ease-spring)",
+                      ? "0 0 0 4px rgba(245, 158, 11, 0.25), 0 6px 16px rgba(15, 23, 42, 0.25)"
+                      : "0 4px 10px rgba(15, 23, 42, 0.18)",
+                    border: "2.5px solid #ffffff",
+                    transition: "all 0.2s ease",
                     position: "relative",
                   }}
                 >
@@ -297,13 +306,14 @@ export function NawabpurMarketMap() {
                     left: "50%",
                     transform: "translateX(-50%)",
                     whiteSpace: "nowrap",
-                    fontSize: "10px",
+                    fontSize: "10.5px",
                     fontWeight: "800",
-                    color: isSelected ? "var(--tier-authentic-gold)" : "var(--text-primary)",
-                    backgroundColor: "rgba(11, 15, 25, 0.85)",
-                    padding: "2px 6px",
-                    borderRadius: "var(--radius-xs)",
-                    border: "1px solid var(--border-subtle)",
+                    color: isSelected ? "#b45309" : "#0f172a",
+                    backgroundColor: "#ffffff",
+                    padding: "3px 8px",
+                    borderRadius: "6px",
+                    border: isSelected ? "1px solid #f59e0b" : "1px solid #cbd5e1",
+                    boxShadow: "0 2px 6px rgba(15, 23, 42, 0.08)",
                     marginTop: "4px",
                     pointerEvents: "none",
                   }}
@@ -318,14 +328,14 @@ export function NawabpurMarketMap() {
         {/* Selected Hub Inspector Card */}
         <div
           style={{
-            backgroundColor: "var(--bg-surface)",
-            border: "1px solid var(--border-default)",
-            borderRadius: "var(--radius-xl)",
-            padding: "var(--space-xl)",
-            boxShadow: "0 12px 32px rgba(0, 0, 0, 0.3)",
+            backgroundColor: "#ffffff",
+            border: "1px solid #e2e8f0",
+            borderRadius: "20px",
+            padding: "24px",
+            boxShadow: "0 12px 32px rgba(15, 23, 42, 0.06)",
             display: "flex",
             flexDirection: "column",
-            gap: "var(--space-md)",
+            gap: "16px",
             minHeight: "420px",
             justifyContent: "space-between",
           }}
@@ -335,21 +345,21 @@ export function NawabpurMarketMap() {
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <span
                 style={{
-                  fontSize: "10px",
+                  fontSize: "10.5px",
                   fontWeight: "800",
                   textTransform: "uppercase",
                   letterSpacing: "0.06em",
-                  padding: "3px 8px",
-                  borderRadius: "var(--radius-xs)",
-                  backgroundColor: "var(--tier-authentic-gold-bg)",
-                  color: "var(--tier-authentic-gold)",
-                  border: "1px solid var(--tier-authentic-gold-border)",
+                  padding: "4px 10px",
+                  borderRadius: "6px",
+                  backgroundColor: "#fef3c7",
+                  color: "#b45309",
+                  border: "1px solid #fde68a",
                 }}
               >
                 {active.badge}
               </span>
 
-              <span style={{ fontSize: "11px", color: "var(--color-status-success)", fontWeight: "700" }}>
+              <span style={{ fontSize: "11.5px", color: "#059669", fontWeight: "700" }}>
                 ● {active.status}
               </span>
             </div>
@@ -357,10 +367,10 @@ export function NawabpurMarketMap() {
             {/* Name & Market Location */}
             <h3
               style={{
-                fontSize: "var(--font-size-xl)",
-                fontWeight: "900",
-                color: "var(--text-primary)",
-                margin: "var(--space-sm) 0 4px",
+                fontSize: "20px",
+                fontWeight: "800",
+                color: "#0f172a",
+                margin: "12px 0 4px",
                 display: "flex",
                 alignItems: "center",
                 gap: "8px",
@@ -372,10 +382,10 @@ export function NawabpurMarketMap() {
 
             <div
               style={{
-                fontSize: "var(--font-size-xs)",
-                color: "var(--text-tertiary)",
+                fontSize: "12.5px",
+                color: "#64748b",
                 fontWeight: "600",
-                marginBottom: "var(--space-md)",
+                marginBottom: "14px",
               }}
             >
               📍 {active.market}
@@ -384,8 +394,8 @@ export function NawabpurMarketMap() {
             {/* Description */}
             <p
               style={{
-                fontSize: "var(--font-size-sm)",
-                color: "var(--text-secondary)",
+                fontSize: "13.5px",
+                color: "#475569",
                 lineHeight: "1.6",
                 margin: 0,
               }}
@@ -396,43 +406,43 @@ export function NawabpurMarketMap() {
             {/* Throughput Metric Pill */}
             <div
               style={{
-                marginTop: "var(--space-md)",
-                padding: "10px 14px",
-                borderRadius: "var(--radius-md)",
-                backgroundColor: "var(--bg-surface-elevated)",
-                border: "1px solid var(--border-subtle)",
+                marginTop: "16px",
+                padding: "12px 16px",
+                borderRadius: "12px",
+                backgroundColor: "#f8fafc",
+                border: "1px solid #e2e8f0",
               }}
             >
-              <div style={{ fontSize: "10px", color: "var(--text-tertiary)", textTransform: "uppercase", fontWeight: "700" }}>
+              <div style={{ fontSize: "10px", color: "#64748b", textTransform: "uppercase", fontWeight: "700", letterSpacing: "0.05em" }}>
                 Daily Throughput SLA
               </div>
-              <div style={{ fontSize: "var(--font-size-sm)", fontWeight: "800", color: "var(--text-primary)", marginTop: "2px" }}>
+              <div style={{ fontSize: "14px", fontWeight: "800", color: "#0f172a", marginTop: "3px" }}>
                 ⚡ {active.throughput}
               </div>
             </div>
           </div>
 
           {/* Stepper Timeline: Drop-and-Pack in 24 Hours */}
-          <div style={{ borderTop: "1px solid var(--border-subtle)", paddingTop: "var(--space-md)" }}>
-            <div style={{ fontSize: "10px", fontWeight: "800", color: "var(--tier-authentic-gold)", letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: "8px" }}>
+          <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: "16px" }}>
+            <div style={{ fontSize: "10.5px", fontWeight: "800", color: "#b45309", letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: "10px" }}>
               How Drop-and-Pack Works
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "4px", textAlign: "center" }}>
-              <div style={{ fontSize: "10px", color: "var(--text-primary)" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "8px", textAlign: "center" }}>
+              <div style={{ fontSize: "11px", color: "#0f172a", backgroundColor: "#f8fafc", padding: "8px 4px", borderRadius: "8px", border: "1px solid #f1f5f9" }}>
                 <div style={{ fontWeight: "800" }}>1. Order</div>
-                <div style={{ color: "var(--text-tertiary)", fontSize: "9px" }}>Instant</div>
+                <div style={{ color: "#64748b", fontSize: "10px", marginTop: "2px" }}>Instant</div>
               </div>
-              <div style={{ fontSize: "10px", color: "var(--text-primary)" }}>
+              <div style={{ fontSize: "11px", color: "#0f172a", backgroundColor: "#f8fafc", padding: "8px 4px", borderRadius: "8px", border: "1px solid #f1f5f9" }}>
                 <div style={{ fontWeight: "800" }}>2. Runner</div>
-                <div style={{ color: "var(--text-tertiary)", fontSize: "9px" }}>&lt; 30 mins</div>
+                <div style={{ color: "#64748b", fontSize: "10px", marginTop: "2px" }}>&lt; 30 mins</div>
               </div>
-              <div style={{ fontSize: "10px", color: "var(--text-primary)" }}>
+              <div style={{ fontSize: "11px", color: "#0f172a", backgroundColor: "#f8fafc", padding: "8px 4px", borderRadius: "8px", border: "1px solid #f1f5f9" }}>
                 <div style={{ fontWeight: "800" }}>3. QC & Seal</div>
-                <div style={{ color: "var(--text-tertiary)", fontSize: "9px" }}>Bench tested</div>
+                <div style={{ color: "#64748b", fontSize: "10px", marginTop: "2px" }}>Bench tested</div>
               </div>
-              <div style={{ fontSize: "10px", color: "var(--text-primary)" }}>
+              <div style={{ fontSize: "11px", color: "#0f172a", backgroundColor: "#f8fafc", padding: "8px 4px", borderRadius: "8px", border: "1px solid #f1f5f9" }}>
                 <div style={{ fontWeight: "800" }}>4. Dispatched</div>
-                <div style={{ color: "var(--text-tertiary)", fontSize: "9px" }}>Same day</div>
+                <div style={{ color: "#64748b", fontSize: "10px", marginTop: "2px" }}>Same day</div>
               </div>
             </div>
           </div>

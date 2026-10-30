@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0b0f19",
+  themeColor: "#ffffff",
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
@@ -34,7 +34,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="bn-BD" suppressHydrationWarning>
+    <html lang="bn-BD" data-theme="light" suppressHydrationWarning>
       <head>
         <ThemeScript />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -49,7 +49,7 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <ThemeProvider defaultTheme="dark">
+        <ThemeProvider defaultTheme="light">
           <LocaleProvider defaultLocale="bn">
             <SkipToContent targetId="main-content" />
             <ToastProvider>
