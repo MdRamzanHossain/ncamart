@@ -153,7 +153,7 @@ jobs:
 
       # Build Web Image
       - name: Build and Push Web Image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: docker/Dockerfile.web
@@ -166,7 +166,7 @@ jobs:
 
       # Build Worker Image
       - name: Build and Push Worker Image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: docker/Dockerfile.worker
@@ -179,7 +179,7 @@ jobs:
 
       # Build Migration Image
       - name: Build and Push Migration Image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: docker/Dockerfile.migrate
