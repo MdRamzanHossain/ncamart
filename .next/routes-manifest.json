@@ -1231,6 +1231,12 @@
       "namedRegex": "^/auth/login(?:/)?$"
     },
     {
+      "page": "/auth/register",
+      "regex": "^/auth/register(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/auth/register(?:/)?$"
+    },
+    {
       "page": "/authenticity",
       "regex": "^/authenticity(?:/)?$",
       "routeKeys": {},
@@ -1337,6 +1343,12 @@
       "regex": "^/referrals(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/referrals(?:/)?$"
+    },
+    {
+      "page": "/register",
+      "regex": "^/register(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/register(?:/)?$"
     },
     {
       "page": "/rewards",
