@@ -52,7 +52,7 @@
     "@types/pg": "^8.11.11",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
-    "drizzle-kit": "^0.30.5",
+    "drizzle-kit": "^0.31.11",
     "eslint": "^9.22.0",
     "eslint-config-prettier": "^10.1.1",
     "fast-check": "^4.10.2",
