@@ -27,6 +27,26 @@ export interface AuthContextValue {
   verifyCustomerOtp: (phone: string, otp: string) => Promise<UserProfile>;
   loginStaff: (identifier: string, password: string, totpCode?: string) => Promise<{ requiresTotp: boolean; tempToken?: string; staff?: UserProfile }>;
   confirmStaffTotp: (tempToken: string, totpCode: string) => Promise<UserProfile>;
+  smartLogin: (
+    identifier: string,
+    password: string,
+    totpCode?: string
+  ) => Promise<{
+    requiresTotp?: boolean;
+    isStaff: boolean;
+    redirectUrl: string;
+    user?: UserProfile;
+    staffId?: string;
+  }>;
+  loginWithGoogle: (
+    credential: string,
+    totpCode?: string
+  ) => Promise<{
+    requiresTotp?: boolean;
+    isStaff: boolean;
+    redirectUrl: string;
+    user?: UserProfile;
+  }>;
   logout: () => Promise<void>;
 }
 
@@ -230,6 +250,108 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return profile;
   };
 
+  // Smart Unified Login (Detects Staff vs Customer + Enforces Staff 2FA)
+  const smartLogin = async (identifier: string, password: string, totpCode?: string) => {
+    const res = await api.post<{
+      success?: boolean;
+      requires_2fa?: boolean;
+      is_staff?: boolean;
+      redirect_url?: string;
+      session_token?: string;
+      staff_id?: string;
+      message?: string;
+      user?: UserProfile;
+    }>("/api/v1/auth/login", {
+      identifier: identifier.trim(),
+      password,
+      totp_code: totpCode?.trim() ? totpCode.trim() : undefined,
+    });
+
+    if (res.requires_2fa) {
+      return {
+        requiresTotp: true,
+        isStaff: Boolean(res.is_staff),
+        redirectUrl: res.redirect_url || "/admin",
+        staffId: res.staff_id,
+      };
+    }
+
+    if (res.session_token && typeof window !== "undefined") {
+      localStorage.setItem("nca_token", res.session_token);
+    }
+
+    const profile: UserProfile = {
+      id: res.user?.id || `user_${Date.now()}`,
+      name: res.user?.name || identifier,
+      email: res.user?.email || identifier,
+      phone: res.user?.phone,
+      role: res.user?.role || (res.is_staff ? "SUPER_ADMIN" : undefined),
+      permissions: res.user?.permissions || (res.is_staff ? ["SUPER_ADMIN"] : []),
+      isStaff: Boolean(res.is_staff),
+    };
+
+    if (typeof window !== "undefined") {
+      localStorage.setItem("nca_user", JSON.stringify(profile));
+    }
+    setUser(profile);
+
+    return {
+      requiresTotp: false,
+      isStaff: Boolean(res.is_staff),
+      redirectUrl: res.redirect_url || (res.is_staff ? "/admin" : "/"),
+      user: profile,
+    };
+  };
+
+  // Google Sign-In Authentication
+  const loginWithGoogle = async (credential: string, totpCode?: string) => {
+    const res = await api.post<{
+      success?: boolean;
+      requires_2fa?: boolean;
+      is_staff?: boolean;
+      redirect_url?: string;
+      session_token?: string;
+      user?: UserProfile;
+    }>("/api/v1/auth/google/verify", {
+      credential,
+      totp_code: totpCode?.trim() ? totpCode.trim() : undefined,
+    });
+
+    if (res.requires_2fa) {
+      return {
+        requiresTotp: true,
+        isStaff: Boolean(res.is_staff),
+        redirectUrl: res.redirect_url || "/admin",
+      };
+    }
+
+    if (res.session_token && typeof window !== "undefined") {
+      localStorage.setItem("nca_token", res.session_token);
+    }
+
+    const profile: UserProfile = {
+      id: res.user?.id || `google_${Date.now()}`,
+      name: res.user?.name || "Google User",
+      email: res.user?.email,
+      phone: res.user?.phone,
+      isStaff: Boolean(res.is_staff),
+      role: res.user?.role || (res.is_staff ? "SUPER_ADMIN" : undefined),
+      permissions: res.user?.permissions || (res.is_staff ? ["SUPER_ADMIN"] : []),
+    };
+
+    if (typeof window !== "undefined") {
+      localStorage.setItem("nca_user", JSON.stringify(profile));
+    }
+    setUser(profile);
+
+    return {
+      requiresTotp: false,
+      isStaff: Boolean(res.is_staff),
+      redirectUrl: res.redirect_url || (res.is_staff ? "/admin" : "/"),
+      user: profile,
+    };
+  };
+
   // Universal Logout
   const logout = async () => {
     try {
@@ -261,6 +383,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         verifyCustomerOtp,
         loginStaff,
         confirmStaffTotp,
+        smartLogin,
+        loginWithGoogle,
         logout,
       }}
     >

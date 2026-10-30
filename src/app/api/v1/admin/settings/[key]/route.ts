@@ -61,7 +61,7 @@ export const PUT = withRoute(
     }
 
     // Update setting in DB and caches
-    await settingsService.set(key, validated as any, actor!.id);
+    await settingsService.set(key, validated as Parameters<typeof settingsService.set>[1], actor!.id);
 
     // Record audit before/after
     await recordAudit(null, {

@@ -154,6 +154,25 @@ export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
     title: "Staff & Governance",
     items: [
       {
+        id: "account-settings",
+        label: "Account & 2FA Settings",
+        href: "/admin/settings",
+        icon: "⚙️",
+        allowedRoles: [
+          "SUPER_ADMIN",
+          "OPS_MANAGER",
+          "SOURCING_MANAGER",
+          "GODOWN_MANAGER",
+          "QC_TECHNICIAN",
+          "FIELD_RUNNER",
+          "SHOWROOM_POS_STAFF",
+          "CATALOG_MANAGER",
+          "CUSTOMER_SUPPORT",
+          "FINANCE_OFFICER",
+          "DISPATCH_STAFF",
+        ],
+      },
+      {
         id: "security-roles",
         label: "Staff Roles & Audit",
         href: "/admin/security",
@@ -228,12 +247,30 @@ export function AdminSidebar({ currentRole = "SUPER_ADMIN", onRoleChange, staffP
 
       {/* Staff Profile & Interactive RBAC Role Switcher */}
       <div className="staff-profile-card">
-        <div className="staff-avatar-row">
-          <div className="staff-avatar">{initials}</div>
-          <div className="staff-info">
-            <span className="staff-name">{displayName}</span>
-            <span className="staff-loc">{displayLocation}</span>
+        <div className="staff-avatar-row" style={{ justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
+            <div className="staff-avatar">{initials}</div>
+            <div className="staff-info">
+              <span className="staff-name">{displayName}</span>
+              <span className="staff-loc">{displayLocation}</span>
+            </div>
           </div>
+          <Link
+            href="/admin/settings"
+            title="Account & 2FA Settings"
+            aria-label="Account & 2FA Settings"
+            style={{
+              fontSize: "14px",
+              textDecoration: "none",
+              padding: "4px 6px",
+              borderRadius: "6px",
+              backgroundColor: "rgba(255, 255, 255, 0.06)",
+              border: "1px solid rgba(255, 255, 255, 0.12)",
+              flexShrink: 0,
+            }}
+          >
+            ⚙️
+          </Link>
         </div>
 
         <div className="role-selector-wrap">

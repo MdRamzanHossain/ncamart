@@ -49,13 +49,15 @@ export function setGlobalPermissionChecker(checker: PermissionCheckerFn): void {
   globalPermissionChecker = checker;
 }
 
-// Default resolver: checks nca_sid cookie or Authorization: Bearer token
+// Default resolver: checks nca_sid / nca_staff_sid cookie or Authorization: Bearer token
 export const defaultActorResolver: ActorResolver = {
   async resolve(req: NextRequest) {
-    const cookieToken = req.cookies.get("nca_sid")?.value;
+    const cookieToken =
+      req.cookies.get("nca_sid")?.value ||
+      req.cookies.get("nca_staff_sid")?.value;
     const authHeader = req.headers.get("authorization");
     const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
-    const token = cookieToken || bearerToken;
+    const token = bearerToken || cookieToken;
     if (!token) return null;
 
     if (globalSessionResolver) {

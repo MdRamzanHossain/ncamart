@@ -1040,6 +1040,335 @@ export const staffAuthService = {
     return sess;
   },
 
+  async getSelfProfile(staffId: string, currentSessionId?: string) {
+    const profile = await this.getStaffById(staffId);
+    if (!profile) {
+      throw new BusinessError("ERR_NOT_FOUND", "Staff profile not found", {}, 404);
+    }
+    const activeSessions = await this.listStaffSessions(staffId, currentSessionId);
+    return {
+      staff: profile,
+      sessions: activeSessions,
+    };
+  },
+
+  async updateSelfProfile(
+    staffId: string,
+    updates: {
+      fullName?: string;
+      email?: string;
+      phone?: string;
+    }
+  ) {
+    const existing = await this.getStaffById(staffId);
+    if (!existing) {
+      throw new BusinessError("ERR_NOT_FOUND", "Staff member not found", {}, 404);
+    }
+
+    const updatedFullName = updates.fullName?.trim() || existing.full_name;
+    if (updatedFullName.length < 2) {
+      throw new BusinessError("ERR_VALIDATION", "Full name must be at least 2 characters", {}, 400);
+    }
+
+    const updatedEmail = updates.email ? updates.email.trim().toLowerCase() : existing.email;
+    let updatedPhone = existing.phone;
+    if (updates.phone) {
+      if (!isValidBdPhone(updates.phone.trim())) {
+        throw new BusinessError(
+          "ERR_INVALID_PHONE",
+          "Please enter a valid Bangladesh mobile number (e.g. +8801712345678)",
+          {},
+          400
+        );
+      }
+      updatedPhone = normalizeBdPhone(updates.phone.trim());
+    }
+
+    const now = new Date();
+    try {
+      await db
+        .update(staff)
+        .set({
+          fullName: updatedFullName,
+          email: updatedEmail,
+          phone: updatedPhone,
+          updatedAt: now,
+        })
+        .where(eq(staff.id, staffId as Uuid));
+    } catch {
+      const mem = memStaffStore.get(staffId);
+      if (mem) {
+        mem.fullName = updatedFullName;
+        mem.email = updatedEmail;
+        mem.phone = updatedPhone;
+        mem.updatedAt = now;
+      }
+    }
+
+    await recordAudit(null, {
+      staffId,
+      actorType: "STAFF",
+      action: "staff.profile.self_updated",
+      entityType: "STAFF",
+      entityId: staffId,
+      beforeState: {
+        fullName: existing.full_name,
+        email: existing.email,
+        phone: existing.phone,
+      },
+      afterState: {
+        fullName: updatedFullName,
+        email: updatedEmail,
+        phone: updatedPhone,
+      },
+    });
+
+    return {
+      id: staffId,
+      full_name: updatedFullName,
+      email: updatedEmail,
+      phone: updatedPhone,
+      status: existing.status,
+      roles: existing.roles,
+      totp_enabled: existing.totp_enabled,
+      must_change_password: existing.must_change_password,
+      updated_at: now.toISOString(),
+    };
+  },
+
+  async initSelfTotpEnrollment(
+    staffId: string
+  ): Promise<{ secret: string; otpauth_url: string; email: string }> {
+    const existing = await this.getStaffById(staffId);
+    if (!existing) {
+      throw new BusinessError("ERR_NOT_FOUND", "Staff member not found", {}, 404);
+    }
+
+    const secret = authenticator.generateSecret();
+    const encryptedSecret = aesGcmEncrypt(secret);
+    const now = new Date();
+
+    try {
+      await db
+        .update(staff)
+        .set({ totpSecretEnc: encryptedSecret, updatedAt: now })
+        .where(eq(staff.id, staffId as Uuid));
+    } catch {
+      const mem = memStaffStore.get(staffId);
+      if (mem) {
+        mem.totpSecretEnc = encryptedSecret;
+        mem.updatedAt = now;
+      }
+    }
+
+    const otpauthUrl = authenticator.keyuri(existing.email, "NCAMart Admin", secret);
+    return {
+      secret,
+      otpauth_url: otpauthUrl,
+      email: existing.email,
+    };
+  },
+
+  async confirmSelfTotpEnrollment(
+    staffId: string,
+    totpCode: string
+  ): Promise<{ totp_enabled: boolean; message: string }> {
+    let staffRecord: StaffRow | null = null;
+    try {
+      const rows = await db.select().from(staff).where(eq(staff.id, staffId as Uuid)).limit(1);
+      staffRecord = rows[0] ?? null;
+    } catch {
+      staffRecord = memStaffStore.get(staffId) ?? null;
+    }
+
+    if (!staffRecord || !staffRecord.totpSecretEnc) {
+      throw new BusinessError(
+        "ERR_VALIDATION",
+        "Please generate a 2FA secret key first before verifying.",
+        {},
+        400
+      );
+    }
+
+    const secret = aesGcmDecrypt(staffRecord.totpSecretEnc);
+    const valid = authenticator.check(totpCode.trim(), secret);
+    if (!valid) {
+      throw new BusinessError(
+        "ERR_OTP_INVALID",
+        "Invalid 6-digit authenticator code. Please check your app and try again.",
+        { status: 401 },
+        401
+      );
+    }
+
+    const now = new Date();
+    try {
+      await db
+        .update(staff)
+        .set({ totpEnabled: true, updatedAt: now })
+        .where(eq(staff.id, staffId as Uuid));
+    } catch {
+      staffRecord.totpEnabled = true;
+      staffRecord.updatedAt = now;
+    }
+
+    await recordAudit(null, {
+      staffId,
+      actorType: "STAFF",
+      action: "staff.totp.self_enrolled",
+      entityType: "STAFF",
+      entityId: staffId,
+      afterState: { totpEnabled: true },
+    });
+
+    return {
+      totp_enabled: true,
+      message: "Two-Factor Authentication (2FA) is now active on your account.",
+    };
+  },
+
+  async disableSelfTotp(
+    staffId: string,
+    password: string
+  ): Promise<{ totp_enabled: boolean; message: string }> {
+    let staffRecord: StaffRow | null = null;
+    try {
+      const rows = await db.select().from(staff).where(eq(staff.id, staffId as Uuid)).limit(1);
+      staffRecord = rows[0] ?? null;
+    } catch {
+      staffRecord = memStaffStore.get(staffId) ?? null;
+    }
+
+    if (!staffRecord) {
+      throw new BusinessError("ERR_NOT_FOUND", "Staff account not found", {}, 404);
+    }
+
+    const passwordValid = await argon2.verify(staffRecord.passwordHash, password);
+    if (!passwordValid) {
+      throw new BusinessError(
+        "ERR_STAFF_AUTH_FAILED",
+        "Current password is incorrect. Cannot disable 2FA.",
+        { status: 401 },
+        401
+      );
+    }
+
+    const now = new Date();
+    try {
+      await db
+        .update(staff)
+        .set({ totpEnabled: false, totpSecretEnc: null, updatedAt: now })
+        .where(eq(staff.id, staffId as Uuid));
+    } catch {
+      staffRecord.totpEnabled = false;
+      staffRecord.totpSecretEnc = null;
+      staffRecord.updatedAt = now;
+    }
+
+    await recordAudit(null, {
+      staffId,
+      actorType: "STAFF",
+      action: "staff.totp.self_disabled",
+      entityType: "STAFF",
+      entityId: staffId,
+      afterState: { totpEnabled: false },
+    });
+
+    return {
+      totp_enabled: false,
+      message: "Two-Factor Authentication (2FA) has been disabled.",
+    };
+  },
+
+  async listStaffSessions(staffId: string, currentSessionId?: string) {
+    const now = new Date();
+    try {
+      const rows = await db
+        .select()
+        .from(sessions)
+        .where(
+          and(
+            eq(sessions.subjectId, staffId as Uuid),
+            eq(sessions.subjectType, "STAFF"),
+            isNull(sessions.revokedAt)
+          )
+        );
+      return rows
+        .filter((s) => new Date(s.expiresAt) > now)
+        .map((s) => ({
+          id: s.id,
+          ip: s.ip || "127.0.0.1",
+          user_agent: s.userAgent || "Web Browser",
+          created_at: new Date(s.createdAt).toISOString(),
+          last_seen_at: new Date(s.lastSeenAt).toISOString(),
+          expires_at: new Date(s.expiresAt).toISOString(),
+          is_current: s.id === currentSessionId,
+        }));
+    } catch {
+      const list = [];
+      for (const s of memStaffSessionStore.values()) {
+        if (s.subjectId === staffId && !s.revokedAt && s.expiresAt > now) {
+          list.push({
+            id: s.id,
+            ip: s.ip || "127.0.0.1",
+            user_agent: s.userAgent || "Web Browser",
+            created_at: s.createdAt.toISOString(),
+            last_seen_at: s.lastSeenAt.toISOString(),
+            expires_at: s.expiresAt.toISOString(),
+            is_current: s.id === currentSessionId,
+          });
+        }
+      }
+      return list;
+    }
+  },
+
+  async revokeOtherStaffSessions(staffId: string, currentSessionId?: string): Promise<number> {
+    const now = new Date();
+    let revokedCount = 0;
+    try {
+      const rows = await db
+        .select()
+        .from(sessions)
+        .where(
+          and(
+            eq(sessions.subjectId, staffId as Uuid),
+            eq(sessions.subjectType, "STAFF"),
+            isNull(sessions.revokedAt)
+          )
+        );
+      for (const s of rows) {
+        if (s.id !== currentSessionId) {
+          await db
+            .update(sessions)
+            .set({ revokedAt: now, revokedBy: staffId })
+            .where(eq(sessions.id, s.id));
+          revokedCount++;
+        }
+      }
+    } catch {
+      for (const [key, sess] of memStaffSessionStore.entries()) {
+        if (sess.subjectId === staffId && sess.id !== currentSessionId && !sess.revokedAt) {
+          sess.revokedAt = now;
+          sess.revokedBy = staffId;
+          revokedCount++;
+          memStaffSessionStore.delete(key);
+        }
+      }
+    }
+
+    await recordAudit(null, {
+      staffId,
+      actorType: "STAFF",
+      action: "staff.sessions.self_revoked_others",
+      entityType: "STAFF",
+      entityId: staffId,
+      afterState: { revokedCount },
+    });
+
+    return revokedCount;
+  },
+
   clearMemoryStaffForTesting(): void {
     memStaffStore.clear();
     memStaffRolesStore.clear();

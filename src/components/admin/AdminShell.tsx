@@ -13,6 +13,8 @@ interface StoredStaffUser {
   id?: string;
   name?: string;
   email?: string;
+  phone?: string;
+  assignedLocation?: string;
   role?: AdminRole;
   isStaff?: boolean;
 }
@@ -48,6 +50,16 @@ export function AdminShell({ children }: AdminShellProps) {
       setAuthStatus("UNAUTHENTICATED");
       window.location.replace("/auth/login?mode=staff&redirect=/admin");
     }
+
+    // Live-sync sidebar/topbar when the staff member edits their profile in /admin/settings
+    const handleProfileUpdated = (event: Event) => {
+      const custom = event as CustomEvent<StoredStaffUser>;
+      if (custom.detail) {
+        setStaffUser((prev) => ({ ...prev, ...custom.detail }));
+      }
+    };
+    window.addEventListener("nca-staff-profile-updated", handleProfileUpdated);
+    return () => window.removeEventListener("nca-staff-profile-updated", handleProfileUpdated);
   }, []);
 
   const handleStaffSignOut = () => {
@@ -152,7 +164,7 @@ export function AdminShell({ children }: AdminShellProps) {
               ? {
                   name: staffUser.name,
                   email: staffUser.email,
-                  assignedLocation: "Nawabpur Central Godown & HQ",
+                  assignedLocation: staffUser.assignedLocation || "Nawabpur Central Godown & HQ",
                 }
               : null
           }
@@ -184,6 +196,15 @@ export function AdminShell({ children }: AdminShellProps) {
             </div>
 
             <div className="topbar-actions">
+              <Link
+                href="/admin/settings"
+                className="topbar-icon-btn"
+                title="Account & 2FA Settings"
+                aria-label="Account Settings"
+                style={{ textDecoration: "none" }}
+              >
+                ⚙️
+              </Link>
               <button
                 type="button"
                 className="topbar-icon-btn"

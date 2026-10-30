@@ -24,6 +24,12 @@ export const SETTINGS_SCHEMAS = {
   MARKETING_QUIET_START: z.string().regex(/^\d{2}:\d{2}$/),
   MARKETING_QUIET_END: z.string().regex(/^\d{2}:\d{2}$/),
   AUDIT_RETENTION_DAYS: z.number().int().positive(),
+  GOOGLE_AUTH_CONFIG: z.object({
+    enabled: z.boolean().default(false),
+    clientId: z.string().default(""),
+    clientSecret: z.string().default(""),
+    redirectUri: z.string().default(""),
+  }),
 } as const;
 
 export type SettingKey = keyof typeof SETTINGS_SCHEMAS;
@@ -54,4 +60,10 @@ export const DEFAULT_SETTINGS: { [K in SettingKey]: SettingValue<K> } = {
   MARKETING_QUIET_START: "22:00",
   MARKETING_QUIET_END: "08:00",
   AUDIT_RETENTION_DAYS: 2190,
+  GOOGLE_AUTH_CONFIG: {
+    enabled: false,
+    clientId: "",
+    clientSecret: "",
+    redirectUri: "",
+  },
 };
