@@ -47,6 +47,14 @@ export interface AuthContextValue {
     redirectUrl: string;
     user?: UserProfile;
   }>;
+  registerCustomer: (data: {
+    fullName: string;
+    phone: string;
+    email?: string;
+    password?: string;
+    accountType?: "RETAIL" | "WHOLESALE";
+    companyName?: string;
+  }) => Promise<{ redirectUrl: string; user: UserProfile }>;
   logout: () => Promise<void>;
 }
 
@@ -352,6 +360,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   };
 
+  // Register Customer
+  const registerCustomer = async (data: {
+    fullName: string;
+    phone: string;
+    email?: string;
+    password?: string;
+    accountType?: "RETAIL" | "WHOLESALE";
+    companyName?: string;
+  }) => {
+    const res = await api.post<{
+      success?: boolean;
+      session_token?: string;
+      redirect_url?: string;
+      user?: UserProfile;
+    }>("/api/v1/auth/register", data);
+
+    if (res.session_token && typeof window !== "undefined") {
+      localStorage.setItem("nca_token", res.session_token);
+    }
+
+    const profile: UserProfile = {
+      id: res.user?.id || `user_${Date.now()}`,
+      name: res.user?.name || data.fullName,
+      email: res.user?.email || data.email,
+      phone: res.user?.phone || data.phone,
+      isStaff: false,
+    };
+
+    if (typeof window !== "undefined") {
+      localStorage.setItem("nca_user", JSON.stringify(profile));
+    }
+    setUser(profile);
+
+    return {
+      redirectUrl: res.redirect_url || "/",
+      user: profile,
+    };
+  };
+
   // Universal Logout
   const logout = async () => {
     try {
@@ -385,6 +432,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         confirmStaffTotp,
         smartLogin,
         loginWithGoogle,
+        registerCustomer,
         logout,
       }}
     >
