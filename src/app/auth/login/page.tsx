@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import React, { useState, useEffect, Suspense, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import { toast } from "@/components/ui/toast";
 
 // Vector Illustration matching the mockup (Office worker at desk with computer & lush plants)
 function LoginIllustration() {
@@ -57,43 +56,32 @@ function LoginIllustration() {
 
       {/* Office Desk */}
       <g id="deskGroup">
-        {/* Desk top */}
         <rect x="180" y="380" width="220" height="14" rx="4" fill="#475569" filter="url(#softShadow)" />
-        {/* Right drawer cabinet / leg */}
         <rect x="330" y="394" width="70" height="106" rx="4" fill="#334155" />
         <rect x="335" y="405" width="60" height="26" rx="2" fill="#1e293b" />
         <circle cx="365" cy="418" r="3" fill="#94a3b8" />
         <rect x="335" y="438" width="60" height="26" rx="2" fill="#1e293b" />
         <circle cx="365" cy="451" r="3" fill="#94a3b8" />
-        {/* Desk left leg */}
         <rect x="195" y="394" width="10" height="106" rx="3" fill="#334155" />
       </g>
 
       {/* Modern Desktop Monitor on Desk */}
       <g id="computerMonitor">
-        {/* Monitor Screen Frame */}
         <rect x="290" y="275" width="115" height="85" rx="6" fill="#0f172a" />
-        {/* Active Display Screen */}
         <rect x="296" y="281" width="103" height="73" rx="4" fill="#1e293b" />
-        {/* Mock UI lines */}
         <rect x="304" y="290" width="45" height="6" rx="2" fill="#38bdf8" />
         <rect x="304" y="302" width="75" height="4" rx="2" fill="#64748b" />
         <rect x="304" y="311" width="60" height="4" rx="2" fill="#64748b" />
         <rect x="304" y="320" width="50" height="4" rx="2" fill="#10b981" />
-        {/* Stand stem & base */}
         <rect x="342" y="360" width="10" height="20" fill="#64748b" />
         <ellipse cx="347" cy="380" rx="20" ry="4" fill="#475569" />
       </g>
 
       {/* Ergonomic Office Chair */}
       <g id="officeChair">
-        {/* Chair Backrest */}
         <path d="M190 280 C180 280 175 320 180 390 C185 415 210 425 225 425 Z" fill="#0f172a" />
-        {/* Seat cushion */}
         <rect x="185" y="415" width="70" height="16" rx="8" fill="#1e293b" />
-        {/* Chair Central Stand */}
         <rect x="215" y="431" width="8" height="65" fill="#64748b" />
-        {/* Swivel Legs & Wheels */}
         <path d="M219 490 L185 506" stroke="#475569" strokeWidth="6" strokeLinecap="round" />
         <path d="M219 490 L250 506" stroke="#475569" strokeWidth="6" strokeLinecap="round" />
         <circle cx="185" cy="508" r="5" fill="#0f172a" />
@@ -102,38 +90,28 @@ function LoginIllustration() {
 
       {/* Worker Character Sitting */}
       <g id="workerSitting">
-        {/* Blue Trousers / Legs */}
         <path d="M220 420 C240 440 255 460 255 500 L240 505 C230 465 215 445 205 425 Z" fill="#1d4ed8" />
         <ellipse cx="250" cy="506" rx="14" ry="7" fill="#0f172a" />
         <path d="M225 420 C250 435 285 450 310 520 L290 525 C270 465 240 445 215 425 Z" fill="#2563eb" />
         <ellipse cx="305" cy="525" rx="16" ry="8" fill="#0f172a" />
 
-        {/* Torso / Crisp White Shirt */}
         <path d="M205 315 C220 315 245 330 248 420 L205 420 C195 380 195 335 205 315 Z" fill="#ffffff" />
-
-        {/* Emerald Green Tie */}
         <polygon points="228,325 233,325 235,390 230,400 226,390" fill="#10b981" />
 
-        {/* Coffee Mug in Right Hand */}
         <rect x="250" y="360" width="16" height="18" rx="3" fill="#ef4444" />
         <path d="M266 364 C271 364 271 374 266 374" stroke="#ef4444" strokeWidth="2.5" fill="none" />
-        {/* Steam */}
         <path d="M255 354 Q253 348 256 342" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.7" />
         <path d="M260 355 Q262 349 259 344" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.7" />
 
-        {/* Arm holding mug */}
         <path d="M235 335 C248 345 255 355 252 368" stroke="#ffffff" strokeWidth="16" strokeLinecap="round" />
         <circle cx="253" cy="370" r="7" fill="#fed7aa" />
 
-        {/* Head & Neck */}
         <rect x="220" y="295" width="14" height="24" rx="6" fill="#fed7aa" />
         <circle cx="228" cy="285" r="18" fill="#fed7aa" />
-
-        {/* Stylized Modern Dark Hair */}
         <path d="M212 284 C210 265 225 255 240 258 C250 260 252 272 248 282 C242 272 232 270 220 274 Z" fill="#0f172a" />
       </g>
 
-      {/* Right Foliage Plants (Tropical Layers) */}
+      {/* Right Foliage Plants */}
       <g id="rightFoliage">
         <polygon points="380,480 405,480 400,525 385,525" fill="#0f172a" />
         <ellipse cx="392.5" cy="480" rx="12.5" ry="4" fill="#334155" />
@@ -146,17 +124,17 @@ function LoginIllustration() {
 }
 
 function LoginContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const redirectParam = searchParams.get("redirect") || "";
 
   const { smartLogin, loginWithGoogle, sendCustomerOtp, verifyCustomerOtp, isAuthenticated, user, logout } = useAuth();
 
-  // Primary Login State
+  // Primary Login State with LocalStorage Remember Me automation
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
+  const [capsLockActive, setCapsLockActive] = useState(false);
 
   // 2FA TOTP State (Triggers for staff accounts requiring TOTP)
   const [requires2Fa, setRequires2Fa] = useState(false);
@@ -170,12 +148,24 @@ function LoginContent() {
 
   // System & Loading State
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [googleConfig, setGoogleConfig] = useState<{ enabled: boolean; client_id: string } | null>(null);
 
-  // Fetch Google OAuth settings dynamically
+  const identifierInputRef = useRef<HTMLInputElement>(null);
+
+  // Load saved remember me identifier on mount & fetch Google OAuth config
   useEffect(() => {
     let isMounted = true;
+    try {
+      const savedUser = localStorage.getItem("nca_remembered_identifier");
+      if (savedUser) {
+        setIdentifier(savedUser);
+      }
+    } catch {
+      // LocalStorage access safe guard
+    }
+
     fetch("/api/v1/auth/google/config")
       .then((res) => res.json())
       .then((data) => {
@@ -187,18 +177,39 @@ function LoginContent() {
         }
       })
       .catch(() => {});
+
     return () => {
       isMounted = false;
     };
   }, []);
 
-  // Handle Smart Unified Login (Staff -> /admin, Customer -> /)
+  // Handle keyboard CapsLock detection
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.getModifierState) {
+      setCapsLockActive(e.getModifierState("CapsLock"));
+    }
+  };
+
+  // Perform immediate safe redirection
+  const performRedirect = (isStaffMember: boolean) => {
+    setIsSuccess(true);
+    // User requested: Authentication success goes directly to admin page (or redirect target)
+    const targetUrl = redirectParam || (isStaffMember ? "/admin" : "/admin");
+    // Using window.location.href ensures clean session cookie propagation without stale Next.js cache
+    setTimeout(() => {
+      window.location.href = targetUrl;
+    }, 300);
+  };
+
+  // Handle Smart Unified Login
   const handleSmartLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
 
-    if (!identifier.trim()) {
-      setErrorMessage("Please enter your Username, Email, or Mobile number.");
+    const cleanIdentifier = identifier.trim();
+    if (!cleanIdentifier) {
+      setErrorMessage("Please enter your Username, Email, or Mobile Phone.");
+      identifierInputRef.current?.focus();
       return;
     }
     if (!password) {
@@ -208,34 +219,39 @@ function LoginContent() {
 
     setIsSubmitting(true);
     try {
-      const res = await smartLogin(identifier.trim(), password, requires2Fa ? totpCode.trim() : undefined);
+      // Remember me automation
+      if (typeof window !== "undefined") {
+        if (rememberMe) {
+          localStorage.setItem("nca_remembered_identifier", cleanIdentifier);
+        } else {
+          localStorage.removeItem("nca_remembered_identifier");
+        }
+      }
+
+      const res = await smartLogin(cleanIdentifier, password, requires2Fa ? totpCode.trim() : undefined);
 
       if (res.requiresTotp) {
         setRequires2Fa(true);
-        toast({
-          title: "2FA Verification Required",
-          description: "Staff account detected. Enter the 6-digit code from Google Authenticator.",
-          variant: "warning",
-        });
+        setIsSubmitting(false);
         return;
       }
 
-      toast({
-        title: res.isStaff ? "Backoffice Verified" : "Welcome Back",
-        description: res.isStaff ? "Redirecting to Admin Panel..." : "Redirecting to NCAMart Store...",
-        variant: "success",
-      });
-
-      // Role-based smart redirect
-      if (res.isStaff) {
-        router.push(redirectParam || "/admin");
-      } else {
-        router.push(redirectParam || "/");
-      }
+      performRedirect(Boolean(res.isStaff));
     } catch (err: unknown) {
-      setErrorMessage(err instanceof Error ? err.message : "Authentication failed. Please verify credentials.");
-    } finally {
       setIsSubmitting(false);
+      const raw = err instanceof Error ? err.message : "";
+      if (
+        raw.toLowerCase().includes("invalid") ||
+        raw.toLowerCase().includes("credential") ||
+        raw.toLowerCase().includes("password") ||
+        raw.toLowerCase().includes("user") ||
+        raw.toLowerCase().includes("not found") ||
+        raw.toLowerCase().includes("401")
+      ) {
+        setErrorMessage("Invalid username, email, or password. Please check your credentials and try again.");
+      } else {
+        setErrorMessage(raw || "Authentication failed. Invalid username or password.");
+      }
     }
   };
 
@@ -244,11 +260,7 @@ function LoginContent() {
     setErrorMessage(null);
 
     if (!googleConfig?.enabled || !googleConfig?.client_id) {
-      toast({
-        title: "Google Sign-In Setup Required",
-        description: "Google OAuth is not configured yet. Configure Client ID in Admin Settings -> Google Sign-In.",
-        variant: "info",
-      });
+      setErrorMessage("Google Sign-In is not configured yet. Configure Client ID in Admin Settings -> Google Sign-In.");
       return;
     }
 
@@ -265,34 +277,21 @@ function LoginContent() {
               const res = await loginWithGoogle(response.credential);
               if (res.requiresTotp) {
                 setRequires2Fa(true);
-                toast({
-                  title: "Staff 2FA Required",
-                  description: "Enter your 6-digit authenticator code to proceed to Admin.",
-                  variant: "warning",
-                });
+                setIsSubmitting(false);
                 return;
               }
-              toast({
-                title: "Signed In with Google",
-                description: res.isStaff ? "Redirecting to Admin..." : "Redirecting to Storefront...",
-                variant: "success",
-              });
-              router.push(redirectParam || (res.isStaff ? "/admin" : "/"));
+              performRedirect(Boolean(res.isStaff));
             }
           },
         });
         win.google.accounts.id.prompt();
       } else {
-        toast({
-          title: "Google Authentication",
-          description: "Connecting with Google Identity Services...",
-          variant: "info",
-        });
+        setErrorMessage("Google Identity Services are loading. Please try again in a moment.");
+        setIsSubmitting(false);
       }
     } catch (err: unknown) {
-      setErrorMessage(err instanceof Error ? err.message : "Google sign-in failed.");
-    } finally {
       setIsSubmitting(false);
+      setErrorMessage(err instanceof Error ? err.message : "Google authentication failed.");
     }
   };
 
@@ -312,13 +311,8 @@ function LoginContent() {
       if (res.demoOtp) {
         setCustomerOtp(res.demoOtp);
       }
-      toast({
-        title: "OTP Dispatched",
-        description: res.message || "6-digit OTP code sent via SMS / WhatsApp.",
-        variant: "info",
-      });
     } catch (err: unknown) {
-      setErrorMessage(err instanceof Error ? err.message : "Failed to dispatch OTP.");
+      setErrorMessage(err instanceof Error ? err.message : "Failed to dispatch verification OTP.");
     } finally {
       setIsSubmitting(false);
     }
@@ -328,22 +322,16 @@ function LoginContent() {
     e.preventDefault();
     setErrorMessage(null);
     if (customerOtp.trim().length !== 6) {
-      setErrorMessage("Enter the full 6-digit OTP code.");
+      setErrorMessage("Please enter the full 6-digit verification code.");
       return;
     }
     setIsSubmitting(true);
     try {
       await verifyCustomerOtp(phone.replace(/\s+/g, ""), customerOtp.trim());
-      toast({
-        title: "OTP Verified",
-        description: "Welcome to NCAMart! Redirecting...",
-        variant: "success",
-      });
-      router.push(redirectParam || "/");
+      performRedirect(false);
     } catch (err: unknown) {
-      setErrorMessage(err instanceof Error ? err.message : "Invalid or expired OTP code.");
-    } finally {
       setIsSubmitting(false);
+      setErrorMessage(err instanceof Error ? err.message : "Invalid or expired OTP code.");
     }
   };
 
@@ -396,7 +384,7 @@ function LoginContent() {
             </Link>
 
             <h1 className="form-heading">
-              {requires2Fa ? "Security Verification" : "Acesse sua conta"}
+              {requires2Fa ? "Security Verification" : "Sign in to your account"}
             </h1>
             <p className="form-subheading">
               {requires2Fa
@@ -415,12 +403,13 @@ function LoginContent() {
                 </span>
               </div>
               <div className="session-actions">
-                <Link
-                  href={user.isStaff ? "/admin" : redirectParam || "/"}
+                <button
+                  type="button"
+                  onClick={() => performRedirect(Boolean(user.isStaff))}
                   className="btn-continue"
                 >
-                  Continue →
-                </Link>
+                  Direct to Admin →
+                </button>
                 <button
                   type="button"
                   onClick={() => logout()}
@@ -432,6 +421,14 @@ function LoginContent() {
             </div>
           )}
 
+          {/* Success Redirecting Banner */}
+          {isSuccess && (
+            <div className="success-alert-banner" role="status">
+              <span className="success-spinner"></span>
+              <span>Authenticated successfully! Redirecting to Admin...</span>
+            </div>
+          )}
+
           {/* Error Banner */}
           {errorMessage && (
             <div className="error-alert-banner" role="alert">
@@ -439,6 +436,13 @@ function LoginContent() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <span>{errorMessage}</span>
+            </div>
+          )}
+
+          {/* CapsLock Warning */}
+          {capsLockActive && !requires2Fa && (
+            <div className="capslock-warning">
+              ⚠️ Caps Lock is ON
             </div>
           )}
 
@@ -466,7 +470,10 @@ function LoginContent() {
                   inputMode="numeric"
                   pattern="[0-9]*"
                   value={totpCode}
-                  onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ""))}
+                  onChange={(e) => {
+                    setErrorMessage(null);
+                    setTotpCode(e.target.value.replace(/\D/g, ""));
+                  }}
                   placeholder="000 000"
                   className="totp-large-input"
                   autoFocus
@@ -489,6 +496,7 @@ function LoginContent() {
                   onClick={() => {
                     setRequires2Fa(false);
                     setTotpCode("");
+                    setErrorMessage(null);
                   }}
                   className="btn-link-back"
                 >
@@ -510,7 +518,10 @@ function LoginContent() {
                       id="phoneInput"
                       type="tel"
                       value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
+                      onChange={(e) => {
+                        setErrorMessage(null);
+                        setPhone(e.target.value);
+                      }}
                       placeholder="01712 345678"
                       className="clean-text-input prefix-padded"
                       required
@@ -531,7 +542,10 @@ function LoginContent() {
                 <div className="center-link-box">
                   <button
                     type="button"
-                    onClick={() => setUseOtpMode(false)}
+                    onClick={() => {
+                      setUseOtpMode(false);
+                      setErrorMessage(null);
+                    }}
                     className="btn-text-link"
                   >
                     ← Sign in with Password / Username instead
@@ -549,7 +563,10 @@ function LoginContent() {
                     type="text"
                     maxLength={6}
                     value={customerOtp}
-                    onChange={(e) => setCustomerOtp(e.target.value.replace(/\D/g, ""))}
+                    onChange={(e) => {
+                      setErrorMessage(null);
+                      setCustomerOtp(e.target.value.replace(/\D/g, ""));
+                    }}
                     placeholder="000000"
                     className="totp-large-input"
                     autoFocus
@@ -590,9 +607,14 @@ function LoginContent() {
                   </svg>
                   <input
                     id="userIdentifier"
+                    ref={identifierInputRef}
                     type="text"
                     value={identifier}
-                    onChange={(e) => setIdentifier(e.target.value)}
+                    onChange={(e) => {
+                      setErrorMessage(null);
+                      setIdentifier(e.target.value);
+                    }}
+                    onKeyDown={handleKeyDown}
                     placeholder="name@example.com or admin"
                     autoComplete="username"
                     autoCapitalize="none"
@@ -606,7 +628,7 @@ function LoginContent() {
               {/* Password Input */}
               <div className="field-group">
                 <label className="field-label" htmlFor="userPassword">
-                  Senha / Password
+                  Password
                 </label>
                 <div className="field-input-wrap">
                   <svg className="field-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -616,7 +638,11 @@ function LoginContent() {
                     id="userPassword"
                     type={showPassword ? "text" : "password"}
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => {
+                      setErrorMessage(null);
+                      setPassword(e.target.value);
+                    }}
+                    onKeyDown={handleKeyDown}
                     placeholder="••••••••"
                     autoComplete="current-password"
                     required
@@ -651,14 +677,14 @@ function LoginContent() {
                     onChange={(e) => setRememberMe(e.target.checked)}
                     className="custom-checkbox"
                   />
-                  <span>Manter-me conectado</span>
+                  <span>Remember me</span>
                 </label>
 
                 <Link
                   href="/account/reset-password"
                   className="forgot-link"
                 >
-                  Esqueceu a senha?
+                  Forgot password?
                 </Link>
               </div>
 
@@ -670,13 +696,13 @@ function LoginContent() {
                   className="btn-pill-submit"
                 >
                   <span className="btn-circle-arrow">→</span>
-                  <span>{isSubmitting ? "SIGNING IN..." : "ENTRAR"}</span>
+                  <span>{isSubmitting ? "SIGNING IN..." : "SIGN IN"}</span>
                 </button>
               </div>
 
               {/* Divider */}
               <div className="or-divider">
-                <span>OU</span>
+                <span>OR</span>
               </div>
 
               {/* Google Sign-In Button */}
@@ -711,17 +737,20 @@ function LoginContent() {
               <div className="otp-toggle-row">
                 <button
                   type="button"
-                  onClick={() => setUseOtpMode(true)}
+                  onClick={() => {
+                    setUseOtpMode(true);
+                    setErrorMessage(null);
+                  }}
                   className="btn-otp-toggle"
                 >
-                  📱 Use Bangladesh Mobile SMS OTP instead
+                  📱 Sign in with Bangladesh Mobile SMS OTP instead
                 </button>
               </div>
 
               {/* Create Account Link */}
               <div className="signup-footer-box">
                 <Link href="/register" className="btn-signup-link">
-                  Criar uma conta
+                  Don&apos;t have an account? Create an account
                 </Link>
               </div>
             </form>
@@ -960,7 +989,13 @@ function LoginContent() {
           color: #ffffff;
           font-weight: 700;
           font-size: 11px;
-          text-decoration: none;
+          border: none;
+          cursor: pointer;
+          transition: background 0.15s;
+        }
+
+        .btn-continue:hover {
+          background: #0050d0;
         }
 
         .btn-signout {
@@ -974,6 +1009,34 @@ function LoginContent() {
 
         .btn-signout:hover {
           color: #e11d48;
+        }
+
+        /* Success Redirect Alert */
+        .success-alert-banner {
+          margin-bottom: 18px;
+          padding: 12px 14px;
+          border-radius: 12px;
+          background: #f0fdf4;
+          border: 1px solid #bbf7d0;
+          color: #15803d;
+          font-size: 13px;
+          font-weight: 700;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .success-spinner {
+          width: 14px;
+          height: 14px;
+          border: 2px solid #16a34a;
+          border-top-color: transparent;
+          border-radius: 50%;
+          animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+          to { transform: rotate(360deg); }
         }
 
         /* Error Alert */
@@ -997,6 +1060,13 @@ function LoginContent() {
           min-width: 18px !important;
           color: #ef4444;
           display: block;
+        }
+
+        .capslock-warning {
+          font-size: 11px;
+          font-weight: 700;
+          color: #d97706;
+          margin-bottom: 10px;
         }
 
         /* Form Controls */
@@ -1030,7 +1100,6 @@ function LoginContent() {
           border-bottom-color: #0066f5;
         }
 
-        /* Strict icon dimensions to prevent global SVG blowup */
         .field-icon {
           width: 18px !important;
           height: 18px !important;
@@ -1418,7 +1487,7 @@ function LoginContent() {
           color: #ffffff;
         }
 
-        /* Responsive Breakpoint: Mobile Screen (matches the mobile mockup in screenshot) */
+        /* Responsive Breakpoint: Mobile Screen */
         @media (max-width: 860px) {
           .login-main-card {
             flex-direction: column;
