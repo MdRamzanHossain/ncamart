@@ -2,31 +2,46 @@ import { NextResponse } from "next/server";
 import { withRoute } from "@/lib/http/route";
 import { settingsService } from "@/modules/settings";
 
+export const dynamic = "force-dynamic";
+
 export const GET = withRoute(
   {
     auth: "public",
   },
   async () => {
+    let enabled = false;
+    let clientId = "";
+    let redirectUri = "";
+
     try {
       const config = await settingsService.get("GOOGLE_AUTH_CONFIG");
-      return NextResponse.json(
-        {
-          enabled: Boolean(config.enabled && config.clientId),
-          client_id: config.clientId || "",
-          redirect_uri: config.redirectUri || "",
-        },
-        { status: 200 }
-      );
+      clientId = config.clientId?.trim() || "";
+      enabled = Boolean(config.enabled && clientId);
+      redirectUri = config.redirectUri?.trim() || "";
     } catch {
-      return NextResponse.json(
-        {
-          enabled: false,
-          client_id: "",
-          redirect_uri: "",
-        },
-        { status: 200 }
-      );
+      // DB settings fallback
     }
+
+    if (!clientId) {
+      clientId =
+        process.env.GOOGLE_CLIENT_ID?.trim() ||
+        process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim() ||
+        "";
+      if (clientId) {
+        enabled = true;
+      }
+    }
+
+    const response = NextResponse.json(
+      {
+        enabled,
+        client_id: clientId,
+        redirect_uri: redirectUri,
+      },
+      { status: 200 }
+    );
+
+    response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+    return response;
   }
 );
-

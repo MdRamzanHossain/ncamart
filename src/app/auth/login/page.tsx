@@ -127,7 +127,7 @@ function LoginContent() {
   const searchParams = useSearchParams();
   const redirectParam = searchParams.get("redirect") || "";
 
-  const { smartLogin, loginWithGoogle, sendCustomerOtp, verifyCustomerOtp, isAuthenticated, user, logout } = useAuth();
+  const { smartLogin, sendCustomerOtp, verifyCustomerOtp, isAuthenticated, user, logout } = useAuth();
 
   // Primary Login State with LocalStorage Remember Me automation
   const [identifier, setIdentifier] = useState("");
@@ -150,13 +150,11 @@ function LoginContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [googleConfig, setGoogleConfig] = useState<{ enabled: boolean; client_id: string } | null>(null);
 
   const identifierInputRef = useRef<HTMLInputElement>(null);
 
-  // Load saved remember me identifier on mount & fetch Google OAuth config
+  // Load saved remember me identifier on mount & process OAuth URL errors/2FA prompts
   useEffect(() => {
-    let isMounted = true;
     try {
       const savedUser = localStorage.getItem("nca_remembered_identifier");
       if (savedUser) {
@@ -166,22 +164,28 @@ function LoginContent() {
       // LocalStorage access safe guard
     }
 
-    fetch("/api/v1/auth/google/config")
-      .then((res) => res.json())
-      .then((data) => {
-        if (isMounted && data) {
-          setGoogleConfig({
-            enabled: Boolean(data.enabled),
-            client_id: data.client_id || "",
-          });
-        }
-      })
-      .catch(() => {});
+    const err = searchParams.get("error");
+    if (err) {
+      if (err === "google_not_configured" || err === "google_credentials_missing_in_admin") {
+        setErrorMessage("Google Sign-In is not configured yet. Configure Client ID & Secret in Admin Settings -> Google Sign-In.");
+      } else if (err === "google_token_exchange_failed") {
+        setErrorMessage("Google token exchange failed. Please verify Client Secret in Admin Settings.");
+      } else if (err === "access_denied") {
+        setErrorMessage("Google sign-in was canceled.");
+      } else {
+        setErrorMessage(decodeURIComponent(err));
+      }
+    }
 
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+    const r2fa = searchParams.get("requires_2fa");
+    const emailParam = searchParams.get("email");
+    if (r2fa === "1") {
+      setRequires2Fa(true);
+      if (emailParam) {
+        setIdentifier(emailParam);
+      }
+    }
+  }, [searchParams]);
 
   // Handle keyboard CapsLock detection
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -211,13 +215,32 @@ function LoginContent() {
       identifierInputRef.current?.focus();
       return;
     }
-    if (!password) {
+    const isGoogle2Fa = searchParams.get("google_2fa") === "1";
+    if (!isGoogle2Fa && !password) {
       setErrorMessage("Please enter your password.");
       return;
     }
 
     setIsSubmitting(true);
     try {
+      // Staff Google 2FA Verification Flow
+      if (isGoogle2Fa) {
+        const res = await fetch("/api/v1/auth/google/totp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            totp_code: totpCode.trim(),
+            email: cleanIdentifier,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || "Invalid 2FA Authenticator code.");
+        }
+        performRedirect(true);
+        return;
+      }
+
       // Remember me automation
       if (typeof window !== "undefined") {
         if (rememberMe) {
@@ -254,44 +277,12 @@ function LoginContent() {
     }
   };
 
-  // Handle Google Sign-In
-  const handleGoogleClick = async () => {
-    setErrorMessage(null);
-
-    if (!googleConfig?.enabled || !googleConfig?.client_id) {
-      setErrorMessage("Google Sign-In is not configured yet. Configure Client ID in Admin Settings -> Google Sign-In.");
-      return;
-    }
-
+  // Handle Google Sign-In (Direct OAuth 2.0 Authorization Code Flow)
+  const handleGoogleClick = () => {
     setIsSubmitting(true);
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const win = window as any;
-      if (win.google && win.google.accounts) {
-        win.google.accounts.id.initialize({
-          client_id: googleConfig.client_id,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          callback: async (response: any) => {
-            if (response?.credential) {
-              const res = await loginWithGoogle(response.credential);
-              if (res.requiresTotp) {
-                setRequires2Fa(true);
-                setIsSubmitting(false);
-                return;
-              }
-              performRedirect(Boolean(res.isStaff));
-            }
-          },
-        });
-        win.google.accounts.id.prompt();
-      } else {
-        setErrorMessage("Google Identity Services are loading. Please try again in a moment.");
-        setIsSubmitting(false);
-      }
-    } catch (err: unknown) {
-      setIsSubmitting(false);
-      setErrorMessage(err instanceof Error ? err.message : "Google authentication failed.");
-    }
+    setErrorMessage(null);
+    const target = redirectParam ? `?redirect=${encodeURIComponent(redirectParam)}` : "";
+    window.location.href = `/api/v1/auth/google${target}`;
   };
 
   // Customer Mobile OTP Fallback

@@ -3,6 +3,8 @@ import { z } from "zod";
 import { withRoute } from "@/lib/http/route";
 import { settingsService } from "@/modules/settings";
 
+export const dynamic = "force-dynamic";
+
 const updateGoogleAuthSchema = z.object({
   enabled: z.boolean(),
   client_id: z.string().trim().default(""),
@@ -15,24 +17,56 @@ export const GET = withRoute(
     auth: "staff",
   },
   async () => {
-    const config = await settingsService.get("GOOGLE_AUTH_CONFIG");
-    const secret = config.clientSecret || "";
+    let config = {
+      enabled: false,
+      clientId: "",
+      clientSecret: "",
+      redirectUri: "",
+    };
+
+    try {
+      config = await settingsService.get("GOOGLE_AUTH_CONFIG");
+    } catch {
+      // fallback
+    }
+
+    let clientId = config.clientId || "";
+    let secret = config.clientSecret || "";
+    const enabled = config.enabled;
+    const redirectUri = config.redirectUri || "";
+
+    if (!clientId) {
+      clientId =
+        process.env.GOOGLE_CLIENT_ID?.trim() ||
+        process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim() ||
+        "";
+    }
+    if (!secret) {
+      secret = process.env.GOOGLE_CLIENT_SECRET?.trim() || "";
+    }
+    if (clientId && secret && !enabled) {
+      // auto-reflect if env configured
+    }
+
     const maskedSecret = secret
       ? secret.length > 8
         ? `${secret.slice(0, 4)}••••••••${secret.slice(-4)}`
         : "••••••••"
       : "";
 
-    return NextResponse.json(
+    const response = NextResponse.json(
       {
-        enabled: config.enabled,
-        client_id: config.clientId || "",
+        enabled,
+        client_id: clientId,
         client_secret_masked: maskedSecret,
         has_secret: Boolean(secret),
-        redirect_uri: config.redirectUri || "",
+        redirect_uri: redirectUri || "https://ncamart.com/api/v1/auth/google/callback",
       },
       { status: 200 }
     );
+
+    response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+    return response;
   }
 );
 
@@ -42,7 +76,18 @@ export const POST = withRoute(
     body: updateGoogleAuthSchema,
   },
   async ({ actor, body }) => {
-    const existing = await settingsService.get("GOOGLE_AUTH_CONFIG");
+    let existing = {
+      enabled: false,
+      clientId: "",
+      clientSecret: "",
+      redirectUri: "",
+    };
+
+    try {
+      existing = await settingsService.get("GOOGLE_AUTH_CONFIG");
+    } catch {
+      // fallback
+    }
 
     // Preserve existing secret if placeholder/masked or blank was sent
     let newSecret = existing.clientSecret || "";
@@ -54,7 +99,7 @@ export const POST = withRoute(
       enabled: body.enabled,
       clientId: body.client_id,
       clientSecret: newSecret,
-      redirectUri: body.redirect_uri || existing.redirectUri || "",
+      redirectUri: body.redirect_uri || existing.redirectUri || "https://ncamart.com/api/v1/auth/google/callback",
     };
 
     await settingsService.set("GOOGLE_AUTH_CONFIG", updatedConfig, actor?.id || "staff");
@@ -74,4 +119,3 @@ export const POST = withRoute(
     );
   }
 );
-
