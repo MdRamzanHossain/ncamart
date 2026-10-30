@@ -1,0 +1,10 @@
+fb72e984c0bc574bd33ab116e404e66437c9dba0:docs/deployment-roadmap.md:generic-api-key:128
+fb72e984c0bc574bd33ab116e404e66437c9dba0:docs/deployment-roadmap.md:generic-api-key:129
+fb72e984c0bc574bd33ab116e404e66437c9dba0:docs/deployment-roadmap.md:generic-api-key:130
+e84713a87c5684cc29a349e4508a936884295e4b:postman/collections/NCAMart Nawabpur Complex E-Commerce REST API/api/v1/_dev/courier/{consignment}/advance/.resources/Create Advance.resources/examples/Bad Request — Validation failed or missing parameters.example.yaml:generic-api-key:6
+e84713a87c5684cc29a349e4508a936884295e4b:postman/collections/NCAMart Nawabpur Complex E-Commerce REST API/api/v1/_dev/courier/{consignment}/advance/.resources/Create Advance.resources/examples/Not Found — Requested resource does not exist.example.yaml:generic-api-key:6
+e84713a87c5684cc29a349e4508a936884295e4b:postman/collections/NCAMart Nawabpur Complex E-Commerce REST API/api/v1/_dev/courier/{consignment}/advance/.resources/Create Advance.resources/examples/Internal Server Error.example.yaml:generic-api-key:6
+e84713a87c5684cc29a349e4508a936884295e4b:postman/collections/NCAMart Nawabpur Complex E-Commerce REST API/api/v1/_debug/echo/.resources/Create Echo.resources/examples/Bad Request — Validation failed or missing parameters.example.yaml:generic-api-key:6
+e84713a87c5684cc29a349e4508a936884295e4b:postman/collections/NCAMart Nawabpur Complex E-Commerce REST API/api/v1/_debug/echo/.resources/Create Echo.resources/examples/Operation executed successfully.example.yaml:generic-api-key:6
+e84713a87c5684cc29a349e4508a936884295e4b:postman/collections/NCAMart Nawabpur Complex E-Commerce REST API/api/v1/_dev/courier/{consignment}/advance/.resources/Create Advance.resources/examples/Operation executed successfully.example.yaml:generic-api-key:6
+e84713a87c5684cc29a349e4508a936884295e4b:postman/collections/NCAMart Nawabpur Complex E-Commerce REST API/api/v1/_debug/echo/.resources/Create Echo.resources/examples/Internal Server Error.example.yaml:generic-api-key:6

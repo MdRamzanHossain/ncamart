@@ -1,0 +1,13 @@
+title = "NCAMart Gitleaks Configuration"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Allowlist documentation examples, Postman collections, and build artifacts"
+paths = [
+  '''^docs/.*''',
+  '''^postman/.*''',
+  '''^\.next/.*''',
+  '''^scripts/.*''',
+]

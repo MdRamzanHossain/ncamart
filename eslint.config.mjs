@@ -61,6 +61,8 @@ export default tseslint.config(
       "*.config.ts",
       "*.config.js",
       "*.cjs",
+      "server.js",
+      "server.cjs",
       "scripts/**",
       "src/lib/cache/redisCacheHandler.cjs",
     ],
