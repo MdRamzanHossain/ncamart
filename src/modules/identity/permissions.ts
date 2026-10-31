@@ -8,6 +8,7 @@ export const STAFF_ROLES = [
   "CATALOG_MANAGER",
   "CUSTOMER_SUPPORT",
   "FINANCE_OFFICER",
+  "OPS_MANAGER",
   "SUPER_ADMIN",
 ] as const;
 
@@ -66,6 +67,31 @@ export type Permission = (typeof ALL_PERMISSIONS)[number];
 
 export const ROLE_PERMISSION_MATRIX: Record<StaffRole, readonly Permission[]> = {
   SUPER_ADMIN: ALL_PERMISSIONS,
+
+  OPS_MANAGER: [
+    "catalog.read",
+    "catalog.draft",
+    "runner.task.read",
+    "runner.task.assign",
+    "sourcing.price.override",
+    "spot.override.approve",
+    "qc.execute",
+    "seal.print",
+    "seal.void.approve",
+    "dispatch.pack",
+    "dispatch.book",
+    "returns.receive",
+    "stock.adjust.request",
+    "stock.adjust.approve",
+    "rma.adjudicate",
+    "support.manage",
+    "staff.manage",
+    "pii.read.shipping",
+    "pii.read.counter",
+    "audit.read",
+    "float.read",
+    "sourcing.quarantine.review",
+  ],
 
   FIELD_RUNNER: [
     "catalog.read",

@@ -245,10 +245,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (token && typeof window !== "undefined") {
       localStorage.setItem("nca_token", token);
     }
+    const resolvedRole = (res.staff as any)?.role || (res.staff as any)?.roles?.[0] || "STAFF";
     const profile: UserProfile = {
       id: res.staff?.id || `staff_${Date.now()}`,
       name: res.staff?.name || res.staff?.full_name || "Admin Staff",
-      role: "SUPER_ADMIN",
+      role: resolvedRole,
       isStaff: true,
     };
     if (typeof window !== "undefined") {
@@ -288,13 +289,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem("nca_token", res.session_token);
     }
 
+    const userRole = (res.user as any)?.role || (res.user as any)?.roles?.[0] || (res.is_staff ? "STAFF" : undefined);
     const profile: UserProfile = {
       id: res.user?.id || `user_${Date.now()}`,
       name: res.user?.name || identifier,
       email: res.user?.email || identifier,
       phone: res.user?.phone,
-      role: res.user?.role || (res.is_staff ? "SUPER_ADMIN" : undefined),
-      permissions: res.user?.permissions || (res.is_staff ? ["SUPER_ADMIN"] : []),
+      role: userRole,
+      permissions: (res.user as any)?.permissions || (res.user as any)?.roles || (res.is_staff ? [userRole || "STAFF"] : []),
       isStaff: Boolean(res.is_staff),
     };
 
@@ -337,14 +339,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem("nca_token", res.session_token);
     }
 
+    const googleRole = (res.user as any)?.role || (res.user as any)?.roles?.[0] || (res.is_staff ? "STAFF" : undefined);
     const profile: UserProfile = {
       id: res.user?.id || `google_${Date.now()}`,
       name: res.user?.name || "Google User",
       email: res.user?.email,
       phone: res.user?.phone,
       isStaff: Boolean(res.is_staff),
-      role: res.user?.role || (res.is_staff ? "SUPER_ADMIN" : undefined),
-      permissions: res.user?.permissions || (res.is_staff ? ["SUPER_ADMIN"] : []),
+      role: googleRole,
+      permissions: (res.user as any)?.permissions || (res.user as any)?.roles || (res.is_staff ? [googleRole || "STAFF"] : []),
     };
 
     if (typeof window !== "undefined") {

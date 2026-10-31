@@ -202,6 +202,10 @@ export function AdminSidebar({ currentRole = "SUPER_ADMIN", onRoleChange, staffP
   const [activeRole, setActiveRole] = useState<AdminRole>(currentRole);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
 
+  React.useEffect(() => {
+    setActiveRole(currentRole);
+  }, [currentRole]);
+
   const displayName = staffProfile?.name || DEFAULT_ADMIN_STAFF.name;
   const displayLocation = staffProfile?.assignedLocation || staffProfile?.email || DEFAULT_ADMIN_STAFF.assignedLocation;
   const initials = displayName
@@ -210,6 +214,39 @@ export function AdminSidebar({ currentRole = "SUPER_ADMIN", onRoleChange, staffP
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase() || "")
     .join("") || "AD";
+
+  const userRoles = staffProfile?.roles && staffProfile.roles.length > 0
+    ? staffProfile.roles
+    : (staffProfile ? [activeRole] : [
+        "SUPER_ADMIN",
+        "OPS_MANAGER",
+        "SOURCING_MANAGER",
+        "GODOWN_MANAGER",
+        "QC_TECHNICIAN",
+        "FIELD_RUNNER",
+        "SHOWROOM_POS_STAFF",
+        "CATALOG_MANAGER",
+        "CUSTOMER_SUPPORT",
+        "FINANCE_OFFICER",
+        "DISPATCH_STAFF",
+      ] as AdminRole[]);
+
+  const isSuperAdmin = userRoles.includes("SUPER_ADMIN");
+  const selectableRoles: AdminRole[] = isSuperAdmin
+    ? [
+        "SUPER_ADMIN",
+        "OPS_MANAGER",
+        "SOURCING_MANAGER",
+        "GODOWN_MANAGER",
+        "QC_TECHNICIAN",
+        "FIELD_RUNNER",
+        "SHOWROOM_POS_STAFF",
+        "CATALOG_MANAGER",
+        "CUSTOMER_SUPPORT",
+        "FINANCE_OFFICER",
+        "DISPATCH_STAFF",
+      ]
+    : userRoles;
 
   const handleRoleSelect = (role: AdminRole) => {
     setActiveRole(role);
@@ -281,17 +318,39 @@ export function AdminSidebar({ currentRole = "SUPER_ADMIN", onRoleChange, staffP
             onChange={(e) => handleRoleSelect(e.target.value as AdminRole)}
             data-testid="admin-role-selector"
           >
-            <option value="SUPER_ADMIN">👑 SUPER_ADMIN (Full Access)</option>
-            <option value="OPS_MANAGER">💼 OPS_MANAGER (Operations)</option>
-            <option value="SOURCING_MANAGER">🤝 SOURCING_MANAGER</option>
-            <option value="GODOWN_MANAGER">🏭 GODOWN_MANAGER</option>
-            <option value="QC_TECHNICIAN">🔬 QC_TECHNICIAN</option>
-            <option value="FIELD_RUNNER">🏃 FIELD_RUNNER</option>
-            <option value="SHOWROOM_POS_STAFF">🖥️ SHOWROOM_POS_STAFF</option>
-            <option value="CATALOG_MANAGER">🏷️ CATALOG_MANAGER</option>
-            <option value="CUSTOMER_SUPPORT">🎧 CUSTOMER_SUPPORT</option>
-            <option value="FINANCE_OFFICER">📑 FINANCE_OFFICER</option>
-            <option value="DISPATCH_STAFF">📦 DISPATCH_STAFF</option>
+            {selectableRoles.includes("SUPER_ADMIN") && (
+              <option value="SUPER_ADMIN">👑 SUPER_ADMIN (Full Access)</option>
+            )}
+            {selectableRoles.includes("OPS_MANAGER") && (
+              <option value="OPS_MANAGER">💼 OPS_MANAGER (Operations)</option>
+            )}
+            {selectableRoles.includes("SOURCING_MANAGER") && (
+              <option value="SOURCING_MANAGER">🤝 SOURCING_MANAGER</option>
+            )}
+            {selectableRoles.includes("GODOWN_MANAGER") && (
+              <option value="GODOWN_MANAGER">🏭 GODOWN_MANAGER</option>
+            )}
+            {selectableRoles.includes("QC_TECHNICIAN") && (
+              <option value="QC_TECHNICIAN">🔬 QC_TECHNICIAN</option>
+            )}
+            {selectableRoles.includes("FIELD_RUNNER") && (
+              <option value="FIELD_RUNNER">🏃 FIELD_RUNNER</option>
+            )}
+            {selectableRoles.includes("SHOWROOM_POS_STAFF") && (
+              <option value="SHOWROOM_POS_STAFF">🖥️ SHOWROOM_POS_STAFF</option>
+            )}
+            {selectableRoles.includes("CATALOG_MANAGER") && (
+              <option value="CATALOG_MANAGER">🏷️ CATALOG_MANAGER</option>
+            )}
+            {selectableRoles.includes("CUSTOMER_SUPPORT") && (
+              <option value="CUSTOMER_SUPPORT">🎧 CUSTOMER_SUPPORT</option>
+            )}
+            {selectableRoles.includes("FINANCE_OFFICER") && (
+              <option value="FINANCE_OFFICER">📑 FINANCE_OFFICER</option>
+            )}
+            {selectableRoles.includes("DISPATCH_STAFF") && (
+              <option value="DISPATCH_STAFF">📦 DISPATCH_STAFF</option>
+            )}
           </select>
         </div>
       </div>

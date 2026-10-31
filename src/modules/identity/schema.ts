@@ -184,6 +184,7 @@ export const staffRoles = pgTable(
         "CATALOG_MANAGER",
         "CUSTOMER_SUPPORT",
         "FINANCE_OFFICER",
+        "OPS_MANAGER",
         "SUPER_ADMIN",
       ],
     }).notNull(),

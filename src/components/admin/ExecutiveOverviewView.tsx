@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import type { AdminKpiStats, RevenueChartPoint, LiveActivityEvent, AdminRole } from "./types";
 import { formatPaisa } from "@/lib/money";
@@ -91,6 +91,36 @@ interface ExecutiveOverviewViewProps {
 export function ExecutiveOverviewView({ currentRole = "SUPER_ADMIN" }: ExecutiveOverviewViewProps) {
   const [dateRange, setDateRange] = useState<"7D" | "30D">("7D");
   const [hoveredPointIndex, setHoveredPointIndex] = useState<number | null>(null);
+  const [activities, setActivities] = useState<LiveActivityEvent[]>(MOCK_ACTIVITIES);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetch("/api/v1/admin/orders?limit=10", { credentials: "include" })
+      .then((res) => {
+        if (res.ok) return res.json();
+        throw new Error("Failed to load orders");
+      })
+      .then((data) => {
+        if (!isMounted) return;
+        if (Array.isArray(data.items) && data.items.length > 0) {
+          const acts: LiveActivityEvent[] = data.items.slice(0, 5).map((o: any) => ({
+            id: `ACT-${o.id.slice(0, 6)}`,
+            timestamp: o.createdAt ? new Date(o.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "Just now",
+            type: "ORDER_PLACED",
+            title: `Order #${o.orderNumber || o.id.slice(0, 8)} (${o.status})`,
+            subtitle: `Customer: ${o.customerPhone || o.customerName || "Customer"} · ৳${(Number(o.totalPaisa) / 100).toLocaleString()}`,
+            amountPaisa: Number(o.totalPaisa) || 0,
+            badge: o.status,
+            badgeColor: o.status === "DELIVERED" ? "#22c55e" : "#38bdf8",
+          }));
+          setActivities(acts);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const chartData = dateRange === "7D" ? MOCK_CHART_7D : MOCK_CHART_30D;
   const maxRevenue = Math.max(...chartData.map((d) => d.revenuePaisa));
@@ -342,7 +372,7 @@ export function ExecutiveOverviewView({ currentRole = "SUPER_ADMIN" }: Executive
           </div>
 
           <div className="activity-list" data-testid="live-activity-feed">
-            {MOCK_ACTIVITIES.map((act) => (
+            {activities.map((act) => (
               <div key={act.id} className="activity-item">
                 <div className="activity-top">
                   <span

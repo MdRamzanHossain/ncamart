@@ -172,3 +172,4 @@ When switching to another device or AI model:
 - [x] Check that `node node_modules/eslint/bin/eslint.js .` exits with 0 errors before making any new commits.
 - [x] If modifying admin screens, maintain both SSR mock data and live API fetch fallback so that unit tests and live UI function synchronously.
 - [x] When ready to deploy on cPanel, follow the step-by-step instructions in [docs/deployment-roadmap.md](file:///G:/My%20Drive/Nawabpur%20Complex%20Accessories/ncamart/docs/deployment-roadmap.md).
+

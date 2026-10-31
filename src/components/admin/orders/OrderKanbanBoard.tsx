@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import type { AdminOrderCardItem, AdminOrderStatus } from "./types";
 import { KANBAN_COLUMNS, VALID_TRANSITIONS } from "./types";
 import { MOCK_ADMIN_ORDERS } from "./mockData";
@@ -14,6 +14,41 @@ export function OrderKanbanBoard() {
   const [shakingCardId, setShakingCardId] = useState<string | null>(null);
 
   const { addToast } = useToast();
+
+  useEffect(() => {
+    let isMounted = true;
+    fetch("/api/v1/admin/orders?limit=50", { credentials: "include" })
+      .then((res) => {
+        if (res.ok) return res.json();
+        throw new Error("Failed to load orders");
+      })
+      .then((data) => {
+        if (!isMounted) return;
+        if (Array.isArray(data.items) && data.items.length > 0) {
+          const mapped: AdminOrderCardItem[] = data.items.map((ord: any) => ({
+            id: ord.id,
+            orderNumber: ord.orderNumber || ord.id.slice(0, 10),
+            customerName: ord.customerName || ord.customerPhone || "Storefront Customer",
+            customerDistrict: ord.shippingDistrict || "Dhaka",
+            tier: ord.tier === "BUDGET_SMART" ? "BUDGET_SMART" : "AUTHENTIC",
+            status: ord.status as AdminOrderStatus,
+            totalPaisa: Number(ord.totalPaisa) || 0,
+            itemCount: ord.itemCount || 1,
+            timeAgo: ord.createdAt ? new Date(ord.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "Recently",
+            hasSealAssigned: Boolean(ord.sealId || ord.hasSeal),
+            courier: ord.courier || undefined,
+            riskScore: ord.riskScore || "LOW",
+          }));
+          setOrders(mapped);
+        }
+      })
+      .catch(() => {
+        // Fallback for offline or test mode
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleAdvanceStatus = (orderId: string, targetStatus?: AdminOrderStatus) => {
     const order = orders.find((o) => o.id === orderId);
@@ -135,18 +170,16 @@ export function OrderKanbanBoard() {
                     return (
                       <div
                         key={order.id}
-                        className={`kanban-card ${isShaking ? "shake-anim" : ""} ${
-                          isSlaBreached ? "sla-breach-card" : ""
-                        }`}
+                        className={`kanban-card ${isShaking ? "shake-anim" : ""} ${isSlaBreached ? "sla-breach-card" : ""
+                          }`}
                         data-testid={`kanban-card-${order.id}`}
                       >
                         {/* Top: Order # & SLA Timer */}
                         <div className="card-top-row">
                           <span className="card-order-num">{order.orderNumber}</span>
                           <span
-                            className={`sla-timer-pill ${
-                              isSlaBreached ? "sla-urgent" : "sla-ok"
-                            }`}
+                            className={`sla-timer-pill ${isSlaBreached ? "sla-urgent" : "sla-ok"
+                              }`}
                             data-testid="order-sla-timer"
                           >
                             ⏱️ {order.slaAgeHours}h age
@@ -177,16 +210,14 @@ export function OrderKanbanBoard() {
 
                           <div className="badges-group">
                             <span
-                              className={`pay-badge ${
-                                order.paymentStatus === "PAID" ? "badge-paid" : "badge-cod"
-                              }`}
+                              className={`pay-badge ${order.paymentStatus === "PAID" ? "badge-paid" : "badge-cod"
+                                }`}
                             >
                               {order.paymentStatus === "PAID" ? "PAID" : "COD"}
                             </span>
                             <span
-                              className={`tier-badge ${
-                                order.tier === "AUTHENTIC" ? "badge-auth" : "badge-budget"
-                              }`}
+                              className={`tier-badge ${order.tier === "AUTHENTIC" ? "badge-auth" : "badge-budget"
+                                }`}
                             >
                               {order.tier === "AUTHENTIC" ? "100% Auth" : "Budget"}
                             </span>

@@ -128,6 +128,8 @@ export const POST = withRoute(
             email: staffUser.email,
             phone: staffUser.phone,
             roles,
+            role: roles[0] || "STAFF",
+            permissions: roles,
             isStaff: true,
           },
         },

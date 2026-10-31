@@ -16,6 +16,7 @@ interface StoredStaffUser {
   phone?: string;
   assignedLocation?: string;
   role?: AdminRole;
+  roles?: AdminRole[];
   isStaff?: boolean;
 }
 
@@ -45,14 +46,13 @@ export function AdminShell({ children }: AdminShellProps) {
           if (parsed.role) setActiveRole(parsed.role);
           setAuthStatus("AUTHENTICATED");
           document.cookie = "nca_auth_sync=; Path=/; Max-Age=0";
-          return;
         }
       }
     } catch {
       // Cookie parse fallback
     }
 
-    // 2. Check localStorage for existing valid session
+    // 2. Hydrate from localStorage for instant UI rendering without flicker
     try {
       const rawUser = localStorage.getItem("nca_user");
       if (rawUser) {
@@ -63,14 +63,13 @@ export function AdminShell({ children }: AdminShellProps) {
             setActiveRole(parsed.role);
           }
           setAuthStatus("AUTHENTICATED");
-          return;
         }
       }
     } catch {
-      // Fall through to server session check
+      // Ignore parse errors
     }
 
-    // 3. Fallback: Verify active HTTP-only cookie against /api/v1/auth/staff/me
+    // 3. Always verify authoritative server session against /api/v1/auth/staff/me
     fetch("/api/v1/auth/staff/me", { credentials: "include" })
       .then((res) => {
         if (res.ok) return res.json();
@@ -78,25 +77,40 @@ export function AdminShell({ children }: AdminShellProps) {
       })
       .then((data) => {
         if (data?.staff) {
+          const userRoles: AdminRole[] = (data.staff.roles || data.roles || []) as AdminRole[];
+          const primaryRole: AdminRole = userRoles.includes("SUPER_ADMIN")
+            ? "SUPER_ADMIN"
+            : (userRoles[0] as AdminRole) || "SUPER_ADMIN";
+          const staffName =
+            data.staff.full_name ||
+            data.staff.fullName ||
+            data.staff.name ||
+            data.staff.email?.split("@")[0] ||
+            "Staff Member";
+
           const profile: StoredStaffUser = {
             id: data.staff.id,
-            name: data.staff.fullName || data.staff.name || "Administrator",
+            name: staffName,
             email: data.staff.email,
             phone: data.staff.phone,
-            role: (data.roles?.[0] as AdminRole) || "SUPER_ADMIN",
+            role: primaryRole,
+            roles: userRoles,
             isStaff: true,
           };
           localStorage.setItem("nca_user", JSON.stringify(profile));
           setStaffUser(profile);
-          setActiveRole(profile.role || "SUPER_ADMIN");
+          setActiveRole(primaryRole);
           setAuthStatus("AUTHENTICATED");
         } else {
           throw new Error("not staff");
         }
       })
       .catch(() => {
-        setAuthStatus("UNAUTHENTICATED");
-        window.location.replace("/auth/login?mode=staff&redirect=/admin");
+        const rawUser = typeof window !== "undefined" ? localStorage.getItem("nca_user") : null;
+        if (!rawUser) {
+          setAuthStatus("UNAUTHENTICATED");
+          window.location.replace("/auth/login?mode=staff&redirect=/admin");
+        }
       });
 
     // Live-sync sidebar/topbar when the staff member edits their profile in /admin/settings
@@ -212,6 +226,7 @@ export function AdminShell({ children }: AdminShellProps) {
               ? {
                   name: staffUser.name,
                   email: staffUser.email,
+                  roles: staffUser.roles,
                   assignedLocation: staffUser.assignedLocation || "Nawabpur Central Godown & HQ",
                 }
               : null

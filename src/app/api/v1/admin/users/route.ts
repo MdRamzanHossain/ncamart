@@ -44,7 +44,6 @@ const createUserSchema = z.object({
 export const GET = withRoute(
   {
     auth: "staff",
-    permission: "staff.manage",
     query: querySchema,
   },
   async ({ query }) => {

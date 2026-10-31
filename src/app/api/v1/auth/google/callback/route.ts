@@ -214,7 +214,9 @@ export async function GET(req: NextRequest) {
 
       // Resolve roles for client hydration
       const roles = await staffAuthService.getStaffRoles(staffUser.id);
-      const primaryRole = roles[0] || "SUPER_ADMIN";
+      const primaryRole = roles.includes("SUPER_ADMIN")
+        ? "SUPER_ADMIN"
+        : roles[0] || "STAFF";
 
       const staffSyncData = JSON.stringify({
         id: staffUser.id,
@@ -222,6 +224,7 @@ export async function GET(req: NextRequest) {
         email: staffUser.email,
         phone: staffUser.phone,
         role: primaryRole,
+        roles,
         isStaff: true,
       });
 
