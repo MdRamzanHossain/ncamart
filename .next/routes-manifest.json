@@ -561,6 +561,14 @@
       "namedRegex": "^/api/v1/admin/support/tasks/(?<nxtPid>[^/]+?)/complete(?:/)?$"
     },
     {
+      "page": "/api/v1/admin/users/[id]",
+      "regex": "^/api/v1/admin/users/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/v1/admin/users/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
       "page": "/api/v1/auth/sessions/[id]",
       "regex": "^/api/v1/auth/sessions/([^/]+?)(?:/)?$",
       "routeKeys": {
@@ -1223,6 +1231,12 @@
       "regex": "^/admin/support(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/admin/support(?:/)?$"
+    },
+    {
+      "page": "/admin/users",
+      "regex": "^/admin/users(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/users(?:/)?$"
     },
     {
       "page": "/auth/login",
