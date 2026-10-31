@@ -29,6 +29,17 @@ export function AdminShell({ children }: AdminShellProps) {
   const [staffUser, setStaffUser] = useState<StoredStaffUser | null>(null);
 
   useEffect(() => {
+    // Cross-tab synchronization logout handler
+    const syncLogout = () => {
+      setStaffUser(null);
+      setAuthStatus("UNAUTHENTICATED");
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("nca_token");
+        localStorage.removeItem("nca_user");
+        window.location.replace("/auth/login?mode=staff&logged_out=1");
+      }
+    };
+
     // 1. Check for temporary Google Auth Sync cookie from OAuth redirect
     try {
       const cookieStr = typeof document !== "undefined" ? document.cookie : "";
@@ -54,7 +65,7 @@ export function AdminShell({ children }: AdminShellProps) {
 
     // 2. Hydrate from localStorage for instant UI rendering without flicker
     try {
-      const rawUser = localStorage.getItem("nca_user");
+      const rawUser = typeof window !== "undefined" ? localStorage.getItem("nca_user") : null;
       if (rawUser) {
         const parsed = JSON.parse(rawUser) as StoredStaffUser;
         if (parsed && parsed.isStaff) {
@@ -70,48 +81,83 @@ export function AdminShell({ children }: AdminShellProps) {
     }
 
     // 3. Always verify authoritative server session against /api/v1/auth/staff/me
-    fetch("/api/v1/auth/staff/me", { credentials: "include" })
-      .then((res) => {
-        if (res.ok) return res.json();
-        throw new Error("unauthorized");
-      })
-      .then((data) => {
-        if (data?.staff) {
-          const userRoles: AdminRole[] = (data.staff.roles || data.roles || []) as AdminRole[];
-          const primaryRole: AdminRole = userRoles.includes("SUPER_ADMIN")
-            ? "SUPER_ADMIN"
-            : (userRoles[0] as AdminRole) || "SUPER_ADMIN";
-          const staffName =
-            data.staff.full_name ||
-            data.staff.fullName ||
-            data.staff.name ||
-            data.staff.email?.split("@")[0] ||
-            "Staff Member";
+    const verifyServerSession = () => {
+      fetch("/api/v1/auth/staff/me", { credentials: "include" })
+        .then((res) => {
+          if (res.ok) return res.json();
+          throw new Error("unauthorized");
+        })
+        .then((data) => {
+          if (data?.staff) {
+            const userRoles: AdminRole[] = (data.staff.roles || data.roles || []) as AdminRole[];
+            const primaryRole: AdminRole = userRoles.includes("SUPER_ADMIN")
+              ? "SUPER_ADMIN"
+              : (userRoles[0] as AdminRole) || "SUPER_ADMIN";
+            const staffName =
+              data.staff.full_name ||
+              data.staff.fullName ||
+              data.staff.name ||
+              data.staff.email?.split("@")[0] ||
+              "Staff Member";
 
-          const profile: StoredStaffUser = {
-            id: data.staff.id,
-            name: staffName,
-            email: data.staff.email,
-            phone: data.staff.phone,
-            role: primaryRole,
-            roles: userRoles,
-            isStaff: true,
-          };
-          localStorage.setItem("nca_user", JSON.stringify(profile));
-          setStaffUser(profile);
-          setActiveRole(primaryRole);
-          setAuthStatus("AUTHENTICATED");
+            const profile: StoredStaffUser = {
+              id: data.staff.id,
+              name: staffName,
+              email: data.staff.email,
+              phone: data.staff.phone,
+              role: primaryRole,
+              roles: userRoles,
+              isStaff: true,
+            };
+            localStorage.setItem("nca_user", JSON.stringify(profile));
+            setStaffUser(profile);
+            setActiveRole(primaryRole);
+            setAuthStatus("AUTHENTICATED");
+          } else {
+            throw new Error("not staff");
+          }
+        })
+        .catch(() => {
+          syncLogout();
+        });
+    };
+
+    verifyServerSession();
+
+    // 4. Cross-tab synchronization via BroadcastChannel
+    let authChannel: BroadcastChannel | null = null;
+    try {
+      authChannel = new BroadcastChannel("nca_auth_channel");
+      authChannel.onmessage = (event) => {
+        if (event.data?.type === "LOGOUT" || event.data?.type === "UNAUTHORIZED") {
+          syncLogout();
+        }
+      };
+    } catch {
+      // BroadcastChannel unsupported fallback
+    }
+
+    // 5. Cross-tab synchronization via localStorage StorageEvent
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "nca_logout_event" || (e.key === "nca_user" && !e.newValue)) {
+        syncLogout();
+      }
+    };
+    window.addEventListener("storage", handleStorageChange);
+
+    // 6. Tab visibility / Focus listener to immediately re-check session when tab is brought to foreground
+    const handleVisibilityOrFocus = () => {
+      if (typeof document !== "undefined" && document.visibilityState === "visible") {
+        const storedUser = localStorage.getItem("nca_user");
+        if (!storedUser) {
+          syncLogout();
         } else {
-          throw new Error("not staff");
+          verifyServerSession();
         }
-      })
-      .catch(() => {
-        const rawUser = typeof window !== "undefined" ? localStorage.getItem("nca_user") : null;
-        if (!rawUser) {
-          setAuthStatus("UNAUTHENTICATED");
-          window.location.replace("/auth/login?mode=staff&redirect=/admin");
-        }
-      });
+      }
+    };
+    window.addEventListener("focus", handleVisibilityOrFocus);
+    document.addEventListener("visibilitychange", handleVisibilityOrFocus);
 
     // Live-sync sidebar/topbar when the staff member edits their profile in /admin/settings
     const handleProfileUpdated = (event: Event) => {
@@ -121,13 +167,47 @@ export function AdminShell({ children }: AdminShellProps) {
       }
     };
     window.addEventListener("nca-staff-profile-updated", handleProfileUpdated);
-    return () => window.removeEventListener("nca-staff-profile-updated", handleProfileUpdated);
+
+    return () => {
+      if (authChannel) {
+        try {
+          authChannel.close();
+        } catch {
+          // ignore
+        }
+      }
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("focus", handleVisibilityOrFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityOrFocus);
+      window.removeEventListener("nca-staff-profile-updated", handleProfileUpdated);
+    };
   }, []);
 
-  const handleStaffSignOut = () => {
-    localStorage.removeItem("nca_token");
-    localStorage.removeItem("nca_user");
-    window.location.href = "/auth/login?mode=staff";
+  const handleStaffSignOut = async () => {
+    try {
+      await fetch("/api/v1/auth/logout", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      }).catch(() => {});
+    } catch {
+      // ignore
+    }
+
+    try {
+      const channel = new BroadcastChannel("nca_auth_channel");
+      channel.postMessage({ type: "LOGOUT", timestamp: Date.now() });
+      channel.close();
+    } catch {
+      // BroadcastChannel unsupported
+    }
+
+    if (typeof window !== "undefined") {
+      localStorage.setItem("nca_logout_event", Date.now().toString());
+      localStorage.removeItem("nca_token");
+      localStorage.removeItem("nca_user");
+      window.location.replace("/auth/login?mode=staff");
+    }
   };
 
   if (authStatus === "UNAUTHENTICATED") {

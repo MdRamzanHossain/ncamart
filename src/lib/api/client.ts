@@ -138,6 +138,24 @@ class ApiClient {
     }
 
     if (!response.ok) {
+      if (
+        response.status === 401 &&
+        typeof window !== "undefined" &&
+        !endpoint.includes("/auth/login") &&
+        !endpoint.includes("/auth/otp") &&
+        !endpoint.includes("/auth/register")
+      ) {
+        localStorage.removeItem("nca_token");
+        localStorage.removeItem("nca_user");
+        try {
+          const channel = new BroadcastChannel("nca_auth_channel");
+          channel.postMessage({ type: "UNAUTHORIZED", timestamp: Date.now() });
+          channel.close();
+        } catch {
+          // ignore
+        }
+      }
+
       if (data && typeof data === "object" && "error" in data) {
         const errorContainer = data as { error: ProblemDetails };
         throw new ApiClientError(errorContainer.error, response.status);

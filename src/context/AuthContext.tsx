@@ -66,11 +66,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [cartCount, setCartCount] = useState<number>(0);
   const [unreadCount, setUnreadCount] = useState<number>(0);
 
-  // Refresh current session against /api/v1/customer/profile or stored session
+  // Refresh current session against /api/v1/customer/profile or /api/v1/auth/staff/me
   const refreshSession = useCallback(async () => {
     setIsLoading(true);
     try {
-      // First try customer profile API
+      // 1. Try customer profile API
       const customerRes = await api
         .get<{ id: string; phone: string; full_name?: string | null; email?: string | null }>("/api/v1/customer/profile")
         .catch(() => null);
@@ -89,22 +89,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // Check local storage session fallback
-      if (typeof window !== "undefined") {
-        const savedUser = localStorage.getItem("nca_user");
-        if (savedUser) {
-          try {
-            const parsed = JSON.parse(savedUser) as UserProfile;
-            if (parsed?.id) {
-              setUser(parsed);
-              return;
-            }
-          } catch {
-            localStorage.removeItem("nca_user");
-          }
+      // 2. Try staff/me API
+      const staffRes = await api
+        .get<{ staff?: { id: string; name?: string; full_name?: string; email?: string; phone?: string; roles?: string[] } }>("/api/v1/auth/staff/me")
+        .catch(() => null);
+      if (staffRes?.staff?.id) {
+        const profile: UserProfile = {
+          id: staffRes.staff.id,
+          name: staffRes.staff.name || staffRes.staff.full_name || "Staff",
+          email: staffRes.staff.email,
+          phone: staffRes.staff.phone,
+          role: staffRes.staff.roles?.[0],
+          isStaff: true,
+        };
+        setUser(profile);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("nca_user", JSON.stringify(profile));
         }
+        return;
       }
 
+      // 3. No active server session found - clear stale local credentials
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("nca_token");
+        localStorage.removeItem("nca_user");
+      }
       setUser(null);
     } catch {
       setUser(null);
@@ -113,9 +122,62 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Fetch initial session on mount
+  // Fetch initial session on mount and listen for cross-tab auth events
   useEffect(() => {
     refreshSession();
+
+    let authChannel: BroadcastChannel | null = null;
+    try {
+      authChannel = new BroadcastChannel("nca_auth_channel");
+      authChannel.onmessage = (event) => {
+        if (event.data?.type === "LOGOUT" || event.data?.type === "UNAUTHORIZED") {
+          setUser(null);
+          setCartCount(0);
+          setUnreadCount(0);
+          if (typeof window !== "undefined") {
+            localStorage.removeItem("nca_token");
+            localStorage.removeItem("nca_user");
+          }
+        }
+      };
+    } catch {
+      // BroadcastChannel unsupported fallback
+    }
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "nca_logout_event" || (e.key === "nca_user" && !e.newValue)) {
+        setUser(null);
+        setCartCount(0);
+        setUnreadCount(0);
+      }
+    };
+    window.addEventListener("storage", handleStorageChange);
+
+    const handleFocus = () => {
+      if (typeof document !== "undefined" && document.visibilityState === "visible") {
+        const storedUser = localStorage.getItem("nca_user");
+        if (!storedUser) {
+          setUser(null);
+          setCartCount(0);
+          setUnreadCount(0);
+        }
+      }
+    };
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleFocus);
+
+    return () => {
+      if (authChannel) {
+        try {
+          authChannel.close();
+        } catch {
+          // ignore
+        }
+      }
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleFocus);
+    };
   }, [refreshSession]);
 
   // Customer OTP Send
@@ -407,7 +469,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await api.post("/api/v1/auth/logout").catch(() => {});
     } finally {
+      try {
+        const channel = new BroadcastChannel("nca_auth_channel");
+        channel.postMessage({ type: "LOGOUT", timestamp: Date.now() });
+        channel.close();
+      } catch {
+        // BroadcastChannel unsupported fallback
+      }
       if (typeof window !== "undefined") {
+        localStorage.setItem("nca_logout_event", Date.now().toString());
         localStorage.removeItem("nca_token");
         localStorage.removeItem("nca_user");
       }

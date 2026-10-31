@@ -144,6 +144,32 @@ Any AI model or developer continuing work from another machine **must strictly r
 
 ---
 
+### Phase 9: Multi-Tab Logout Synchronization & Session Cookie Invalidation
+- **Problem Diagnosed:**
+  - When a staff member logged out from one tab, another already-open tab (e.g., `/admin/orders` or `/admin/users`) remained logged in and retained administrative capabilities.
+- **Root Causes Discovered & Fixed:**
+  1. *No Server-Side Logout Call:* In `AdminShell.tsx`, `handleStaffSignOut` only cleared client `localStorage` (`nca_token`, `nca_user`) and navigated away. It never issued an HTTP request to `/api/v1/auth/logout`.
+  2. *Active Cookies Retained:* Because no server request occurred, HTTP-only cookies (`nca_sid` and `nca_staff_sid`) remained completely valid in the browser's cookie jar. Any API calls from other open tabs continued to succeed.
+  3. *PostgreSQL Session Revocation Missing:* PostgreSQL `sessions` records were never updated with `revokedAt = now()`.
+  4. *Missing Cross-Tab Event Bus:* Stale open tabs had no mechanism (`BroadcastChannel`, `storage` event, or window `focus`/`visibilitychange` handlers) to detect that another tab had logged out.
+  5. *Optimistic SSR/LocalStorage Stale Fallback:* If a background tab re-focused or mounted, it fell back to stale cached user data without re-verifying against the server.
+- **Fixes Implemented:**
+  1. **Server-Side Session Revocation (`/api/v1/auth/logout`):**
+     - Updated `POST /api/v1/auth/logout` to revoke DB sessions via `authService.revokeSession` and direct SHA-256 token hash lookup in the `sessions` table (`revokedAt = new Date()`).
+     - Added explicit invalidation (`Max-Age=0`) for `nca_sid`, `nca_staff_sid`, and `nca_auth_sync` cookies.
+  2. **Backoffice Multi-Tab Synchronization (`AdminShell.tsx`):**
+     - Updated `handleStaffSignOut` to send an authenticated POST request to `/api/v1/auth/logout`.
+     - Integrated `BroadcastChannel("nca_auth_channel")` to emit `{ type: "LOGOUT" }` across all open tabs.
+     - Added cross-tab `storage` event listeners watching for `nca_logout_event` and `nca_user` deletion.
+     - Added `visibilitychange` and `focus` event listeners: whenever an open background tab is brought into focus, it probes `/api/v1/auth/staff/me`. If the session is invalid or local credentials have been cleared, it immediately terminates the session and redirects to `/auth/login?mode=staff&logged_out=1`.
+  3. **Universal API Client (`src/lib/api/client.ts`):**
+     - If any API request receives an HTTP 401 Unauthorized status (excluding login/OTP authentication routes), it clears stored credentials and broadcasts an `UNAUTHORIZED` message on `nca_auth_channel` to lock all open tabs.
+  4. **Storefront AuthContext Synchronization (`AuthContext.tsx`):**
+     - Updated `logout()` to broadcast on `nca_auth_channel` and clear `nca_logout_event`.
+     - Attached cross-tab `BroadcastChannel`, `storage`, and `focus` listeners to reset customer state across storefront tabs synchronously.
+
+---
+
 ## 4. Key Database Tables & Relations Map
 
 ```mermaid
