@@ -170,6 +170,49 @@ Any AI model or developer continuing work from another machine **must strictly r
 
 ---
 
+### Phase 10: Admin Dashboard Clean Redesign & Color/Theme Customization Studio
+- **Requirement:**
+  - Modernize and clean up the Admin Dashboard UI based on the CoreDesk design reference.
+  - Implement a dedicated color customization section allowing admins to personalize theme colors.
+- **Design System & Palette Implementation:**
+  - **Color Palette:**
+    - `#BFE77D`: Primary Accent (Pastel Pistachio / Lime Green)
+    - `#A6C7FF`: Soft Sky Blue Accent
+    - `#FED591`: Warm Peach / Amber Accent
+    - `#C6BBF9`: Soft Lavender Accent
+    - `#FFFFFF`: Pure White Card Surfaces
+    - `#151515`: Deep Charcoal Headings & Primary Text
+    - `#F4F6F8`: Soft Canvas Background
+  - **Typography:** Roboto / system-ui clean hierarchy with integer Paisa BDT currency formatting.
+- **Components Redesigned:**
+  1. **Executive Operations Hub (`ExecutiveOverviewView.tsx`):**
+     - **4 Hero Pastel KPI Cards:**
+       - Card 1: Gross Revenue (MTD) (`#BFE77D`, ৳4,892,450.00, 40/50 invoices, +14.2% growth).
+       - Card 2: Daily Drop-and-Pack (`#FED591`, 142 Orders, 48/86 dispatched, +8.5% growth).
+       - Card 3: Active Pre-Orders (`#A6C7FF`, 38 Units, ৳890,000 landed quota).
+       - Card 4: Courier RTO Rate & RMA (`#C6BBF9`, 2.40% healthy, 3 RMA claims).
+     - **Payment Record & Revenue Area Chart:** Dual bar indicators (Payment Awaited & Payment Completed) combined with SVG area trend curve, interactive tooltips, and 7D / 30D toggles.
+     - **To-Do Items Widget:** Interactive operational task queue with checkboxes, priority badges (High, Medium), due dates, and "View all items" action.
+     - **Leads Overview Gauge:** Semi-circular SVG radial gauge displaying 20k units breakdown across sourcing, QC check, and dispatch.
+     - **Latest Leads Table:** Clean tabular feed displaying client avatars, activity descriptions, BDT amounts, and status pills (Completed, Pending).
+  2. **Interactive Color & Theme Customization Studio:**
+     - Toggleable via "🎨 Customize Colors" button in the dashboard topbar.
+     - Includes 5 curated palettes:
+       1. CoreDesk Pistachio (Default)
+       2. Skyline Ocean Blue
+       3. Sunset Warm Peach
+       4. Soft Lavender Amethyst
+       5. Cyber Midnight (Dark Mode)
+     - Individual HTML `<input type="color">` pickers for Primary Accent, Sky Blue, Warm Peach, Lavender, Canvas Background, and Card Background.
+     - "Reset to Default" button.
+     - Automatic persistence in `localStorage` (`nca_admin_theme_custom`).
+  3. **Clean Shell & Sidebar Harmonization (`AdminShell.tsx` & `AdminSidebar.tsx`):**
+     - Updated shell canvas to soft `#F4F6F8` and topbar to `#FFFFFF` with command search bar input.
+     - Updated sidebar with rounded pill navigation buttons, lime green `#BFE77D` active highlight, and clean typography.
+     - All 27 admin test cases (including RBAC role isolation) pass 100%.
+
+---
+
 ## 4. Key Database Tables & Relations Map
 
 ```mermaid

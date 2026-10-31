@@ -415,22 +415,22 @@ export function AdminSidebar({ currentRole = "SUPER_ADMIN", onRoleChange, staffP
         .admin-sidebar {
           width: 260px;
           min-width: 260px;
-          background: #0f172a;
-          border-right: 1px solid rgba(255, 255, 255, 0.08);
+          background: #ffffff;
+          border-right: 1px solid #e5e7eb;
           height: 100vh;
           position: sticky;
           top: 0;
           display: flex;
           flex-direction: column;
-          color: #f8fafc;
+          color: #151515;
           overflow-y: auto;
           font-family: var(--font-sans, system-ui, sans-serif);
         }
 
         .sidebar-brand {
           padding: 18px 20px;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-          background: #0b1329;
+          border-bottom: 1px solid #e5e7eb;
+          background: #ffffff;
         }
 
         .brand-link {
@@ -442,27 +442,28 @@ export function AdminSidebar({ currentRole = "SUPER_ADMIN", onRoleChange, staffP
         }
 
         .brand-logo {
-          font-size: 24px;
+          font-size: 20px;
           width: 38px;
           height: 38px;
-          border-radius: 8px;
-          background: linear-gradient(135deg, #f59e0b, #d97706);
+          border-radius: 10px;
+          background: #bfe77d;
+          color: #151515;
           display: flex;
           align-items: center;
           justify-content: center;
-          box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+          box-shadow: 0 2px 8px rgba(191, 231, 125, 0.4);
         }
 
         .brand-name {
           font-size: 16px;
           font-weight: 900;
           letter-spacing: -0.3px;
-          color: #f8fafc;
+          color: #151515;
         }
 
         .brand-sub {
           font-size: 10px;
-          color: #94a3b8;
+          color: #6b7280;
           text-transform: uppercase;
           letter-spacing: 0.5px;
           font-weight: 700;
@@ -471,8 +472,8 @@ export function AdminSidebar({ currentRole = "SUPER_ADMIN", onRoleChange, staffP
         /* Profile & Role Switcher */
         .staff-profile-card {
           padding: 14px 16px;
-          background: rgba(255, 255, 255, 0.02);
-          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+          background: #f9fafb;
+          border-bottom: 1px solid #e5e7eb;
           display: flex;
           flex-direction: column;
           gap: 10px;
@@ -488,8 +489,8 @@ export function AdminSidebar({ currentRole = "SUPER_ADMIN", onRoleChange, staffP
           width: 32px;
           height: 32px;
           border-radius: 50%;
-          background: #3b82f6;
-          color: #fff;
+          background: #bfe77d;
+          color: #151515;
           font-size: 12px;
           font-weight: 800;
           display: flex;
@@ -506,7 +507,7 @@ export function AdminSidebar({ currentRole = "SUPER_ADMIN", onRoleChange, staffP
         .staff-name {
           font-size: 12px;
           font-weight: 800;
-          color: #f8fafc;
+          color: #151515;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -514,7 +515,7 @@ export function AdminSidebar({ currentRole = "SUPER_ADMIN", onRoleChange, staffP
 
         .staff-loc {
           font-size: 10px;
-          color: #64748b;
+          color: #6b7280;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -529,31 +530,32 @@ export function AdminSidebar({ currentRole = "SUPER_ADMIN", onRoleChange, staffP
         .role-label {
           font-size: 10px;
           font-weight: 700;
-          color: #f59e0b;
+          color: #6b7280;
           text-transform: uppercase;
           letter-spacing: 0.5px;
         }
 
         .role-select {
-          background: #1e293b;
-          border: 1px solid rgba(255, 255, 255, 0.15);
-          color: #f8fafc;
+          background: #ffffff;
+          border: 1px solid #d1d5db;
+          color: #151515;
           font-size: 11px;
           font-weight: 700;
           padding: 6px 8px;
-          border-radius: 6px;
+          border-radius: 8px;
           outline: none;
           cursor: pointer;
         }
 
         .role-select:focus {
-          border-color: #f59e0b;
+          border-color: #bfe77d;
+          box-shadow: 0 0 0 2px rgba(191, 231, 125, 0.25);
         }
 
         /* Nav List */
         .sidebar-nav {
           flex: 1;
-          padding: 12px 10px;
+          padding: 14px 12px;
           display: flex;
           flex-direction: column;
           gap: 14px;
@@ -571,7 +573,7 @@ export function AdminSidebar({ currentRole = "SUPER_ADMIN", onRoleChange, staffP
           align-items: center;
           background: none;
           border: none;
-          color: #64748b;
+          color: #9ca3af;
           font-size: 10px;
           font-weight: 800;
           text-transform: uppercase;
@@ -583,7 +585,7 @@ export function AdminSidebar({ currentRole = "SUPER_ADMIN", onRoleChange, staffP
         }
 
         .section-title-btn:hover {
-          color: #94a3b8;
+          color: #4b5563;
         }
 
         .collapse-chevron {
@@ -596,32 +598,33 @@ export function AdminSidebar({ currentRole = "SUPER_ADMIN", onRoleChange, staffP
           margin: 0;
           display: flex;
           flex-direction: column;
-          gap: 2px;
+          gap: 3px;
         }
 
         .nav-link {
           display: flex;
           align-items: center;
           gap: 10px;
-          padding: 8px 10px;
-          border-radius: 6px;
-          color: #94a3b8;
+          padding: 9px 12px;
+          border-radius: 9999px;
+          color: #4b5563;
           text-decoration: none;
-          font-size: 12px;
+          font-size: 12.5px;
           font-weight: 600;
           transition: background 0.12s ease, color 0.12s ease;
         }
 
         .nav-link:hover {
-          background: rgba(255, 255, 255, 0.05);
-          color: #f8fafc;
+          background: #f3f4f6;
+          color: #151515;
         }
 
         .nav-link.active {
-          background: rgba(245, 158, 11, 0.15);
-          color: #f59e0b;
+          background: #bfe77d;
+          color: #151515;
           font-weight: 800;
-          border-left: 3px solid #f59e0b;
+          border-left: none;
+          box-shadow: 0 2px 6px rgba(191, 231, 125, 0.35);
         }
 
         .nav-icon {
@@ -635,28 +638,28 @@ export function AdminSidebar({ currentRole = "SUPER_ADMIN", onRoleChange, staffP
         .nav-badge {
           font-size: 10px;
           font-weight: 800;
-          padding: 2px 6px;
+          padding: 2px 8px;
           border-radius: 9999px;
         }
 
         .badge-default {
-          background: rgba(255, 255, 255, 0.1);
-          color: #cbd5e1;
+          background: #e5e7eb;
+          color: #374151;
         }
 
         .badge-primary {
-          background: rgba(56, 189, 248, 0.2);
-          color: #38bdf8;
+          background: #dbeafe;
+          color: #1e40af;
         }
 
         .badge-warning {
-          background: rgba(245, 158, 11, 0.2);
-          color: #f59e0b;
+          background: #fef3c7;
+          color: #b45309;
         }
 
         .badge-destructive {
-          background: rgba(239, 68, 68, 0.2);
-          color: #ef4444;
+          background: #fee2e2;
+          color: #b91c1c;
         }
 
         /* Footer */

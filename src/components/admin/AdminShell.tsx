@@ -327,9 +327,22 @@ export function AdminShell({ children }: AdminShellProps) {
             >
               ☰
             </button>
-            <span className="location-pill">📍 Nawabpur Central Godown Hub</span>
-            <span className="sep">/</span>
-            <span className="breadcrumb-current">Control Center</span>
+            <div className="breadcrumbs-wrap">
+              <span className="location-pill">📍 Nawabpur Central Godown Hub</span>
+              <span className="sep">/</span>
+              <span className="breadcrumb-current">Control Center</span>
+            </div>
+          </div>
+
+          <div className="topbar-center">
+            <div className="topbar-search-box">
+              <span className="search-icon">🔍</span>
+              <input
+                type="text"
+                placeholder="Search or type a command..."
+                className="topbar-search-input"
+              />
+            </div>
           </div>
 
           <div className="topbar-right">
@@ -360,16 +373,7 @@ export function AdminShell({ children }: AdminShellProps) {
               <button
                 type="button"
                 onClick={handleStaffSignOut}
-                style={{
-                  padding: "6px 12px",
-                  borderRadius: "8px",
-                  backgroundColor: "rgba(239, 68, 68, 0.14)",
-                  border: "1px solid rgba(239, 68, 68, 0.3)",
-                  color: "#fca5a5",
-                  fontSize: "11.5px",
-                  fontWeight: "700",
-                  cursor: "pointer",
-                }}
+                className="topbar-signout-btn"
               >
                 Sign Out
               </button>
@@ -409,8 +413,8 @@ export function AdminShell({ children }: AdminShellProps) {
         .admin-shell-layout {
           display: flex;
           min-height: 100vh;
-          background: #020617;
-          color: #f8fafc;
+          background: #f4f6f8;
+          color: #151515;
           font-family: var(--font-sans, system-ui, sans-serif);
         }
 
@@ -423,64 +427,113 @@ export function AdminShell({ children }: AdminShellProps) {
         }
 
         .admin-topbar {
-          height: 56px;
-          background: #0b1329;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+          height: 62px;
+          background: #ffffff;
+          border-bottom: 1px solid #e5e7eb;
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 0 24px;
+          padding: 0 28px;
           position: sticky;
           top: 0;
           z-index: 50;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
         }
 
         .topbar-left {
           display: flex;
           align-items: center;
+          gap: 12px;
+        }
+
+        .breadcrumbs-wrap {
+          display: flex;
+          align-items: center;
           gap: 8px;
-          font-size: 12px;
+          font-size: 13px;
         }
 
         .location-pill {
-          color: #38bdf8;
+          color: #151515;
           font-weight: 700;
         }
 
         .sep {
-          color: #475569;
+          color: #9ca3af;
         }
 
         .breadcrumb-current {
-          color: #94a3b8;
+          color: #6b7280;
           font-weight: 600;
+        }
+
+        .topbar-center {
+          flex: 1;
+          max-width: 420px;
+          margin: 0 24px;
+        }
+
+        @media (max-width: 768px) {
+          .topbar-center {
+            display: none;
+          }
+        }
+
+        .topbar-search-box {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          background: #f3f4f6;
+          border: 1px solid #e5e7eb;
+          padding: 8px 14px;
+          border-radius: 9999px;
+          transition: all 0.15s ease;
+        }
+
+        .topbar-search-box:focus-within {
+          background: #ffffff;
+          border-color: #bfe77d;
+          box-shadow: 0 0 0 3px rgba(191, 231, 125, 0.25);
+        }
+
+        .search-icon {
+          font-size: 13px;
+          opacity: 0.6;
+        }
+
+        .topbar-search-input {
+          border: none;
+          background: transparent;
+          outline: none;
+          font-size: 13px;
+          width: 100%;
+          color: #151515;
         }
 
         .topbar-right {
           display: flex;
           align-items: center;
-          gap: 16px;
+          gap: 14px;
         }
 
         .role-indicator-badge {
           display: flex;
           align-items: center;
           gap: 6px;
-          font-size: 11px;
+          font-size: 11.5px;
           font-weight: 800;
-          color: #f59e0b;
-          background: rgba(245, 158, 11, 0.12);
-          border: 1px solid rgba(245, 158, 11, 0.25);
-          padding: 4px 10px;
+          color: #151515;
+          background: #bfe77d;
+          border: 1px solid rgba(0, 0, 0, 0.08);
+          padding: 5px 12px;
           border-radius: 9999px;
-          font-family: monospace;
         }
 
         .role-indicator-badge .dot {
           width: 6px;
           height: 6px;
           border-radius: 50%;
-          background: #f59e0b;
+          background: #151515;
         }
 
         .topbar-actions {
@@ -491,17 +544,39 @@ export function AdminShell({ children }: AdminShellProps) {
 
         .topbar-icon-btn {
           position: relative;
-          width: 34px;
-          height: 34px;
-          border-radius: 8px;
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          color: #cbd5e1;
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          background: #f9fafb;
+          border: 1px solid #e5e7eb;
+          color: #374151;
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
           font-size: 14px;
+          transition: all 0.15s ease;
+        }
+
+        .topbar-icon-btn:hover {
+          background: #f3f4f6;
+          border-color: #d1d5db;
+        }
+
+        .topbar-signout-btn {
+          padding: 6px 14px;
+          border-radius: 9999px;
+          background-color: #fee2e2;
+          border: 1px solid #fca5a5;
+          color: #b91c1c;
+          font-size: 12px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+
+        .topbar-signout-btn:hover {
+          background-color: #fecaca;
         }
 
         .bell-badge {
