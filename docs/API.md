@@ -1,8 +1,8 @@
 # NCAMart REST API Specification & Endpoint Reference
 
 **Document Version:** 2.0.0 (OpenAPI 3.1 Synchronized)  
-**Last Generated:** 2026-10-31T08:59:55.277Z  
-**Total Active Endpoints:** 286  
+**Last Generated:** 2026-10-31T09:54:10.477Z  
+**Total Active Endpoints:** 288  
 **Source of Truth:** `docs/openapi.json` (Generated via `pnpm openapi:generate`)  
 
 ## 1. Global Architectural Invariants
@@ -151,7 +151,7 @@
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | `POST  ` | `/api/v1/analytics/events` | PUBLIC | - | - | Create Events |
 
-### Authentication & Identity (19 endpoints)
+### Authentication & Identity (21 endpoints)
 
 | Method | Path | Auth / Permission | Idempotent? | Rate Limit | Description |
 | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -164,6 +164,8 @@
 | `POST  ` | `/api/v1/auth/logout` | ANY | - | - | Logout Session Auth |
 | `POST  ` | `/api/v1/auth/otp/send` | PUBLIC | - | 3/10m per phone, 20/hr per IP | Send Otp |
 | `POST  ` | `/api/v1/auth/otp/verify` | PUBLIC | - | 5/min per device, 60/min per IP | Verify Otp |
+| `POST  ` | `/api/v1/auth/password/reset-confirm` | PUBLIC | - | - | Create Reset Confirm |
+| `POST  ` | `/api/v1/auth/password/reset-request` | PUBLIC | - | - | Create Reset Request |
 | `POST  ` | `/api/v1/auth/register` | PUBLIC | - | - | Create Register |
 | `GET   ` | `/api/v1/auth/sessions` | CUSTOMER | - | - | Get Sessions |
 | `DELETE` | `/api/v1/auth/sessions/{id}` | CUSTOMER | - | - | Delete {id} |

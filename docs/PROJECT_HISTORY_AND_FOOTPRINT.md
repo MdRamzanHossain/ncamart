@@ -211,6 +211,36 @@ Any AI model or developer continuing work from another machine **must strictly r
      - Updated sidebar with rounded pill navigation buttons, lime green `#BFE77D` active highlight, and clean typography.
      - All 27 admin test cases (including RBAC role isolation) pass 100%.
 
+
+### Phase 11: Multi-Channel Password Reset System (SMS, WhatsApp, Email) & 404 Resolution
+- **Problem Fixed:**
+  - `ncamart.com/account/reset-password` was returning a 404 page because the route did not exist, and `AccountShell.tsx` was redirecting unauthenticated users to `/auth/login`.
+  - Users and staff who forgot passwords had no self-service reset mechanism.
+- **Implemented Capabilities:**
+  1. **Omnichannel Reset Verification (`src/app/api/v1/auth/password/reset-request/route.ts`):**
+     - Accepts user identifier (Bangladeshi mobile number or email).
+     - Resolves account across `staff` and `customers` tables in PostgreSQL.
+     - Supports 3 channels:
+       - 💬 **SMS Message**: Integrated with primary SMS gateway (`defaultProviders.smsPrimary`).
+       - 🟢 **WhatsApp**: Dispatches template notifications via WhatsApp Cloud API and generates a direct one-click WhatsApp action link (`https://wa.me/{phone}?text={code}`).
+       - 📧 **Email**: Dispatches styled HTML verification emails with security notice and expiration warning.
+     - Generates 6-digit cryptographically random OTP, hashed with HMAC SHA-256 and stored with 10-minute TTL (with memory fallback).
+     - Returns masked destination (`+88017****890` or `us***@domain.com`) to prevent PII exposure.
+  2. **Cryptographic Password Confirmation & Session Invalidation (`src/app/api/v1/auth/password/reset-confirm/route.ts`):**
+     - Validates 6-digit OTP against hash and TTL.
+     - Enforces password strength (minimum 8 characters).
+     - Hashes new password using Argon2 (`argon2.hash`).
+     - Updates `staff.passwordHash`, clears `mustChangePassword = false`, and updates `staff.updatedAt`.
+     - Automatically revokes and purges active sessions from `sessions` table across all active devices to prevent unauthorized continuation.
+  3. **Self-Service Responsive Reset UI (`src/app/account/reset-password/page.tsx` & `/auth/reset-password`):**
+     - Step 1: Identifier input + interactive 3-card channel selector (SMS, WhatsApp, Email).
+     - Step 2: 6-digit verification code input, show/hide password toggle, confirm password, 60s resend timer countdown, and direct WhatsApp open button.
+     - Step 3: Success state with 5-second automatic redirect to `/auth/login`.
+     - `AccountShell.tsx` updated to bypass authentication requirement and sidebar layout specifically for `/reset-password` while honoring React hook execution order.
+  4. **Automated Verification:**
+     - Created `src/modules/identity/__tests__/passwordReset.test.ts` covering SMS, WhatsApp, Email, confirmation, invalid OTP rejection, and short password rejection (6 tests, 100% pass).
+     - Zero regressions across all 98 test suites.
+
 ---
 
 ## 4. Key Database Tables & Relations Map

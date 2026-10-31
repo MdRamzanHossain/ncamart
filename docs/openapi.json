@@ -44926,6 +44926,380 @@
         }
       }
     },
+    "/api/v1/auth/password/reset-confirm": {
+      "post": {
+        "tags": [
+          "Authentication & Identity"
+        ],
+        "summary": "Create Reset Confirm",
+        "description": "Handles **POST** requests on `/api/v1/auth/password/reset-confirm`.\n\n- **Authentication:** PUBLIC\n- **Source File:** `src/app/api/v1/auth/password/reset-confirm/route.ts`\n",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "UUIDv7 idempotency key for safely retrying mutating operations",
+              "example": "0192b0c3-4d5e-7a1b-8c2d-3e4f5a6b7c8d"
+            },
+            "required": false,
+            "name": "Idempotency-Key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Runner PWA offline client mutation UUID",
+              "example": "b553c4cb-02c7-4b77-aa1a-8c7b0fbc1f33"
+            },
+            "required": false,
+            "name": "X-Client-Mutation-Id",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": {},
+                "description": "JSON request payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Operation executed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Operation completed successfully"
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ],
+                  "description": "Standard success response confirmation",
+                  "title": "GenericSuccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request — Validation failed or missing parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "description": "Standard machine-readable error code",
+                          "example": "ERR_VALIDATION"
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable bilingual explanation of the error",
+                          "example": "Invalid request payload or missing parameters"
+                        },
+                        "status": {
+                          "type": "integer",
+                          "description": "HTTP status code matching the response",
+                          "example": 400
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {},
+                          "description": "Structured contextual debugging details or validation errors",
+                          "example": {
+                            "field": "phone",
+                            "message": "Must be a valid Bangladeshi MSISDN"
+                          }
+                        },
+                        "timestamp": {
+                          "type": "string",
+                          "format": "date-time",
+                          "description": "ISO 8601 UTC timestamp of when error occurred",
+                          "example": "2026-10-25T12:00:00.000Z"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "status",
+                        "timestamp"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "description": "Standard NCAMart RFC 7807 error response envelope",
+                  "title": "ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "description": "Standard machine-readable error code",
+                          "example": "ERR_VALIDATION"
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable bilingual explanation of the error",
+                          "example": "Invalid request payload or missing parameters"
+                        },
+                        "status": {
+                          "type": "integer",
+                          "description": "HTTP status code matching the response",
+                          "example": 400
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {},
+                          "description": "Structured contextual debugging details or validation errors",
+                          "example": {
+                            "field": "phone",
+                            "message": "Must be a valid Bangladeshi MSISDN"
+                          }
+                        },
+                        "timestamp": {
+                          "type": "string",
+                          "format": "date-time",
+                          "description": "ISO 8601 UTC timestamp of when error occurred",
+                          "example": "2026-10-25T12:00:00.000Z"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "status",
+                        "timestamp"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "description": "Standard NCAMart RFC 7807 error response envelope",
+                  "title": "ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/password/reset-request": {
+      "post": {
+        "tags": [
+          "Authentication & Identity"
+        ],
+        "summary": "Create Reset Request",
+        "description": "Handles **POST** requests on `/api/v1/auth/password/reset-request`.\n\n- **Authentication:** PUBLIC\n- **Source File:** `src/app/api/v1/auth/password/reset-request/route.ts`\n",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "UUIDv7 idempotency key for safely retrying mutating operations",
+              "example": "0192b0c3-4d5e-7a1b-8c2d-3e4f5a6b7c8d"
+            },
+            "required": false,
+            "name": "Idempotency-Key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Runner PWA offline client mutation UUID",
+              "example": "b553c4cb-02c7-4b77-aa1a-8c7b0fbc1f33"
+            },
+            "required": false,
+            "name": "X-Client-Mutation-Id",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": {},
+                "description": "JSON request payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Operation executed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Operation completed successfully"
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ],
+                  "description": "Standard success response confirmation",
+                  "title": "GenericSuccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request — Validation failed or missing parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "description": "Standard machine-readable error code",
+                          "example": "ERR_VALIDATION"
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable bilingual explanation of the error",
+                          "example": "Invalid request payload or missing parameters"
+                        },
+                        "status": {
+                          "type": "integer",
+                          "description": "HTTP status code matching the response",
+                          "example": 400
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {},
+                          "description": "Structured contextual debugging details or validation errors",
+                          "example": {
+                            "field": "phone",
+                            "message": "Must be a valid Bangladeshi MSISDN"
+                          }
+                        },
+                        "timestamp": {
+                          "type": "string",
+                          "format": "date-time",
+                          "description": "ISO 8601 UTC timestamp of when error occurred",
+                          "example": "2026-10-25T12:00:00.000Z"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "status",
+                        "timestamp"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "description": "Standard NCAMart RFC 7807 error response envelope",
+                  "title": "ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "description": "Standard machine-readable error code",
+                          "example": "ERR_VALIDATION"
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable bilingual explanation of the error",
+                          "example": "Invalid request payload or missing parameters"
+                        },
+                        "status": {
+                          "type": "integer",
+                          "description": "HTTP status code matching the response",
+                          "example": 400
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": {},
+                          "description": "Structured contextual debugging details or validation errors",
+                          "example": {
+                            "field": "phone",
+                            "message": "Must be a valid Bangladeshi MSISDN"
+                          }
+                        },
+                        "timestamp": {
+                          "type": "string",
+                          "format": "date-time",
+                          "description": "ISO 8601 UTC timestamp of when error occurred",
+                          "example": "2026-10-25T12:00:00.000Z"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "status",
+                        "timestamp"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "description": "Standard NCAMart RFC 7807 error response envelope",
+                  "title": "ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/auth/register": {
       "post": {
         "tags": [

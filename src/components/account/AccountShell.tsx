@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { AccountSidebar } from "./AccountSidebar";
 import type { CustomerProfile } from "./types";
 import { useAuth } from "@/context/AuthContext";
@@ -22,7 +22,10 @@ export function AccountShell({
   children,
 }: AccountShellProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, isAuthenticated, isLoading } = useAuth();
+
+
 
   const [liveProfile, setLiveProfile] = useState<CustomerProfile>(() => {
     return (
@@ -44,6 +47,10 @@ export function AccountShell({
 
   // Sync with real authenticated user and live database APIs
   useEffect(() => {
+    if (pathname?.includes("/reset-password")) {
+      return;
+    }
+
     if (!isLoading && !isAuthenticated) {
       router.push("/auth/login?redirect=/account");
       return;
@@ -105,7 +112,11 @@ export function AccountShell({
         })
         .catch(() => {});
     }
-  }, [user, isAuthenticated, isLoading, router]);
+  }, [user, isAuthenticated, isLoading, router, pathname]);
+
+  if (pathname?.includes("/reset-password")) {
+    return <>{children}</>;
+  }
 
   return (
     <div className="account-layout-wrapper">
