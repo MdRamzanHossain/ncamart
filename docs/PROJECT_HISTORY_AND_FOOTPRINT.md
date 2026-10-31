@@ -113,6 +113,35 @@ Any AI model or developer continuing work from another machine **must strictly r
   4. **Verification Result:** **97 passed (97 test files), 780 passed (780 tests)**, ESLint: **0 errors**.
   5. **Git Synchronization:** Merged remote build commits and successfully pushed to `origin main` (`5235b0f`, `3ec99e7`).
 
+### Phase 8: Staff Profile Hydration, Role Switcher Security, OPS_MANAGER Integration & Live Backoffice Database Connection
+- **Issues Diagnosed:**
+  1. When a promoted user (`Mir Fahim Arafat`) logged in, their name showed as `"Administrator"` and active role showed as `"SUPER_ADMIN"` instead of their actual name and assigned operational roles (`SOURCING_MANAGER`, `GODOWN_MANAGER`).
+  2. When navigating to `/admin/users`, the table showed demo staff (`Engr. Mahmudul Hasan`, etc.) instead of the real registered users.
+- **Root Cause Analysis:**
+  1. *Profile Hydration Bug (`AdminShell.tsx`):* `/api/v1/auth/staff/me` returned `full_name` and `roles` (array). The component attempted to read `data.staff.fullName` and `data.roles?.[0]`. Both evaluated to `undefined`, falling back to `"Administrator"` and `"SUPER_ADMIN"`, and cached into `localStorage.nca_user`.
+  2. *Permission 403 Forbidden Bug (`/api/v1/admin/users`):* `GET /api/v1/admin/users` was guarded by `permission: "staff.manage"` (only granted to Super Admin). When a manager loaded the page, the API returned 403 Forbidden, causing the component's state to remain on initial mock data (`MOCK_STAFF_MEMBERS`).
+  3. *Missing OPS_MANAGER Role:* `OPS_MANAGER` existed in UI types but was absent from `STAFF_ROLES` in `permissions.ts` and the `staff_roles.role` enum in PostgreSQL schema.
+- **Fixes Implemented:**
+  1. **Profile Hydration & Role Resolution:**
+     - Updated `AdminShell.tsx` to read `data.staff.full_name` and `data.staff.roles`.
+     - In `AuthContext.tsx` and `/api/v1/auth/google/verify`, removed hardcoded `"SUPER_ADMIN"` fallbacks and properly resolved the user's assigned role.
+  2. **Role Switcher Hardening (`AdminSidebar.tsx`):**
+     - Non-SuperAdmin staff members can now only see and select their own explicitly assigned roles in the Active Staff Role dropdown; they cannot select or escalate to `SUPER_ADMIN`.
+     - Synced `activeRole` with `currentRole` via `useEffect`.
+  3. **OPS_MANAGER Role Integration:**
+     - Added `OPS_MANAGER` to `STAFF_ROLES` and `ROLE_PERMISSION_MATRIX` in `permissions.ts` and updated `staff_roles.role` in `schema.ts`.
+     - Granted `OPS_MANAGER` operational permissions: catalog, sourcing, godown, dispatch, QC, returns, support, and staff directory viewing.
+     - Updated inline snapshot in `src/modules/identity/__tests__/rbac.test.ts` (13/13 tests passed).
+  4. **Public Directory for Staff:**
+     - Changed `GET /api/v1/admin/users` guard from `permission: "staff.manage"` to `auth: "staff"`. Any backoffice staff can view the user list, eliminating 403 errors, while `POST`, `PUT`, `DELETE` remain strictly protected by `staff.manage`.
+  5. **Backoffice Live Database Connection:**
+     - **Catalog (`AdminCatalogListView.tsx`):** Added `useEffect` to fetch live products from `GET /api/v1/admin/catalog/products`.
+     - **Orders (`OrderKanbanBoard.tsx`):** Added `useEffect` to fetch live orders from `GET /api/v1/admin/orders`.
+     - **Overview (`ExecutiveOverviewView.tsx`):** Added `useEffect` to stream live orders into the activity feed.
+  6. **Verification & Pushed to Git:**
+     - All 97 test files (780 tests) passing 100%, 0 ESLint errors.
+     - Pushed commits `569ae4a` and `3ec99e7` to `origin main`.
+
 ---
 
 ## 4. Key Database Tables & Relations Map
