@@ -19,15 +19,17 @@ export async function GET(req: NextRequest) {
       // Fallback if settings query fails
     }
 
-    // 2. Fallback to Environment Variables if DB empty
+    // 2. Fallback to Environment Variables if DB empty or client ID exists
     if (!clientId) {
       clientId =
         process.env.GOOGLE_CLIENT_ID?.trim() ||
         process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim() ||
         "";
-      if (clientId) {
-        enabled = true;
-      }
+    }
+
+    if (clientId) {
+      // Auto-enable if client ID is configured
+      enabled = true;
     }
 
     // If still not configured or disabled
@@ -72,3 +74,4 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL(`/auth/login?error=${msg}`, origin));
   }
 }
+

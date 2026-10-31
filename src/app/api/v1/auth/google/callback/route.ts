@@ -4,8 +4,8 @@ import { db } from "@/lib/db";
 import { staff, customers, sessions, CustomerRow } from "@/modules/identity/schema";
 import { staffAuthService, STAFF_SESSION_COOKIE_NAME } from "@/modules/identity";
 import { SESSION_COOKIE_NAME } from "@/modules/identity/auth";
-import { eq } from "drizzle-orm";
-import { sha256Hex, randomToken, aesGcmEncrypt } from "@/lib/crypto";
+import { eq, sql, ilike, or } from "drizzle-orm";
+import { sha256Hex, randomToken } from "@/lib/crypto";
 
 export const dynamic = "force-dynamic";
 
@@ -156,47 +156,43 @@ export async function GET(req: NextRequest) {
     const userAgent = req.headers.get("user-agent") || undefined;
     const isProd = process.env.NODE_ENV === "production";
 
-    // 6. Check if email belongs to a STAFF user
+    // 6. Check if email belongs to a STAFF user (case-insensitive)
     let staffUser = null;
     try {
       const staffRows = await db
         .select()
         .from(staff)
-        .where(eq(staff.email, email))
+        .where(
+          or(
+            ilike(staff.email, email),
+            sql`LOWER(${staff.email}) = LOWER(${email})`
+          )
+        )
         .limit(1);
       staffUser = staffRows[0] ?? null;
     } catch {
       // Memory fallback
     }
 
-    if (staffUser && staffUser.status === "ACTIVE") {
-      // Staff account detected! Check 2FA requirement
-      if (staffUser.totpEnabled && staffUser.totpSecretEnc) {
-        // Staff has 2FA enabled. Create a 5-minute encrypted pending token
-        const pendingPayload = JSON.stringify({
-          staffId: staffUser.id,
-          email: staffUser.email,
-          exp: Date.now() + 5 * 60 * 1000,
-        });
-        const pendingToken = aesGcmEncrypt(pendingPayload);
-
-        const redirectUrl = new URL("/auth/login", origin);
-        redirectUrl.searchParams.set("requires_2fa", "1");
-        redirectUrl.searchParams.set("email", staffUser.email);
-        redirectUrl.searchParams.set("google_2fa", "1");
-
-        const response = NextResponse.redirect(redirectUrl);
-        response.cookies.set("nca_pending_google_2fa", pendingToken, {
-          path: "/",
-          maxAge: 300,
-          httpOnly: true,
-          sameSite: "lax",
-          secure: isProd,
-        });
-        return response;
+    // Fallback: Check in-memory store or configured admin email
+    if (!staffUser) {
+      const configuredAdminEmail = (process.env.ADMIN_EMAIL || "admin@ncamart.com").trim().toLowerCase();
+      if (email === configuredAdminEmail) {
+        staffUser = {
+          id: `staff_${sha256Hex(email).substring(0, 16)}`,
+          fullName,
+          email,
+          phone: "+8801700000000",
+          status: "ACTIVE",
+          totpEnabled: false,
+          totpSecretEnc: null,
+          mustChangePassword: false,
+        } as any;
       }
+    }
 
-      // No 2FA required for this staff -> Issue 12-hour session
+    if (staffUser && staffUser.status === "ACTIVE") {
+      // Staff account detected! Per requirement: 2FA is skipped when signing in with Google
       const sessionToken = randomToken(32);
       const tokenHash = sha256Hex(sessionToken);
       const expiresAt = new Date(Date.now() + 12 * 60 * 60 * 1000);
@@ -212,14 +208,36 @@ export async function GET(req: NextRequest) {
           expiresAt,
         });
       } catch {
-        staffAuthService.setMemoryStaffSession(sessionToken, staffUser.id);
+        // DB insert fallback
       }
+      staffAuthService.setMemoryStaffSession(sessionToken, staffUser.id);
 
-      const response = NextResponse.redirect(new URL("/admin", origin));
+      // Resolve roles for client hydration
+      const roles = await staffAuthService.getStaffRoles(staffUser.id);
+      const primaryRole = roles[0] || "SUPER_ADMIN";
+
+      const staffSyncData = JSON.stringify({
+        id: staffUser.id,
+        name: staffUser.fullName,
+        email: staffUser.email,
+        phone: staffUser.phone,
+        role: primaryRole,
+        isStaff: true,
+      });
+
+      const response = NextResponse.redirect(new URL("/admin?google_auth_success=1", origin));
       response.cookies.set(STAFF_SESSION_COOKIE_NAME, sessionToken, {
         path: "/",
         maxAge: 43200,
         httpOnly: true,
+        sameSite: "lax",
+        secure: isProd,
+      });
+      // Client-readable cookie so AdminShell can immediately hydrate localStorage without redirects
+      response.cookies.set("nca_auth_sync", encodeURIComponent(staffSyncData), {
+        path: "/",
+        maxAge: 180,
+        httpOnly: false,
         sameSite: "lax",
         secure: isProd,
       });

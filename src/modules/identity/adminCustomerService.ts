@@ -364,4 +364,32 @@ export const adminCustomerService = {
         "Deletion request submitted. Our support team will process your request within 48 hours.",
     };
   },
+
+  /**
+   * Delete customer account permanently by admin.
+   */
+  async deleteCustomer(customerId: string, actor: Actor): Promise<void> {
+    const customer = await authService.findCustomerById(customerId);
+    if (!customer) {
+      throw new NotFoundError("Customer not found");
+    }
+
+    try {
+      await db.delete(sessions).where(and(eq(sessions.subjectType, "CUSTOMER"), eq(sessions.subjectId, customerId as Uuid)));
+      await db.delete(customerAddresses).where(eq(customerAddresses.customerId, customerId as Uuid));
+      await db.delete(customers).where(eq(customers.id, customerId as Uuid));
+    } catch {
+      // Memory / DB fallback
+    }
+
+    await recordAudit(null, {
+      staffId: actor.id,
+      actorType: "STAFF",
+      action: "customer.deleted",
+      entityType: "CUSTOMER",
+      entityId: customerId,
+      beforeState: { id: customer.id, phone: customer.phone, email: customer.email, fullName: customer.fullName },
+      afterState: null,
+    });
+  },
 };

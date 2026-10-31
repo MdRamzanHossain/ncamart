@@ -10,7 +10,7 @@ export interface StaffRoleModalProps {
   allStaff: StaffUser[];
   isOpen: boolean;
   onClose: () => void;
-  onSave: (staffId: string, updatedRoles: AdminRole[]) => void;
+  onSave: (staffId: string, updatedRoles: AdminRole[], updatedStatus?: "ACTIVE" | "SUSPENDED") => void;
 }
 
 export function StaffRoleModal({
@@ -21,6 +21,7 @@ export function StaffRoleModal({
   onSave,
 }: StaffRoleModalProps) {
   const [selectedRoles, setSelectedRoles] = useState<AdminRole[]>(staff.roles);
+  const [status, setStatus] = useState<"ACTIVE" | "SUSPENDED">(staff.status as any || "ACTIVE");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   if (!isOpen) return null;
@@ -48,7 +49,7 @@ export function StaffRoleModal({
 
   const handleSave = () => {
     if (selectedRoles.length === 0) {
-      setErrorMsg("A staff member must have at least one assigned role.");
+      setErrorMsg("A user must have at least one assigned role (e.g. Customer or Staff role).");
       return;
     }
     if (
@@ -61,7 +62,7 @@ export function StaffRoleModal({
       );
       return;
     }
-    onSave(staff.id, selectedRoles);
+    onSave(staff.id, selectedRoles, status);
     onClose();
   };
 
@@ -70,10 +71,10 @@ export function StaffRoleModal({
       <div className="modal-dialog">
         <div className="modal-header">
           <div>
-            <div className="modal-pill">RBAC Governance · PRD §3.9</div>
-            <h2 className="modal-title">Edit Staff Roles &amp; Permissions</h2>
+            <div className="modal-pill">Access &amp; Roles Governance</div>
+            <h2 className="modal-title">Edit User Access &amp; Roles</h2>
             <p className="modal-sub">
-              Configuring roles for <strong>{staff.name}</strong> ({staff.email})
+              Configuring account for <strong>{staff.name}</strong> ({staff.email})
             </p>
           </div>
           <button type="button" className="btn-close" onClick={onClose} data-testid="btn-close-role-modal">
@@ -86,6 +87,34 @@ export function StaffRoleModal({
             ⚠️ {errorMsg}
           </div>
         )}
+
+        <div style={{ margin: "16px 0", padding: "12px", background: "#1e293b", borderRadius: "8px", border: "1px solid #334155" }}>
+          <label style={{ display: "block", fontSize: "12px", color: "#94a3b8", marginBottom: "6px", fontWeight: 700 }}>
+            Account Access Status
+          </label>
+          <div style={{ display: "flex", gap: "16px" }}>
+            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", color: "#10b981", cursor: "pointer" }}>
+              <input
+                type="radio"
+                name="accStatus"
+                value="ACTIVE"
+                checked={status === "ACTIVE"}
+                onChange={() => setStatus("ACTIVE")}
+              />
+              ✓ Active (Full Access Permitted)
+            </label>
+            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", color: "#ef4444", cursor: "pointer" }}>
+              <input
+                type="radio"
+                name="accStatus"
+                value="SUSPENDED"
+                checked={status === "SUSPENDED"}
+                onChange={() => setStatus("SUSPENDED")}
+              />
+              🚫 Suspended (Login &amp; Orders Blocked)
+            </label>
+          </div>
+        </div>
 
         <div className="roles-list">
           {ALL_ADMIN_ROLES.map(({ role, label, description }) => {

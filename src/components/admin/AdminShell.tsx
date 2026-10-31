@@ -28,28 +28,76 @@ export function AdminShell({ children }: AdminShellProps) {
   const [staffUser, setStaffUser] = useState<StoredStaffUser | null>(null);
 
   useEffect(() => {
+    // 1. Check for temporary Google Auth Sync cookie from OAuth redirect
+    try {
+      const cookieStr = typeof document !== "undefined" ? document.cookie : "";
+      const syncCookie = cookieStr
+        .split(";")
+        .map((c) => c.trim())
+        .find((c) => c.startsWith("nca_auth_sync="));
+
+      if (syncCookie) {
+        const rawVal = decodeURIComponent(syncCookie.split("=")[1] || "");
+        const parsed = JSON.parse(rawVal) as StoredStaffUser;
+        if (parsed && parsed.isStaff) {
+          localStorage.setItem("nca_user", JSON.stringify(parsed));
+          setStaffUser(parsed);
+          if (parsed.role) setActiveRole(parsed.role);
+          setAuthStatus("AUTHENTICATED");
+          document.cookie = "nca_auth_sync=; Path=/; Max-Age=0";
+          return;
+        }
+      }
+    } catch {
+      // Cookie parse fallback
+    }
+
+    // 2. Check localStorage for existing valid session
     try {
       const rawUser = localStorage.getItem("nca_user");
-      if (!rawUser) {
-        setAuthStatus("UNAUTHENTICATED");
-        window.location.replace("/auth/login?mode=staff&redirect=/admin");
-        return;
+      if (rawUser) {
+        const parsed = JSON.parse(rawUser) as StoredStaffUser;
+        if (parsed && parsed.isStaff) {
+          setStaffUser(parsed);
+          if (parsed.role) {
+            setActiveRole(parsed.role);
+          }
+          setAuthStatus("AUTHENTICATED");
+          return;
+        }
       }
-      const parsed = JSON.parse(rawUser) as StoredStaffUser;
-      if (!parsed || !parsed.isStaff) {
-        setAuthStatus("UNAUTHENTICATED");
-        window.location.replace("/auth/login?mode=staff&redirect=/admin");
-        return;
-      }
-      setStaffUser(parsed);
-      if (parsed.role) {
-        setActiveRole(parsed.role);
-      }
-      setAuthStatus("AUTHENTICATED");
     } catch {
-      setAuthStatus("UNAUTHENTICATED");
-      window.location.replace("/auth/login?mode=staff&redirect=/admin");
+      // Fall through to server session check
     }
+
+    // 3. Fallback: Verify active HTTP-only cookie against /api/v1/auth/staff/me
+    fetch("/api/v1/auth/staff/me", { credentials: "include" })
+      .then((res) => {
+        if (res.ok) return res.json();
+        throw new Error("unauthorized");
+      })
+      .then((data) => {
+        if (data?.staff) {
+          const profile: StoredStaffUser = {
+            id: data.staff.id,
+            name: data.staff.fullName || data.staff.name || "Administrator",
+            email: data.staff.email,
+            phone: data.staff.phone,
+            role: (data.roles?.[0] as AdminRole) || "SUPER_ADMIN",
+            isStaff: true,
+          };
+          localStorage.setItem("nca_user", JSON.stringify(profile));
+          setStaffUser(profile);
+          setActiveRole(profile.role || "SUPER_ADMIN");
+          setAuthStatus("AUTHENTICATED");
+        } else {
+          throw new Error("not staff");
+        }
+      })
+      .catch(() => {
+        setAuthStatus("UNAUTHENTICATED");
+        window.location.replace("/auth/login?mode=staff&redirect=/admin");
+      });
 
     // Live-sync sidebar/topbar when the staff member edits their profile in /admin/settings
     const handleProfileUpdated = (event: Event) => {

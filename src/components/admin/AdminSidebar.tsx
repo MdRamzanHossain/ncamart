@@ -6,21 +6,11 @@ import { usePathname } from "next/navigation";
 import type { AdminRole, AdminNavSection, StaffAdminProfile } from "./types";
 
 export const DEFAULT_ADMIN_STAFF: StaffAdminProfile = {
-  id: "STAFF-NCA-001",
-  name: "Engr. Mahmudul Hasan",
-  email: "mahmudul@ncamart.com",
+  id: "STAFF-001",
+  name: "SuperAdmin",
+  email: "admin@ncamart.com",
   roles: [
     "SUPER_ADMIN",
-    "OPS_MANAGER",
-    "SOURCING_MANAGER",
-    "GODOWN_MANAGER",
-    "QC_TECHNICIAN",
-    "FIELD_RUNNER",
-    "SHOWROOM_POS_STAFF",
-    "CATALOG_MANAGER",
-    "CUSTOMER_SUPPORT",
-    "FINANCE_OFFICER",
-    "DISPATCH_STAFF",
   ],
   activeRole: "SUPER_ADMIN",
   assignedLocation: "Nawabpur Central Godown & HQ",
@@ -153,6 +143,13 @@ export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
   {
     title: "Staff & Governance",
     items: [
+      {
+        id: "users-management",
+        label: "Registered Users & Access",
+        href: "/admin/users",
+        icon: "👥",
+        allowedRoles: ["SUPER_ADMIN", "OPS_MANAGER"],
+      },
       {
         id: "account-settings",
         label: "Account & 2FA Settings",

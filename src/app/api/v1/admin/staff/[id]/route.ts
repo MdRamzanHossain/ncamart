@@ -54,3 +54,26 @@ export const PUT = withRoute(
     return NextResponse.json(updated, { status: 200 });
   }
 );
+
+export const DELETE = withRoute(
+  {
+    auth: "staff",
+    permission: "staff.manage",
+    params: paramsSchema,
+  },
+  async ({ params, actor }) => {
+    // Prevent self-deletion
+    if (actor && actor.id === params.id) {
+      return NextResponse.json(
+        { error: "You cannot delete your own staff account." },
+        { status: 400 }
+      );
+    }
+
+    await staffAuthService.deleteStaff(params.id, actor!);
+    return NextResponse.json(
+      { success: true, message: `Staff account ${params.id} has been permanently deleted.` },
+      { status: 200 }
+    );
+  }
+);

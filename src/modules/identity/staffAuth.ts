@@ -926,6 +926,44 @@ export const staffAuthService = {
     };
   },
 
+  async deleteStaff(id: string, actor: { id: string; type?: string }): Promise<void> {
+    const existing = await this.getStaffById(id);
+    if (!existing) {
+      throw new BusinessError("ERR_NOT_FOUND", "Staff member not found", {}, 404);
+    }
+
+    if (existing.roles.includes("SUPER_ADMIN")) {
+      const otherAdmins = await this.countOtherActiveSuperAdmins(id);
+      if (otherAdmins === 0) {
+        throw new BusinessError(
+          "ERR_LAST_SUPER_ADMIN",
+          "Cannot delete the last active SUPER_ADMIN",
+          { staffId: id },
+          422
+        );
+      }
+    }
+
+    try {
+      await db.delete(staffRoles).where(eq(staffRoles.staffId, id as Uuid));
+      await db.delete(sessions).where(and(eq(sessions.subjectType, "STAFF"), eq(sessions.subjectId, id as Uuid)));
+      await db.delete(staff).where(eq(staff.id, id as Uuid));
+    } catch {
+      memStaffStore.delete(id);
+      memStaffRolesStore.delete(id);
+    }
+
+    await recordAudit(null, {
+      staffId: actor.id,
+      actorType: "STAFF",
+      action: "staff.deleted",
+      entityType: "STAFF",
+      entityId: id,
+      beforeState: existing,
+      afterState: null,
+    });
+  },
+
   async resetStaffPassword(
     id: string,
     actor: { id: string }

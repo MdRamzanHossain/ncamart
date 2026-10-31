@@ -1,12 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import type { StaffUser, AuditLogEntry, CustomerPiiRecord, AuditActionType } from "./types";
-import { MOCK_STAFF_MEMBERS, MOCK_AUDIT_LOGS, MOCK_CUSTOMERS_PII } from "./mockData";
+import { MOCK_AUDIT_LOGS, MOCK_CUSTOMERS_PII } from "./mockData";
 import { StaffRoleModal } from "./StaffRoleModal";
 import { TotpResetModal } from "./TotpResetModal";
 import { AuditLogDiffViewer } from "./AuditLogDiffViewer";
 import { AnonymizeConfirmModal } from "./AnonymizeConfirmModal";
+import { UserDeleteModal } from "./UserDeleteModal";
+import { AddUserModal } from "./AddUserModal";
 import { useToast } from "@/components/ui/toast";
 import type { AdminRole } from "../types";
 
@@ -18,12 +20,16 @@ export function SecurityGovernanceView({
   initialTab = "STAFF_RBAC",
 }: SecurityGovernanceViewProps = {}) {
   const [activeTab, setActiveTab] = useState<"STAFF_RBAC" | "AUDIT_LOGS" | "DATA_PRIVACY">(initialTab);
-  const [staffList, setStaffList] = useState<StaffUser[]>(MOCK_STAFF_MEMBERS);
+  const [staffList, setStaffList] = useState<StaffUser[]>([]);
+  const [usersList, setUsersList] = useState<any[]>([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState<boolean>(true);
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>(MOCK_AUDIT_LOGS);
   const [customersPii, setCustomersPii] = useState<CustomerPiiRecord[]>(MOCK_CUSTOMERS_PII);
 
   // Search & Filters
   const [staffSearch, setStaffSearch] = useState("");
+  const [filterType, setFilterType] = useState<"ALL" | "STAFF" | "CUSTOMER">("ALL");
+  const [filterStatus, setFilterStatus] = useState<string>("ALL");
   const [auditSearch, setAuditSearch] = useState("");
   const [auditActionFilter, setAuditActionFilter] = useState<string>("ALL");
   const [expandedLogId, setExpandedLogId] = useState<string | null>("AUD-2026-9041");
@@ -31,47 +37,158 @@ export function SecurityGovernanceView({
   // Modals
   const [editingStaff, setEditingStaff] = useState<StaffUser | null>(null);
   const [resettingTotpStaff, setResettingTotpStaff] = useState<StaffUser | null>(null);
+  const [deletingUser, setDeletingUser] = useState<StaffUser | null>(null);
+  const [isAddUserOpen, setIsAddUserOpen] = useState(false);
   const [anonymizingCustomer, setAnonymizingCustomer] = useState<CustomerPiiRecord | null>(null);
 
   const { addToast } = useToast();
 
-  // Handle Save Staff Roles
-  const handleSaveRoles = (staffId: string, updatedRoles: AdminRole[]) => {
-    setStaffList((prev) =>
-      prev.map((s) => (s.id === staffId ? { ...s, roles: updatedRoles } : s))
-    );
-
-    // Create Audit Log Entry
-    const staffTarget = staffList.find((s) => s.id === staffId);
-    if (staffTarget) {
-      const newAudit: AuditLogEntry = {
-        id: `AUD-2026-${Math.floor(1000 + Math.random() * 9000)}`,
-        timestamp: new Date().toISOString().replace("T", " ").substring(0, 19),
-        actorId: "STAFF-001",
-        actorName: "Engr. Mahmudul Hasan",
-        actorRole: "SUPER_ADMIN",
-        action: "STAFF_ROLE_MUTATED",
-        resourceType: "StaffAccount",
-        resourceId: staffId,
-        ipAddress: "103.230.106.18 (Nawabpur Fiber)",
-        beforeJson: { roles: staffTarget.roles },
-        afterJson: { roles: updatedRoles },
-      };
-      setAuditLogs((prev) => [newAudit, ...prev]);
+  // Load Real Registered Users & Staff from Backend API
+  const fetchUsers = useCallback(async () => {
+    setIsLoadingUsers(true);
+    try {
+      const res = await fetch("/api/v1/admin/users", { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.users)) {
+          setUsersList(data.users);
+          const mappedStaff: StaffUser[] = data.users.map((u: any) => ({
+            id: u.id,
+            name: u.name,
+            email: u.email,
+            phone: u.phone,
+            roles: u.roles,
+            status: u.status,
+            twoFactorEnabled: u.twoFactorEnabled,
+            assignedLocation: u.type === "STAFF" ? "Nawabpur Central Godown & HQ" : "Storefront Customer",
+            createdAt: u.createdAt,
+            lastLoginAt: u.lastLoginAt || "Recently active",
+            type: u.type,
+            authProvider: u.authProvider,
+          }));
+          setStaffList(mappedStaff);
+          return;
+        }
+      }
+    } catch {
+      // Fallback
+    } finally {
+      setIsLoadingUsers(false);
     }
+  }, []);
 
-    addToast({
-      title: "Staff Roles Updated",
-      description: `Roles updated for staff ${staffId}. Changes will take effect on their next action.`,
-      variant: "success",
-    });
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
+
+  // Handle Save Staff / User Roles & Access
+  const handleSaveRoles = async (
+    staffId: string,
+    updatedRoles: AdminRole[],
+    updatedStatus?: "ACTIVE" | "SUSPENDED"
+  ) => {
+    try {
+      const res = await fetch(`/api/v1/admin/users/${staffId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          roles: updatedRoles,
+          status: updatedStatus,
+        }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "Failed to update user access.");
+      }
+
+      setStaffList((prev) =>
+        prev.map((s) =>
+          s.id === staffId
+            ? { ...s, roles: updatedRoles, status: updatedStatus || s.status }
+            : s
+        )
+      );
+
+      // Create Audit Log Entry
+      const staffTarget = staffList.find((s) => s.id === staffId);
+      if (staffTarget) {
+        const newAudit: AuditLogEntry = {
+          id: `AUD-2026-${Math.floor(1000 + Math.random() * 9000)}`,
+          timestamp: new Date().toISOString().replace("T", " ").substring(0, 19),
+          actorId: "STAFF-001",
+          actorName: "SuperAdmin",
+          actorRole: "SUPER_ADMIN",
+          action: "STAFF_ROLE_MUTATED",
+          resourceType: "UserAccount",
+          resourceId: staffId,
+          ipAddress: "103.230.106.18 (Nawabpur Fiber)",
+          beforeJson: { roles: staffTarget.roles, status: staffTarget.status },
+          afterJson: { roles: updatedRoles, status: updatedStatus || staffTarget.status },
+        };
+        setAuditLogs((prev) => [newAudit, ...prev]);
+      }
+
+      addToast({
+        title: "User Access & Roles Updated",
+        description: `Roles and permissions updated for user ${staffId}.`,
+        variant: "success",
+      });
+
+      fetchUsers();
+    } catch (err: any) {
+      addToast({
+        title: "Update Failed",
+        description: err.message || "Could not update user roles.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Handle TOTP Reset
-  const handleConfirmTotpReset = (staffId: string) => {
-    setStaffList((prev) =>
-      prev.map((s) => (s.id === staffId ? { ...s, twoFactorEnabled: false } : s))
-    );
+  const handleConfirmTotpReset = async (staffId: string) => {
+    try {
+      await fetch(`/api/v1/admin/users/${staffId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reset2FA: true }),
+      });
+
+      setStaffList((prev) =>
+        prev.map((s) => (s.id === staffId ? { ...s, twoFactorEnabled: false } : s))
+      );
+
+      addToast({
+        title: "2FA Reset Complete",
+        description: `Two-factor authentication has been disabled for ${staffId}.`,
+        variant: "success",
+      });
+    } catch {
+      // fallback
+    }
+  };
+
+  // Handle Delete User
+  const handleConfirmDeleteUser = async (userId: string) => {
+    const res = await fetch(`/api/v1/admin/users/${userId}`, {
+      method: "DELETE",
+    });
+
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error || "Failed to delete user.");
+    }
+
+    setStaffList((prev) => prev.filter((s) => s.id !== userId));
+    setUsersList((prev) => prev.filter((u) => u.id !== userId));
+
+    addToast({
+      title: "User Deleted",
+      description: "User account was permanently deleted from the database.",
+      variant: "success",
+    });
+
+    fetchUsers();
   };
 
   // Handle Customer Anonymization
@@ -127,13 +244,19 @@ export function SecurityGovernanceView({
     });
   };
 
-  // Filtered Staff
-  const filteredStaff = staffList.filter((s) => {
-    const q = staffSearch.toLowerCase();
+  // Filtered Users (Staff + Customers)
+  const filteredUsers = staffList.filter((u: any) => {
+    if (filterType === "STAFF" && u.type === "CUSTOMER") return false;
+    if (filterType === "CUSTOMER" && u.type !== "CUSTOMER") return false;
+    if (filterStatus !== "ALL" && u.status !== filterStatus) return false;
+
+    const q = staffSearch.toLowerCase().trim();
+    if (!q) return true;
     return (
-      s.name.toLowerCase().includes(q) ||
-      s.email.toLowerCase().includes(q) ||
-      s.roles.some((r) => r.toLowerCase().includes(q))
+      (u.name && u.name.toLowerCase().includes(q)) ||
+      (u.email && u.email.toLowerCase().includes(q)) ||
+      (u.phone && u.phone.includes(q)) ||
+      (u.roles && u.roles.some((r: string) => r.toLowerCase().includes(q)))
     );
   });
 
@@ -160,10 +283,10 @@ export function SecurityGovernanceView({
       {/* Header */}
       <div className="console-header">
         <div>
-          <div className="header-pill">Security, RBAC &amp; Compliance · PRD §3.9 &amp; §3.18</div>
-          <h1 className="console-title">Staff Governance &amp; Immutable Audit Trail</h1>
+          <div className="header-pill">Security, Users &amp; RBAC Compliance · PRD §3.9 &amp; §3.18</div>
+          <h1 className="console-title">User Management &amp; Access Governance</h1>
           <p className="console-sub">
-            Granular access control across 10 staff roles, cryptographic audit logs, and GDPR customer data retention.
+            Monitor registered users, manage staff access roles, promote/demote accounts, and execute immutable audit records.
           </p>
         </div>
       </div>
@@ -173,10 +296,13 @@ export function SecurityGovernanceView({
         <button
           type="button"
           className={`tab-btn ${activeTab === "STAFF_RBAC" ? "active" : ""}`}
-          onClick={() => setActiveTab("STAFF_RBAC")}
+          onClick={() => {
+            setActiveTab("STAFF_RBAC");
+            setFilterType("ALL");
+          }}
           data-testid="tab-staff-rbac"
         >
-          👥 Staff Roles &amp; Access Control
+          👥 Registered Users &amp; Staff Access
         </button>
         <button
           type="button"
@@ -196,103 +322,261 @@ export function SecurityGovernanceView({
         </button>
       </div>
 
-      {/* Tab 1: Staff Roles & Access Control */}
+      {/* Tab 1: Registered Users & Staff Roles */}
       {activeTab === "STAFF_RBAC" && (
         <section className="staff-section" data-testid="staff-rbac-section">
-          {/* Controls */}
-          <div className="section-toolbar">
-            <div className="search-wrap">
+          {/* Controls & Filter Bar */}
+          <div className="section-toolbar" style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "10px" }}>
+            <div className="search-wrap" style={{ flex: "1 1 240px" }}>
               <span className="search-icon">🔍</span>
               <input
                 type="text"
                 className="search-input"
-                placeholder="Search staff by name, email, or role..."
+                placeholder="Search by name, email, phone, or role..."
                 value={staffSearch}
                 onChange={(e) => setStaffSearch(e.target.value)}
                 data-testid="staff-search-input"
               />
             </div>
-            <div className="staff-count font-mono">
-              Total Active Staff: <strong>{staffList.length}</strong>
+
+            {/* Filter by Type */}
+            <div style={{ display: "flex", gap: "6px" }}>
+              <button
+                type="button"
+                className={`filter-pill-btn ${filterType === "ALL" ? "filter-pill-active" : ""}`}
+                onClick={() => setFilterType("ALL")}
+              >
+                All Accounts ({staffList.length})
+              </button>
+              <button
+                type="button"
+                className={`filter-pill-btn ${filterType === "STAFF" ? "filter-pill-active" : ""}`}
+                onClick={() => setFilterType("STAFF")}
+              >
+                👑 Staff ({staffList.filter((s: any) => s.type !== "CUSTOMER").length})
+              </button>
+              <button
+                type="button"
+                className={`filter-pill-btn ${filterType === "CUSTOMER" ? "filter-pill-active" : ""}`}
+                onClick={() => setFilterType("CUSTOMER")}
+              >
+                👤 Customers ({staffList.filter((s: any) => s.type === "CUSTOMER").length})
+              </button>
             </div>
+
+            {/* Filter by Status */}
+            <select
+              className="action-select"
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              style={{
+                padding: "8px 12px",
+                borderRadius: "8px",
+                background: "#1e293b",
+                border: "1px solid #334155",
+                color: "#f8fafc",
+                fontSize: "12px",
+              }}
+            >
+              <option value="ALL">All Statuses</option>
+              <option value="ACTIVE">Active Only</option>
+              <option value="SUSPENDED">Suspended Only</option>
+            </select>
+
+            <button
+              type="button"
+              onClick={() => setIsAddUserOpen(true)}
+              style={{
+                padding: "9px 16px",
+                borderRadius: "8px",
+                background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
+                color: "#ffffff",
+                border: "none",
+                fontWeight: 700,
+                fontSize: "12px",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3)",
+              }}
+            >
+              ➕ Add Staff / User
+            </button>
           </div>
 
-          {/* Staff Table */}
+          {/* Users Table */}
           <div className="table-card">
-            <table className="staff-table">
-              <thead>
-                <tr>
-                  <th>Staff Member</th>
-                  <th>Assigned Location</th>
-                  <th>Assigned Roles (RBAC)</th>
-                  <th>2FA Status</th>
-                  <th>Last Active</th>
-                  <th className="th-actions">Governance Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredStaff.map((staff) => (
-                  <tr key={staff.id} data-testid={`staff-row-${staff.id}`}>
-                    <td>
-                      <div className="staff-profile-cell">
-                        <div className="staff-avatar">{staff.name.charAt(0)}</div>
-                        <div>
-                          <div className="staff-name font-bold">{staff.name}</div>
-                          <div className="staff-email font-mono">{staff.email}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <span className="location-pill">{staff.assignedLocation}</span>
-                    </td>
-                    <td>
-                      <div className="roles-stack">
-                        {staff.roles.map((r) => (
-                          <span
-                            key={r}
-                            className={`role-pill ${
-                              r === "SUPER_ADMIN" ? "role-super" : "role-standard"
-                            }`}
-                          >
-                            {r}
-                          </span>
-                        ))}
-                      </div>
-                    </td>
-                    <td>
-                      {staff.twoFactorEnabled ? (
-                        <span className="badge-2fa-active" data-testid={`2fa-active-${staff.id}`}>
-                          ✓ 2FA Active (TOTP)
-                        </span>
-                      ) : (
-                        <span className="badge-2fa-disabled">⚠️ 2FA Disabled</span>
-                      )}
-                    </td>
-                    <td className="font-mono text-muted">{staff.lastLoginAt}</td>
-                    <td className="td-actions">
-                      <div className="actions-cluster">
-                        <button
-                          type="button"
-                          className="btn-action btn-edit-role"
-                          onClick={() => setEditingStaff(staff)}
-                          data-testid={`btn-edit-role-${staff.id}`}
-                        >
-                          ✏️ Edit Roles
-                        </button>
-                        <button
-                          type="button"
-                          className="btn-action btn-reset-totp"
-                          onClick={() => setResettingTotpStaff(staff)}
-                          data-testid={`btn-reset-totp-${staff.id}`}
-                        >
-                          🔑 Reset 2FA
-                        </button>
-                      </div>
-                    </td>
+            {isLoadingUsers ? (
+              <div style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>
+                Loading registered users and access permissions...
+              </div>
+            ) : filteredUsers.length === 0 ? (
+              <div style={{ padding: "48px 24px", textAlign: "center", color: "#94a3b8" }}>
+                <div style={{ fontSize: "32px", marginBottom: "8px" }}>👥</div>
+                <div style={{ fontWeight: 700, fontSize: "15px", color: "#f8fafc" }}>No registered users found</div>
+                <p style={{ fontSize: "12px", margin: "6px 0 16px", color: "#64748b" }}>
+                  No accounts match your current filter. You can add a staff member or user above.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setIsAddUserOpen(true)}
+                  style={{
+                    padding: "8px 16px",
+                    borderRadius: "8px",
+                    background: "#3b82f6",
+                    color: "#ffffff",
+                    border: "none",
+                    fontWeight: 700,
+                    fontSize: "12px",
+                    cursor: "pointer",
+                  }}
+                >
+                  Create New Account
+                </button>
+              </div>
+            ) : (
+              <table className="staff-table">
+                <thead>
+                  <tr>
+                    <th>User &amp; Identity</th>
+                    <th>Contact &amp; Provider</th>
+                    <th>Type &amp; Status</th>
+                    <th>Assigned Roles (RBAC)</th>
+                    <th>2FA Status</th>
+                    <th>Registered</th>
+                    <th className="th-actions">Governance Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {filteredUsers.map((user: any) => (
+                    <tr key={user.id} data-testid={`staff-row-${user.id}`}>
+                      <td>
+                        <div className="staff-profile-cell">
+                          <div className="staff-avatar">{user.name?.charAt(0) || "U"}</div>
+                          <div>
+                            <div className="staff-name font-bold">{user.name}</div>
+                            <div className="staff-email font-mono">{user.email || "No email provided"}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                          <span className="font-mono text-sm" style={{ color: "#cbd5e1" }}>{user.phone || "—"}</span>
+                          <span
+                            style={{
+                              fontSize: "10px",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "4px",
+                              color: user.authProvider === "GOOGLE" ? "#60a5fa" : "#94a3b8",
+                            }}
+                          >
+                            {user.authProvider === "GOOGLE" ? "🌐 Google Auth" : user.authProvider === "PHONE_OTP" ? "📱 Phone OTP" : "🔑 Credentials"}
+                          </span>
+                        </div>
+                      </td>
+                      <td>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                          <span
+                            style={{
+                              fontSize: "10px",
+                              fontWeight: 800,
+                              textTransform: "uppercase",
+                              padding: "2px 6px",
+                              borderRadius: "4px",
+                              background: user.type === "STAFF" ? "rgba(245, 158, 11, 0.15)" : "rgba(100, 116, 139, 0.15)",
+                              color: user.type === "STAFF" ? "#fbbf24" : "#94a3b8",
+                              display: "inline-block",
+                              width: "fit-content",
+                            }}
+                          >
+                            {user.type === "STAFF" ? "👑 Staff" : "👤 Customer"}
+                          </span>
+                          <span
+                            style={{
+                              fontSize: "10px",
+                              fontWeight: 700,
+                              color: user.status === "ACTIVE" ? "#34d399" : "#f87171",
+                            }}
+                          >
+                            {user.status === "ACTIVE" ? "✓ Active" : "🚫 Suspended"}
+                          </span>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="roles-stack">
+                          {user.roles.map((r: string) => (
+                            <span
+                              key={r}
+                              className={`role-pill ${
+                                r === "SUPER_ADMIN" ? "role-super" : r === "CUSTOMER" ? "role-customer" : "role-standard"
+                              }`}
+                            >
+                              {r}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                      <td>
+                        {user.twoFactorEnabled ? (
+                          <span className="badge-2fa-active" data-testid={`2fa-active-${user.id}`}>
+                            ✓ 2FA Active
+                          </span>
+                        ) : (
+                          <span className="badge-2fa-disabled">⚠️ 2FA Disabled</span>
+                        )}
+                      </td>
+                      <td className="font-mono text-muted" style={{ fontSize: "11px" }}>
+                        {user.createdAt ? user.createdAt.slice(0, 10) : "—"}
+                      </td>
+                      <td className="td-actions">
+                        <div className="actions-cluster">
+                          <button
+                            type="button"
+                            className="btn-action btn-edit-role"
+                            onClick={() => setEditingStaff(user)}
+                            data-testid={`btn-edit-role-${user.id}`}
+                            title="Edit User Roles & Access Status"
+                          >
+                            ✏️ Edit Access
+                          </button>
+                          {user.roles.some((r: string) => r !== "CUSTOMER") && (
+                            <button
+                              type="button"
+                              className="btn-action btn-reset-totp"
+                              onClick={() => setResettingTotpStaff(user)}
+                              data-testid={`btn-reset-totp-${user.id}`}
+                              title="Reset Two-Factor Authentication"
+                            >
+                              🔑 Reset 2FA
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            className="btn-action btn-delete-user"
+                            onClick={() => setDeletingUser(user)}
+                            style={{
+                              padding: "6px 10px",
+                              borderRadius: "6px",
+                              background: "rgba(239, 68, 68, 0.12)",
+                              border: "1px solid rgba(239, 68, 68, 0.3)",
+                              color: "#f87171",
+                              fontSize: "11px",
+                              fontWeight: 700,
+                              cursor: "pointer",
+                            }}
+                            title="Delete User Account Permanently"
+                          >
+                            🗑️ Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </section>
       )}
@@ -485,6 +769,30 @@ export function SecurityGovernanceView({
           isOpen={true}
           onClose={() => setAnonymizingCustomer(null)}
           onConfirm={handleConfirmAnonymize}
+        />
+      )}
+
+      {deletingUser && (
+        <UserDeleteModal
+          user={deletingUser}
+          isOpen={true}
+          onClose={() => setDeletingUser(null)}
+          onConfirm={handleConfirmDeleteUser}
+        />
+      )}
+
+      {isAddUserOpen && (
+        <AddUserModal
+          isOpen={true}
+          onClose={() => setIsAddUserOpen(false)}
+          onCreated={(newUser) => {
+            fetchUsers();
+            addToast({
+              title: "Account Created",
+              description: `User account ${newUser.email || newUser.phone} created successfully.`,
+              variant: "success",
+            });
+          }}
         />
       )}
 
@@ -707,6 +1015,35 @@ export function SecurityGovernanceView({
         .role-standard {
           background: rgba(255, 255, 255, 0.08);
           color: #cbd5e1;
+        }
+
+        .role-customer {
+          background: rgba(148, 163, 184, 0.12);
+          color: #94a3b8;
+          border: 1px solid rgba(148, 163, 184, 0.25);
+        }
+
+        .filter-pill-btn {
+          padding: 6px 12px;
+          border-radius: 9999px;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          color: #94a3b8;
+          font-size: 11px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+
+        .filter-pill-btn:hover {
+          color: #f8fafc;
+          background: rgba(255, 255, 255, 0.1);
+        }
+
+        .filter-pill-active {
+          background: rgba(59, 130, 246, 0.2);
+          border-color: #3b82f6;
+          color: #60a5fa;
         }
 
         .badge-2fa-active {
