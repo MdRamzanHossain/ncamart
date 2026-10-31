@@ -1149,6 +1149,12 @@
       "namedRegex": "^/account/profile(?:/)?$"
     },
     {
+      "page": "/account/reset-password",
+      "regex": "^/account/reset\\-password(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/account/reset\\-password(?:/)?$"
+    },
+    {
       "page": "/account/wallet",
       "regex": "^/account/wallet(?:/)?$",
       "routeKeys": {},
@@ -1249,6 +1255,12 @@
       "regex": "^/auth/register(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/auth/register(?:/)?$"
+    },
+    {
+      "page": "/auth/reset-password",
+      "regex": "^/auth/reset\\-password(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/auth/reset\\-password(?:/)?$"
     },
     {
       "page": "/authenticity",
