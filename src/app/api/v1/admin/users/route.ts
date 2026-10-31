@@ -2,12 +2,10 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { withRoute } from "@/lib/http/route";
 import { db } from "@/lib/db";
-import { staff, customers, staffRoles } from "@/modules/identity/schema";
+import { customers } from "@/modules/identity/schema";
 import { staffAuthService } from "@/modules/identity/staffAuth";
-import { eq, or, ilike, sql, desc } from "drizzle-orm";
-import { STAFF_ROLES, StaffRole } from "@/modules/identity/permissions";
+import { desc } from "drizzle-orm";
 import { normalizeBdPhone } from "@/lib/phone";
-import { sha256Hex } from "@/lib/crypto";
 
 export const dynamic = "force-dynamic";
 

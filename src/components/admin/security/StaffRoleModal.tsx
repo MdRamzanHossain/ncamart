@@ -15,21 +15,23 @@ export interface StaffRoleModalProps {
 
 export function StaffRoleModal({
   staff,
-  allStaff,
+  allStaff = [],
   isOpen,
   onClose,
   onSave,
 }: StaffRoleModalProps) {
+  if (!isOpen || !staff) return null;
+
   const isInitiallyCustomer =
     staff.type === "CUSTOMER" ||
-    (staff.roles.length === 1 && staff.roles[0] === "CUSTOMER") ||
-    !staff.roles.some((r) => r !== "CUSTOMER");
+    (staff.roles && staff.roles.length === 1 && staff.roles[0] === "CUSTOMER") ||
+    !(staff.roles || []).some((r) => r !== "CUSTOMER");
 
   const [accountType, setAccountType] = useState<"CUSTOMER" | "STAFF">(
     isInitiallyCustomer ? "CUSTOMER" : "STAFF"
   );
 
-  const initialStaffRoles = staff.roles.filter((r) => r !== "CUSTOMER") as AdminRole[];
+  const initialStaffRoles = (staff.roles || []).filter((r) => r !== "CUSTOMER") as AdminRole[];
   const [selectedRoles, setSelectedRoles] = useState<AdminRole[]>(
     initialStaffRoles.length > 0 ? initialStaffRoles : ["SUPER_ADMIN"]
   );
@@ -39,12 +41,10 @@ export function StaffRoleModal({
   );
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  if (!isOpen) return null;
-
   // Last Super Admin Guard (DECISIONS.md #62 / PRD §3.9)
-  const isTargetSuperAdmin = staff.roles.includes("SUPER_ADMIN");
-  const totalSuperAdmins = allStaff.filter(
-    (s) => s.status === "ACTIVE" && s.roles.includes("SUPER_ADMIN")
+  const isTargetSuperAdmin = (staff.roles || []).includes("SUPER_ADMIN");
+  const totalSuperAdmins = (allStaff || []).filter(
+    (s) => s.status === "ACTIVE" && (s.roles || []).includes("SUPER_ADMIN")
   ).length;
 
   const toggleRole = (role: AdminRole) => {
@@ -103,7 +103,7 @@ export function StaffRoleModal({
         <div className="modal-header">
           <div>
             <div className="modal-pill">Access &amp; Roles Governance</div>
-            <h2 className="modal-title">Edit User Access &amp; Roles</h2>
+            <h2 className="modal-title">Edit Staff Roles &amp; Permissions</h2>
             <p className="modal-sub">
               Configuring account for <strong>{staff.name}</strong> ({staff.email})
             </p>

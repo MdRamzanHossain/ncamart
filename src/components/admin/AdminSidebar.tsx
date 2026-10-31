@@ -7,8 +7,8 @@ import type { AdminRole, AdminNavSection, StaffAdminProfile } from "./types";
 
 export const DEFAULT_ADMIN_STAFF: StaffAdminProfile = {
   id: "STAFF-001",
-  name: "SuperAdmin",
-  email: "admin@ncamart.com",
+  name: "Engr. Mahmudul Hasan",
+  email: "mahmudul@ncamart.com",
   roles: [
     "SUPER_ADMIN",
   ],

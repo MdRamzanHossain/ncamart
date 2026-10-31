@@ -25,7 +25,7 @@ export function TotpResetModal({
 
   const { addToast } = useToast();
 
-  if (!isOpen) return null;
+  if (!isOpen || !staff) return null;
 
   const handleCopy = () => {
     if (typeof navigator !== "undefined" && navigator.clipboard) {

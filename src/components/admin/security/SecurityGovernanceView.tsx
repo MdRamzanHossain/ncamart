@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import type { StaffUser, AuditLogEntry, CustomerPiiRecord, AuditActionType } from "./types";
-import { MOCK_AUDIT_LOGS, MOCK_CUSTOMERS_PII } from "./mockData";
+import { MOCK_STAFF_MEMBERS, MOCK_AUDIT_LOGS, MOCK_CUSTOMERS_PII } from "./mockData";
 import { StaffRoleModal } from "./StaffRoleModal";
 import { TotpResetModal } from "./TotpResetModal";
 import { AuditLogDiffViewer } from "./AuditLogDiffViewer";
@@ -20,9 +20,9 @@ export function SecurityGovernanceView({
   initialTab = "STAFF_RBAC",
 }: SecurityGovernanceViewProps = {}) {
   const [activeTab, setActiveTab] = useState<"STAFF_RBAC" | "AUDIT_LOGS" | "DATA_PRIVACY">(initialTab);
-  const [staffList, setStaffList] = useState<StaffUser[]>([]);
+  const [staffList, setStaffList] = useState<StaffUser[]>(MOCK_STAFF_MEMBERS);
   const [usersList, setUsersList] = useState<any[]>([]);
-  const [isLoadingUsers, setIsLoadingUsers] = useState<boolean>(true);
+  const [isLoadingUsers, setIsLoadingUsers] = useState<boolean>(false);
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>(MOCK_AUDIT_LOGS);
   const [customersPii, setCustomersPii] = useState<CustomerPiiRecord[]>(MOCK_CUSTOMERS_PII);
 
@@ -294,10 +294,10 @@ export function SecurityGovernanceView({
       {/* Header */}
       <div className="console-header">
         <div>
-          <div className="header-pill">Security, Users &amp; RBAC Compliance · PRD §3.9 &amp; §3.18</div>
-          <h1 className="console-title">User Management &amp; Access Governance</h1>
+          <div className="header-pill">Security, RBAC &amp; Compliance · PRD §3.9 &amp; §3.18</div>
+          <h1 className="console-title">Staff Governance &amp; Immutable Audit Trail</h1>
           <p className="console-sub">
-            Monitor registered users, manage staff access roles, promote/demote accounts, and execute immutable audit records.
+            Monitor registered users and staff, manage access roles, and execute immutable audit records.
           </p>
         </div>
       </div>

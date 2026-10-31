@@ -1,8 +1,8 @@
 # NCAMart REST API Specification & Endpoint Reference
 
 **Document Version:** 2.0.0 (OpenAPI 3.1 Synchronized)  
-**Last Generated:** 2026-10-27T13:05:10.324Z  
-**Total Active Endpoints:** 266  
+**Last Generated:** 2026-10-31T07:24:58.324Z  
+**Total Active Endpoints:** 286  
 **Source of Truth:** `docs/openapi.json` (Generated via `pnpm openapi:generate`)  
 
 ## 1. Global Architectural Invariants
@@ -18,7 +18,7 @@
 
 ## 2. Active Endpoints Directory
 
-### Admin & Governance (114 endpoints)
+### Admin & Governance (122 endpoints)
 
 | Method | Path | Auth / Permission | Idempotent? | Rate Limit | Description |
 | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -109,6 +109,8 @@
 | `POST  ` | `/api/v1/admin/security/clone-alerts/{id}/resolve` | STAFF | - | - | Create Resolve |
 | `GET   ` | `/api/v1/admin/settings/{key}` | STAFF (`settings.manage`) | - | - | Get By ID |
 | `PUT   ` | `/api/v1/admin/settings/{key}` | STAFF (`settings.manage`) | - | - | Update {key} |
+| `GET   ` | `/api/v1/admin/settings/google-auth` | STAFF | - | - | Get Google Auth |
+| `POST  ` | `/api/v1/admin/settings/google-auth` | STAFF | - | - | Create Google Auth |
 | `GET   ` | `/api/v1/admin/sourcing/purchases` | STAFF | - | - | Get Purchases |
 | `POST  ` | `/api/v1/admin/sourcing/purchases/{id}/approve` | STAFF | - | - | Approve Resource |
 | `GET   ` | `/api/v1/admin/sourcing/quarantine` | STAFF (`sourcing.quarantine.review`) | - | - | Get Quarantine |
@@ -121,6 +123,7 @@
 | `POST  ` | `/api/v1/admin/sourcing/tasks/{taskId}/override-decision` | STAFF | - | - | Create Override Decision |
 | `GET   ` | `/api/v1/admin/staff` | STAFF (`staff.manage`) | - | - | Get Staff |
 | `POST  ` | `/api/v1/admin/staff` | STAFF (`staff.manage`) | - | - | Create Staff |
+| `DELETE` | `/api/v1/admin/staff/{id}` | STAFF (`staff.manage`) | - | - | Delete {id} |
 | `GET   ` | `/api/v1/admin/staff/{id}` | STAFF (`staff.manage`) | - | - | Get By ID |
 | `PUT   ` | `/api/v1/admin/staff/{id}` | STAFF (`staff.manage`) | - | - | Update {id} |
 | `POST  ` | `/api/v1/admin/staff/{id}/reset-password` | STAFF (`staff.manage`) | - | - | Create Reset Password |
@@ -136,6 +139,11 @@
 | `GET   ` | `/api/v1/admin/support/tasks` | STAFF (`support.manage`) | - | - | Get Tasks |
 | `POST  ` | `/api/v1/admin/support/tasks/{id}/assign` | STAFF (`support.manage`) | - | - | Create Assign |
 | `POST  ` | `/api/v1/admin/support/tasks/{id}/complete` | STAFF (`support.manage`) | - | - | Create Complete |
+| `GET   ` | `/api/v1/admin/users` | STAFF (`staff.manage`) | - | - | Get Users |
+| `POST  ` | `/api/v1/admin/users` | STAFF (`staff.manage`) | - | - | Create Users |
+| `DELETE` | `/api/v1/admin/users/{id}` | STAFF (`staff.manage`) | - | - | Delete {id} |
+| `GET   ` | `/api/v1/admin/users/{id}` | STAFF (`staff.manage`) | - | - | Get By ID |
+| `PUT   ` | `/api/v1/admin/users/{id}` | STAFF (`staff.manage`) | - | - | Update {id} |
 
 ### Analytics & Feeds (1 endpoints)
 
@@ -143,16 +151,26 @@
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | `POST  ` | `/api/v1/analytics/events` | PUBLIC | - | - | Create Events |
 
-### Authentication & Identity (9 endpoints)
+### Authentication & Identity (19 endpoints)
 
 | Method | Path | Auth / Permission | Idempotent? | Rate Limit | Description |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| `GET   ` | `/api/v1/auth/google` | PUBLIC | - | - | Get Google |
+| `GET   ` | `/api/v1/auth/google/callback` | PUBLIC | - | - | Get Callback |
+| `GET   ` | `/api/v1/auth/google/config` | PUBLIC | - | - | Get Config |
+| `POST  ` | `/api/v1/auth/google/totp` | PUBLIC | - | - | Create Totp |
+| `POST  ` | `/api/v1/auth/google/verify` | PUBLIC | - | 5/min per device, 60/min per IP | Verify Google |
+| `POST  ` | `/api/v1/auth/login` | PUBLIC | - | - | Staff Login Auth |
 | `POST  ` | `/api/v1/auth/logout` | ANY | - | - | Logout Session Auth |
 | `POST  ` | `/api/v1/auth/otp/send` | PUBLIC | - | 3/10m per phone, 20/hr per IP | Send Otp |
 | `POST  ` | `/api/v1/auth/otp/verify` | PUBLIC | - | 5/min per device, 60/min per IP | Verify Otp |
+| `POST  ` | `/api/v1/auth/register` | PUBLIC | - | - | Create Register |
 | `GET   ` | `/api/v1/auth/sessions` | CUSTOMER | - | - | Get Sessions |
 | `DELETE` | `/api/v1/auth/sessions/{id}` | CUSTOMER | - | - | Delete {id} |
 | `POST  ` | `/api/v1/auth/staff/login` | PUBLIC | - | - | Staff Login Staff |
+| `GET   ` | `/api/v1/auth/staff/me` | STAFF | - | - | Get Me |
+| `PATCH ` | `/api/v1/auth/staff/me` | STAFF | - | - | PATCH /api/v1/auth/staff/me |
+| `POST  ` | `/api/v1/auth/staff/me` | STAFF | - | - | Create Me |
 | `POST  ` | `/api/v1/auth/staff/password/change` | STAFF | - | - | Change Password |
 | `POST  ` | `/api/v1/auth/staff/totp/confirm` | PUBLIC | - | - | Confirm Totp |
 | `POST  ` | `/api/v1/auth/staff/totp/enroll` | PUBLIC | - | - | Enroll Totp |
@@ -289,11 +307,13 @@
 | `GET   ` | `/feeds/google.xml` | PUBLIC | - | - | Get Google.xml |
 | `GET   ` | `/feeds/meta.csv` | PUBLIC | - | - | Get Meta.csv |
 
-### Media & Uploads (5 endpoints)
+### Media & Uploads (7 endpoints)
 
 | Method | Path | Auth / Permission | Idempotent? | Rate Limit | Description |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | `GET   ` | `/api/v1/media/{id}/url` | PUBLIC | - | - | Get Url |
+| `GET   ` | `/api/v1/media/local-upload` | PUBLIC | - | - | Get Local Upload |
+| `PUT   ` | `/api/v1/media/local-upload` | PUBLIC | - | - | Update Local Upload |
 | `POST  ` | `/api/v1/media/uploads` | ANY | - | - | Create Uploads |
 | `POST  ` | `/api/v1/media/uploads/{id}/abort` | ANY | - | - | Create Abort |
 | `POST  ` | `/api/v1/media/uploads/{id}/complete` | ANY | - | - | Create Complete |

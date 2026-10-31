@@ -6,7 +6,7 @@ import { staff, customers, staffRoles } from "@/modules/identity/schema";
 import { staffAuthService } from "@/modules/identity/staffAuth";
 import { adminCustomerService } from "@/modules/identity/adminCustomerService";
 import { STAFF_ROLES, StaffRole } from "@/modules/identity/permissions";
-import { eq, or, ilike, sql } from "drizzle-orm";
+import { eq, or, ilike } from "drizzle-orm";
 import { normalizeBdPhone } from "@/lib/phone";
 import argon2 from "argon2";
 
@@ -184,7 +184,9 @@ export const PUT = withRoute(
         if (staffMatches[0]) {
           staffRecord = await staffAuthService.getStaffById(staffMatches[0].id);
         }
-      } catch {}
+      } catch (_err) {
+        // ignore
+      }
     }
 
     if (!staffRecord && !custRow) {
@@ -360,7 +362,9 @@ export const PUT = withRoute(
               updatedAt: new Date(),
             })
             .where(eq(customers.id, custRow.id));
-        } catch {}
+        } catch (_err) {
+          // ignore
+        }
       } else {
         try {
           await db
@@ -372,7 +376,9 @@ export const PUT = withRoute(
               status: custStatus as any,
             })
             .onConflictDoNothing();
-        } catch {}
+        } catch (_err) {
+          // ignore
+        }
       }
 
       return NextResponse.json({
@@ -398,7 +404,9 @@ export const PUT = withRoute(
           .update(staff)
           .set({ status: targetStatus, updatedAt: new Date() })
           .where(eq(staff.id, staffRecord.id as any));
-      } catch {}
+      } catch (_err) {
+        // ignore
+      }
     }
 
     if (custRow) {
@@ -410,7 +418,9 @@ export const PUT = withRoute(
             updatedAt: new Date(),
           })
           .where(eq(customers.id, custRow.id));
-      } catch {}
+      } catch (_err) {
+        // ignore
+      }
     }
 
     return NextResponse.json({
@@ -449,7 +459,9 @@ export const DELETE = withRoute(
     let staffUser: any = null;
     try {
       staffUser = await staffAuthService.getStaffById(params.id);
-    } catch {}
+    } catch (_err) {
+      // ignore
+    }
 
     if (!staffUser) {
       try {
@@ -466,7 +478,9 @@ export const DELETE = withRoute(
             staffId = s[0].id;
           }
         }
-      } catch {}
+      } catch (_err) {
+        // ignore
+      }
     }
 
     if (staffUser) {
@@ -485,7 +499,9 @@ export const DELETE = withRoute(
     // Also delete from customers
     try {
       await adminCustomerService.deleteCustomer(params.id, actor!);
-    } catch {}
+    } catch (_err) {
+      // ignore
+    }
 
     return NextResponse.json({
       success: true,
