@@ -265,6 +265,33 @@ Any AI model or developer continuing work from another machine **must strictly r
      - Created `src/app/api/v1/auth/google/__tests__/googleAuth.test.ts` verifying instant 302 redirect and cached config endpoints.
      - 100% pass across all unit tests and 0 ESLint errors.
 
+### Phase 13: Storefront Console Error Elimination & Admin Queues Health Resiliency
+- **Problems Fixed:**
+  1. Storefront homepage console was inundated with continuous errors:
+     - `GET /favicon.ico 404 (Not Found)`
+     - `GET /api/v1/customer/profile 401 (Unauthorized)`
+     - `GET /api/v1/auth/staff/me 401 (Unauthorized)`
+     - Repeating infinite loop: `GET /api/v1/events/stream?channel=all-staff 401 (Unauthorized)`
+  2. Navigating to `/admin/queues` ("System Health & Queues") returned `500 Internal server error` (`ERR_INTERNAL`) with raw JSON on screen instead of the dashboard.
+- **Root Causes Discovered & Solutions Implemented:**
+  1. **Favicon Missing (404 Error):**
+     - `public/favicon.ico` was missing from the repository root. Created authentic 32x32 multi-depth Windows binary icon `public/favicon.ico` and vector `public/favicon.svg` with NCAMart brand gradient and bold "N" glyph.
+  2. **Endless SSE 401 Reconnect Loop:**
+     - `Navbar.tsx` mounted `<NotificationDrawer />` across all public pages, which unconditionally initialized `useRealtimeEvents("all-staff")`. Since the endpoint enforces `auth: "staff"`, guest visitors were rejected with 401, triggering `EventSource` to reconnect in an infinite loop.
+     - Solution: Updated `NotificationDrawer.tsx` to conditionally pass `"all-staff"` only when `user?.isStaff` is true (`null` for guests/customers).
+     - Enhanced `src/hooks/useRealtimeEvents.ts` to abort reconnect attempts immediately upon unauthorized/forbidden (401/403) responses or after 2 consecutive errors.
+  3. **Guest Session Auth Probing:**
+     - On page mount, `AuthContext.tsx` blindly dispatched HTTP requests to both `/api/v1/customer/profile` and `/api/v1/auth/staff/me` even for first-time guest visitors without cookies or tokens.
+     - Solution: `refreshSession` now checks for stored profile/token/session hints before dispatching network requests, and prioritizes checking staff vs customer based on cached state, keeping DevTools console completely clean.
+  4. **Admin Queues 500 Crash Resiliency (`/admin/queues`):**
+     - When Redis is offline, unconfigured, or idle on shared cPanel hosting, `q.getJobCounts()` threw unhandled `ECONNREFUSED` / timeout errors that bubbled up to `withRoute`, producing HTTP 500.
+     - Solution: Wrapped `q.getJobCounts()` in `try...catch` with a 1.2-second timeout fallback. If Redis is unreachable, it logs a clean warning and falls back to safe in-memory metrics without crashing.
+     - Enhanced HTML dashboard with dark-mode status cards, real-time live/fallback badges, system telemetry, and a navigation link back to the Admin Console.
+- **Verification:**
+  - `src/modules/identity/__tests__/admin-and-compliance.test.ts` (12 tests) 100% pass.
+  - `src/app/api/v1/auth/google/__tests__/googleAuth.test.ts` (2 tests) 100% pass.
+  - Zero ESLint errors across all modified files.
+
 ---
 
 ## 4. Key Database Tables & Relations Map

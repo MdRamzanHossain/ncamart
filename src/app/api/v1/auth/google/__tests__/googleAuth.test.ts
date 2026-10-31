@@ -33,3 +33,4 @@ describe("Google OAuth Fast Path & Configuration", () => {
     expect(res.headers.get("cache-control")).toContain("public");
   });
 });
+

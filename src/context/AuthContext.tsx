@@ -70,6 +70,58 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshSession = useCallback(async () => {
     setIsLoading(true);
     try {
+      let isStaffHint = false;
+
+      if (typeof window !== "undefined") {
+        const storedUser = localStorage.getItem("nca_user");
+        const storedToken = localStorage.getItem("nca_token");
+        const cookieStr = typeof document !== "undefined" ? document.cookie : "";
+        const hasSessionHint =
+          cookieStr.includes("nca_auth_sync") ||
+          cookieStr.includes("nca_session_hint") ||
+          cookieStr.includes("nca_sid");
+
+        // If guest without any token, stored user, or session hint, skip blind 401 calls
+        if (!storedUser && !storedToken && !hasSessionHint) {
+          setUser(null);
+          setIsLoading(false);
+          return;
+        }
+
+        if (storedUser) {
+          try {
+            const parsed = JSON.parse(storedUser);
+            if (parsed?.isStaff) {
+              isStaffHint = true;
+            }
+          } catch {
+            // parse error fallback
+          }
+        }
+      }
+
+      // If user profile indicates staff, verify staff session first
+      if (isStaffHint) {
+        const staffRes = await api
+          .get<{ staff?: { id: string; name?: string; full_name?: string; email?: string; phone?: string; roles?: string[] } }>("/api/v1/auth/staff/me")
+          .catch(() => null);
+        if (staffRes?.staff?.id) {
+          const profile: UserProfile = {
+            id: staffRes.staff.id,
+            name: staffRes.staff.name || staffRes.staff.full_name || "Staff",
+            email: staffRes.staff.email,
+            phone: staffRes.staff.phone,
+            role: staffRes.staff.roles?.[0],
+            isStaff: true,
+          };
+          setUser(profile);
+          if (typeof window !== "undefined") {
+            localStorage.setItem("nca_user", JSON.stringify(profile));
+          }
+          return;
+        }
+      }
+
       // 1. Try customer profile API
       const customerRes = await api
         .get<{ id: string; phone: string; full_name?: string | null; email?: string | null }>("/api/v1/customer/profile")
@@ -89,24 +141,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // 2. Try staff/me API
-      const staffRes = await api
-        .get<{ staff?: { id: string; name?: string; full_name?: string; email?: string; phone?: string; roles?: string[] } }>("/api/v1/auth/staff/me")
-        .catch(() => null);
-      if (staffRes?.staff?.id) {
-        const profile: UserProfile = {
-          id: staffRes.staff.id,
-          name: staffRes.staff.name || staffRes.staff.full_name || "Staff",
-          email: staffRes.staff.email,
-          phone: staffRes.staff.phone,
-          role: staffRes.staff.roles?.[0],
-          isStaff: true,
-        };
-        setUser(profile);
-        if (typeof window !== "undefined") {
-          localStorage.setItem("nca_user", JSON.stringify(profile));
+      // 2. Try staff/me API (if not already verified above)
+      if (!isStaffHint) {
+        const staffRes = await api
+          .get<{ staff?: { id: string; name?: string; full_name?: string; email?: string; phone?: string; roles?: string[] } }>("/api/v1/auth/staff/me")
+          .catch(() => null);
+        if (staffRes?.staff?.id) {
+          const profile: UserProfile = {
+            id: staffRes.staff.id,
+            name: staffRes.staff.name || staffRes.staff.full_name || "Staff",
+            email: staffRes.staff.email,
+            phone: staffRes.staff.phone,
+            role: staffRes.staff.roles?.[0],
+            isStaff: true,
+          };
+          setUser(profile);
+          if (typeof window !== "undefined") {
+            localStorage.setItem("nca_user", JSON.stringify(profile));
+          }
+          return;
         }
-        return;
       }
 
       // 3. No active server session found - clear stale local credentials

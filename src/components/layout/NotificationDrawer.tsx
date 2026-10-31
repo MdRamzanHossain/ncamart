@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Drawer } from "@/components/ui/drawer";
 import { Badge } from "@/components/ui/badge";
 import { useRealtimeEvents, RealtimeEventPayload } from "@/hooks/useRealtimeEvents";
+import { useAuth } from "@/context/AuthContext";
 
 export interface NotificationItem {
   id: string;
@@ -56,8 +57,11 @@ export function NotificationDrawer({
 }) {
   const [notifications, setNotifications] = useState<NotificationItem[]>(INITIAL_NOTIFICATIONS);
   const [activeTab, setActiveTab] = useState<"ALL" | "CLASS_A" | "CLASS_B" | "CLASS_C">("ALL");
+  const { user } = useAuth();
 
-  const { addListener } = useRealtimeEvents("all-staff");
+  // Only subscribe to staff SSE channel if authenticated as a staff member
+  const staffChannel = user && user.isStaff ? "all-staff" : null;
+  const { addListener } = useRealtimeEvents(staffChannel);
 
   // Listen to incoming SSE realtime events and dynamically insert new notifications
   useEffect(() => {
