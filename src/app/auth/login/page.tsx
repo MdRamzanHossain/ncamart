@@ -148,10 +148,50 @@ function LoginContent() {
 
   // System & Loading State
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRedirectingGoogle, setIsRedirectingGoogle] = useState(false);
+  const [googleClientId, setGoogleClientId] = useState<string>(() => {
+    return process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
+  });
   const [isSuccess, setIsSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const identifierInputRef = useRef<HTMLInputElement>(null);
+
+  // Preconnect to Google accounts for zero-latency network connection
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      const link1 = document.createElement("link");
+      link1.rel = "preconnect";
+      link1.href = "https://accounts.google.com";
+      document.head.appendChild(link1);
+
+      const link2 = document.createElement("link");
+      link2.rel = "dns-prefetch";
+      link2.href = "https://accounts.google.com";
+      document.head.appendChild(link2);
+    }
+
+    if (!googleClientId) {
+      try {
+        const cached = sessionStorage.getItem("nca_google_client_id");
+        if (cached) {
+          setGoogleClientId(cached);
+        } else {
+          fetch("/api/v1/auth/google/config")
+            .then((res) => (res.ok ? res.json() : null))
+            .then((data) => {
+              if (data?.client_id) {
+                setGoogleClientId(data.client_id);
+                sessionStorage.setItem("nca_google_client_id", data.client_id);
+              }
+            })
+            .catch(() => {});
+        }
+      } catch {
+        // Safe fallback
+      }
+    }
+  }, [googleClientId]);
 
   // Load saved remember me identifier on mount & process OAuth URL errors/2FA prompts
   useEffect(() => {
@@ -277,12 +317,47 @@ function LoginContent() {
     }
   };
 
-  // Handle Google Sign-In (Direct OAuth 2.0 Authorization Code Flow)
+  // Handle Google Sign-In with INSTANT Client-Side Direct Redirection
   const handleGoogleClick = () => {
     setIsSubmitting(true);
+    setIsRedirectingGoogle(true);
     setErrorMessage(null);
-    const target = redirectParam ? `?redirect=${encodeURIComponent(redirectParam)}` : "";
-    window.location.href = `/api/v1/auth/google${target}`;
+
+    const target = redirectParam || "";
+
+    // 1. Instant direct client-side redirect to Google if client ID is loaded (0 ms server latency)
+    const effectiveClientId = googleClientId || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    if (effectiveClientId) {
+      try {
+        const statePayload = JSON.stringify({
+          redirect: target,
+          ts: Date.now(),
+        });
+        const state = btoa(statePayload)
+          .replace(/\+/g, "-")
+          .replace(/\//g, "_")
+          .replace(/=+$/, "");
+        const redirectUri = `${window.location.origin}/api/v1/auth/google/callback`;
+
+        const googleAuthUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
+        googleAuthUrl.searchParams.set("client_id", effectiveClientId);
+        googleAuthUrl.searchParams.set("redirect_uri", redirectUri);
+        googleAuthUrl.searchParams.set("response_type", "code");
+        googleAuthUrl.searchParams.set("scope", "openid email profile");
+        googleAuthUrl.searchParams.set("access_type", "online");
+        googleAuthUrl.searchParams.set("prompt", "select_account");
+        googleAuthUrl.searchParams.set("state", state);
+
+        window.location.href = googleAuthUrl.toString();
+        return;
+      } catch {
+        // Fallback below
+      }
+    }
+
+    // 2. Fallback through backend route if client ID is resolving
+    const query = target ? `?redirect=${encodeURIComponent(target)}` : "";
+    window.location.href = `/api/v1/auth/google${query}`;
   };
 
   // Customer Mobile OTP Fallback
@@ -722,7 +797,7 @@ function LoginContent() {
                     d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.36 0 3.26 2.64 1.26 6.59l4.02 3.09c.95-2.83 3.6-4.93 6.72-4.93z"
                   />
                 </svg>
-                <span>Continue with Google</span>
+                <span>{isRedirectingGoogle ? "Connecting to Google..." : "Continue with Google"}</span>
               </button>
 
               {/* Customer Mobile SMS OTP Alternative Link */}

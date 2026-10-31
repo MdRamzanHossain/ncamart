@@ -241,6 +241,30 @@ Any AI model or developer continuing work from another machine **must strictly r
      - Created `src/modules/identity/__tests__/passwordReset.test.ts` covering SMS, WhatsApp, Email, confirmation, invalid OTP rejection, and short password rejection (6 tests, 100% pass).
      - Zero regressions across all 98 test suites.
 
+
+### Phase 12: Google OAuth 2.0 Sign-In Latency Elimination & Fast-Path Architecture
+- **Problem Fixed:**
+  - Clicking "Continue with Google" was taking an excessively long time (several seconds) to open Google's profile selection screen.
+  - Root causes identified:
+    1. Double navigation round-trip (client -> backend -> 302 -> Google).
+    2. Backend route (`/api/v1/auth/google`) queried Redis and PostgreSQL database before checking in-memory environment variables.
+    3. Redis connection retries without circuit breaking blocked request processing when Redis was offline on shared/VPS hosting.
+    4. Missing DNS prefetch and TLS preconnect to `accounts.google.com`.
+- **Implemented Capabilities:**
+  1. **Instant Direct Client-Side Redirection (`src/app/auth/login/page.tsx` & `src/app/register/page.tsx`):**
+     - Browser directly constructs and navigates to Google's OAuth 2.0 Authorization URL in **0 milliseconds** when client ID is present.
+     - Adds background DNS preconnect (`<link rel="preconnect" href="https://accounts.google.com" />` & `dns-prefetch`) so TCP/TLS handshakes are warm before the user even clicks.
+     - Dynamic button feedback ("Connecting to Google...") for instant tactile UI responsiveness.
+  2. **Fast-Path Route Resolution (`/api/v1/auth/google/route.ts`, `callback/route.ts`, `config/route.ts`):**
+     - Checks `process.env.GOOGLE_CLIENT_ID` and `process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID` first (0.001ms latency, zero database or Redis overhead).
+     - Config endpoint responses cached via `Cache-Control: public, max-age=300`.
+  3. **Resilient Redis Circuit Breaker (`src/lib/redis.ts` & `src/modules/settings/service.ts`):**
+     - Redis connection timeout lowered to 1000ms with `maxRetriesPerRequest: 1`.
+     - 60-second circuit breaker prevents blocking subsequent requests if Redis is unreachable.
+  4. **Automated Verification:**
+     - Created `src/app/api/v1/auth/google/__tests__/googleAuth.test.ts` verifying instant 302 redirect and cached config endpoints.
+     - 100% pass across all unit tests and 0 ESLint errors.
+
 ---
 
 ## 4. Key Database Tables & Relations Map

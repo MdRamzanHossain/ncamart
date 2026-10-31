@@ -5,31 +5,24 @@ export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   try {
-    let clientId = "";
-    let enabled = false;
+    // 1. Fast path: Check Environment Variables first (0 ms, zero DB / Redis latency)
+    let clientId =
+      process.env.GOOGLE_CLIENT_ID?.trim() ||
+      process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim() ||
+      "";
+    let enabled = Boolean(clientId);
     let redirectUri = "";
 
-    // 1. Try reading from Database Settings
-    try {
-      const config = await settingsService.get("GOOGLE_AUTH_CONFIG");
-      clientId = config.clientId?.trim() || "";
-      enabled = Boolean(config.enabled);
-      redirectUri = config.redirectUri?.trim() || "";
-    } catch {
-      // Fallback if settings query fails
-    }
-
-    // 2. Fallback to Environment Variables if DB empty or client ID exists
+    // 2. If not found in env, check Database Settings
     if (!clientId) {
-      clientId =
-        process.env.GOOGLE_CLIENT_ID?.trim() ||
-        process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim() ||
-        "";
-    }
-
-    if (clientId) {
-      // Auto-enable if client ID is configured
-      enabled = true;
+      try {
+        const config = await settingsService.get("GOOGLE_AUTH_CONFIG");
+        clientId = config.clientId?.trim() || "";
+        enabled = Boolean(config.enabled && clientId);
+        redirectUri = config.redirectUri?.trim() || "";
+      } catch {
+        // Fallback if settings query fails
+      }
     }
 
     // If still not configured or disabled
@@ -67,11 +60,12 @@ export async function GET(req: NextRequest) {
     googleAuthUrl.searchParams.set("prompt", "select_account");
     googleAuthUrl.searchParams.set("state", state);
 
-    return NextResponse.redirect(googleAuthUrl.toString(), 302);
+    const res = NextResponse.redirect(googleAuthUrl.toString(), 302);
+    res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
+    return res;
   } catch (err) {
     const origin = req.nextUrl.origin;
     const msg = err instanceof Error ? encodeURIComponent(err.message) : "oauth_init_failed";
     return NextResponse.redirect(new URL(`/auth/login?error=${msg}`, origin));
   }
 }
-

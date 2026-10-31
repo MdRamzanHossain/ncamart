@@ -20,6 +20,7 @@ interface CacheEntry {
   expiresAt: number;
 }
 const memSettingsCache = new Map<string, CacheEntry>();
+let redisDisabledUntil = 0;
 
 export const settingsService = {
   /**
@@ -36,8 +37,8 @@ export const settingsService = {
       return memCached.value as SettingValue<K>;
     }
 
-    // 2. Check Redis cache if not in mock mode
-    if (!env.MOCK_EXTERNAL_SERVICES) {
+    // 2. Check Redis cache if not in mock mode and circuit breaker open
+    if (!env.MOCK_EXTERNAL_SERVICES && process.env.NODE_ENV !== "test" && now >= redisDisabledUntil) {
       try {
         const redis = getRedis();
         const cachedRaw = await redis.get(cacheKey);
@@ -48,6 +49,7 @@ export const settingsService = {
           return validated as SettingValue<K>;
         }
       } catch (err) {
+        redisDisabledUntil = now + 60000; // Trip circuit breaker for 60s on failure
         logger.warn({ err, key }, "Redis settings cache lookup failed, falling back to DB");
       }
     }
@@ -83,12 +85,12 @@ export const settingsService = {
       expiresAt: now + CACHE_TTL_SECONDS * 1000,
     });
 
-    if (!env.MOCK_EXTERNAL_SERVICES) {
+    if (!env.MOCK_EXTERNAL_SERVICES && process.env.NODE_ENV !== "test" && now >= redisDisabledUntil) {
       try {
         const redis = getRedis();
         await redis.set(cacheKey, JSON.stringify(validated), "EX", CACHE_TTL_SECONDS);
       } catch {
-        // Ignored
+        redisDisabledUntil = now + 60000;
       }
     }
 
@@ -139,12 +141,12 @@ export const settingsService = {
     });
 
     // Update Redis cache
-    if (!env.MOCK_EXTERNAL_SERVICES) {
+    if (!env.MOCK_EXTERNAL_SERVICES && process.env.NODE_ENV !== "test" && now >= redisDisabledUntil) {
       try {
         const redis = getRedis();
         await redis.set(cacheKey, JSON.stringify(validated), "EX", CACHE_TTL_SECONDS);
       } catch {
-        // Ignored
+        redisDisabledUntil = now + 60000;
       }
     }
   },

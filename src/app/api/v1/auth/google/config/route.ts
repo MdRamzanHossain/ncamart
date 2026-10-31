@@ -9,26 +9,22 @@ export const GET = withRoute(
     auth: "public",
   },
   async () => {
-    let enabled = false;
-    let clientId = "";
+    let clientId =
+      process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim() ||
+      process.env.GOOGLE_CLIENT_ID?.trim() ||
+      "";
+    let enabled = Boolean(clientId);
     let redirectUri = "";
 
-    try {
-      const config = await settingsService.get("GOOGLE_AUTH_CONFIG");
-      clientId = config.clientId?.trim() || "";
-      enabled = Boolean(config.enabled && clientId);
-      redirectUri = config.redirectUri?.trim() || "";
-    } catch {
-      // DB settings fallback
-    }
-
+    // If not found in environment, query settings
     if (!clientId) {
-      clientId =
-        process.env.GOOGLE_CLIENT_ID?.trim() ||
-        process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim() ||
-        "";
-      if (clientId) {
-        enabled = true;
+      try {
+        const config = await settingsService.get("GOOGLE_AUTH_CONFIG");
+        clientId = config.clientId?.trim() || "";
+        enabled = Boolean(config.enabled && clientId);
+        redirectUri = config.redirectUri?.trim() || "";
+      } catch {
+        // DB settings fallback
       }
     }
 
@@ -41,7 +37,8 @@ export const GET = withRoute(
       { status: 200 }
     );
 
-    response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+    // Cache config for 5 minutes so subsequent frontend visits are instant
+    response.headers.set("Cache-Control", "public, max-age=300, stale-while-revalidate=600");
     return response;
   }
 );

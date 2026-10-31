@@ -9,11 +9,14 @@ const globalForRedis = globalThis as unknown as {
 };
 
 const defaultOptions: RedisOptions = {
-  maxRetriesPerRequest: 3,
-  enableReadyCheck: true,
+  maxRetriesPerRequest: 1,
+  enableReadyCheck: false,
   lazyConnect: true,
+  connectTimeout: 1000,
+  commandTimeout: 1500,
   retryStrategy(times) {
-    const delay = Math.min(times * 100, 3000);
+    if (times > 2) return null;
+    const delay = Math.min(times * 100, 1000);
     return delay;
   },
 };

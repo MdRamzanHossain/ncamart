@@ -9,7 +9,12 @@
 1. [কোথায় ভ্যারিয়েবলগুলো যোগ করবেন (Where to Add Environment Variables)](#1-কোথায়-ভ্যারিয়েবলগুলো-যোগ-করবেন)
 2. [পার্ট ১: SMS Gateway কনফিগারেশন (মোবাইল এসএমএস)](#part-1-sms-gateway-configuration)
 3. [পার্ট ২: WhatsApp Business Cloud API কনফিগারেশন](#part-2-whatsapp-business-cloud-api-configuration)
-4. [পার্ট ৩: SMTP ইমেইল সেটআপ (cPanel Webmail / Gmail / Zoho)](#part-3-smtp-email-setup)
+4. [পার্ট ৩: Google OAuth 2.0 Sign-In কনফিগারেশন (অতি দ্রুত লগইন)](#part-3-google-oauth-20-sign-in-configuration)
+5. [পার্ট ৪: SMTP ইমেইল সেটআপ (cPanel Webmail / Gmail / Zoho)](#part-4-smtp-email-setup)
+6. [পার্ট ৫: ডাটাবেজ ও রেডিস সেটআপ (PostgreSQL & Redis)](#part-5-database--redis-configuration)
+7. [পার্ট ৬: সিকিউরিটি ও এনক্রিপশন কি (Security Peppers & Keys)](#part-6-security--encryption-keys)
+8. [সার্ভিস টেস্ট ও ভেরিফিকেশন চেকলিস্ট (Verification & Testing)](#verification--testing)
+9. [সাধারণ সমস্যা ও সমাধান (Troubleshooting)](#troubleshooting)
 5. [পার্ট ৪: ডাটাবেজ ও রেডিস সেটআপ (PostgreSQL & Redis)](#part-4-database--redis-configuration)
 6. [পার্ট ৫: সিকিউরিটি ও এনক্রিপশন কি (Security Peppers & Keys)](#part-5-security--encryption-keys)
 7. [সার্ভিস টেস্ট ও ভেরিফিকেশন চেকলিস্ট (Verification & Testing)](#verification--testing)
@@ -89,7 +94,41 @@ WHATSAPP_WEBHOOK_VERIFY_TOKEN="nca_wa_verify_secret_2026"
 
 ---
 
-## Part 3: SMTP Email Setup
+## Part 3: Google OAuth 2.0 Sign-In Configuration
+*(ইউজার ও স্টাফদের অতি দ্রুত গুগল দিয়ে সাইন-ইন এবং প্রোফাইল নির্বাচন স্ক্রিন খোলার জন্য)*
+
+NCAMart প্ল্যাটফর্মে জিরো-ল্যাটেন্সি **Direct Client-Side Redirection** এবং **DNS Preconnect** ইঞ্জিন সংযুক্ত করা হয়েছে যাতে বাটন ক্লিকের সাথে সাথেই **০ মিলিসেকেন্ডে** সরাসরি গুগলের প্রোফাইল সিলেকশন উইন্ডো খুলে যায়।
+
+### ধাপসমূহ:
+1. [Google Cloud Console](https://console.cloud.google.com/) এ যান এবং আপনার প্রজেক্ট সিলেক্ট করুন।
+2. **APIs & Services > Credentials** এ যান।
+3. **"Create Credentials" > "OAuth client ID"** সিলেক্ট করুন:
+   - Application type: **Web application**
+   - Name: "NCAMart Web Auth"
+   - Authorized JavaScript origins:
+     - `https://ncamart.com`
+     - `http://localhost:3000` (লোকাল ডেভেলপমেন্ট)
+   - Authorized redirect URIs:
+     - `https://ncamart.com/api/v1/auth/google/callback`
+     - `http://localhost:3000/api/v1/auth/google/callback`
+4. তৈরি হওয়া **Client ID** এবং **Client Secret** সংগ্রহ করে ফাইলে বসান:
+
+```env
+# ==========================================
+# GOOGLE OAUTH 2.0 SETTINGS (INSTANT LOGIN)
+# ==========================================
+GOOGLE_CLIENT_ID="your_google_client_id.apps.googleusercontent.com"
+NEXT_PUBLIC_GOOGLE_CLIENT_ID="your_google_client_id.apps.googleusercontent.com"
+GOOGLE_CLIENT_SECRET="GOCSPX-your_google_client_secret"
+```
+
+> [!TIP]
+> **কেন \`NEXT_PUBLIC_GOOGLE_CLIENT_ID\` গুরুত্বপূর্ণ:**
+> ব্রাউজার যখন \`NEXT_PUBLIC_GOOGLE_CLIENT_ID\` সরাসরি পায়, তখন বাটন চাপার সাথে সাথে কোনো সার্ভার রাউন্ড-ট্রিপ ছাড়াই **০ মিলিসেকেন্ডে সরাসরি গুগলের প্রোফাইল উইন্ডো খুলে যায়**।
+
+---
+
+## Part 4: SMTP Email Setup
 *(ইমেইলে পাসওয়ার্ড রিসেট কোড, সিকিউরিটি নোটিশ ও ইনভয়েস প্রেরণের জন্য)*
 
 cPanel ওয়েবমেইল, জিমেইল অ্যাপ পাসওয়ার্ড (Google Workspace), অথবা প্রফেশনাল SMTP (যেমন: Amazon SES, SendGrid, Brevo) ব্যবহার করতে পারেন।
@@ -129,7 +168,7 @@ SMTP_FROM_NAME="NCAMart Team"
 
 ---
 
-## Part 4: Database & Redis Configuration
+## Part 5: Database & Redis Configuration
 *(ইউজার, স্টাফ পাসওয়ার্ড ও সিকিউর সেশন ব্যবস্থাপনার মূল ভিত্তি)*
 
 ```env
@@ -149,7 +188,7 @@ REDIS_URL="redis://127.0.0.1:6379"         # cPanel বা লোকাল র�
 
 ---
 
-## Part 5: Security & Encryption Keys
+## Part 6: Security & Encryption Keys
 *(পাসওয়ার্ড হ্যাশিং, ওটিপি পেপারিং ও টোকেন এনক্রিপশন)*
 
 নিরাপত্তার জন্য নিচের ভ্যারিয়েবলগুলো যেকোনো দীর্ঘ র্যান্ডম স্ট্রিং দিয়ে সুরক্ষিত রাখুন:
@@ -196,3 +235,4 @@ ENCRYPTION_KEY="0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
 
 ---
 *ডকুমেন্টটি সর্বদা হালনাগাদ রাখতে এবং দলগত সহায়তায় ব্যবহার করুন।*
+

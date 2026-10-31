@@ -109,7 +109,7 @@ function RegisterContent() {
   const searchParams = useSearchParams();
   const redirectParam = searchParams.get("redirect") || "";
 
-  const { registerCustomer, loginWithGoogle, isAuthenticated, user, logout } = useAuth();
+  const { registerCustomer, isAuthenticated, user, logout } = useAuth();
 
   // Registration Form State
   const [accountType, setAccountType] = useState<"RETAIL" | "WHOLESALE">("RETAIL");
@@ -146,9 +146,22 @@ function RegisterContent() {
 
   const strength = getPasswordStrength(password);
 
-  // Fetch Google OAuth settings
+  // Preconnect to Google accounts for zero-latency network connection & fetch settings
   useEffect(() => {
     let isMounted = true;
+
+    if (typeof document !== "undefined") {
+      const link1 = document.createElement("link");
+      link1.rel = "preconnect";
+      link1.href = "https://accounts.google.com";
+      document.head.appendChild(link1);
+
+      const link2 = document.createElement("link");
+      link2.rel = "dns-prefetch";
+      link2.href = "https://accounts.google.com";
+      document.head.appendChild(link2);
+    }
+
     fetch("/api/v1/auth/google/config")
       .then((res) => res.json())
       .then((data) => {
@@ -221,43 +234,44 @@ function RegisterContent() {
   };
 
   // Handle Google Sign-Up
-  const handleGoogleClick = async () => {
+  const handleGoogleClick = () => {
     setErrorMessage(null);
-
-    if (!googleConfig?.enabled || !googleConfig?.client_id) {
-      setErrorMessage("Google Sign-In is not configured yet. Configure Client ID in Admin Settings -> Google Sign-In.");
-      return;
-    }
-
     setIsSubmitting(true);
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const win = window as any;
-      if (win.google && win.google.accounts) {
-        win.google.accounts.id.initialize({
-          client_id: googleConfig.client_id,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          callback: async (response: any) => {
-            if (response?.credential) {
-              const res = await loginWithGoogle(response.credential);
-              setIsSuccess(true);
-              setTimeout(() => {
-                window.location.href = redirectParam || (res.isStaff ? "/admin" : "/");
-              }, 400);
-            }
-          },
-        });
-        win.google.accounts.id.prompt();
-      } else {
-        setErrorMessage("Google Identity Services are loading. Please try again in a moment.");
-        setIsSubmitting(false);
-      }
-    } catch (err: unknown) {
-      setIsSubmitting(false);
-      setErrorMessage(err instanceof Error ? err.message : "Google authentication failed.");
-    }
-  };
 
+    const target = redirectParam || "/";
+    const effectiveClientId = googleConfig?.client_id || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+
+    if (effectiveClientId) {
+      try {
+        const statePayload = JSON.stringify({
+          redirect: target,
+          ts: Date.now(),
+        });
+        const state = btoa(statePayload)
+          .replace(/\+/g, "-")
+          .replace(/\//g, "_")
+          .replace(/=+$/, "");
+        const redirectUri = `${window.location.origin}/api/v1/auth/google/callback`;
+
+        const googleAuthUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
+        googleAuthUrl.searchParams.set("client_id", effectiveClientId);
+        googleAuthUrl.searchParams.set("redirect_uri", redirectUri);
+        googleAuthUrl.searchParams.set("response_type", "code");
+        googleAuthUrl.searchParams.set("scope", "openid email profile");
+        googleAuthUrl.searchParams.set("access_type", "online");
+        googleAuthUrl.searchParams.set("prompt", "select_account");
+        googleAuthUrl.searchParams.set("state", state);
+
+        window.location.href = googleAuthUrl.toString();
+        return;
+      } catch {
+        // Fallback
+      }
+    }
+
+    const query = target ? `?redirect=${encodeURIComponent(target)}` : "";
+    window.location.href = `/api/v1/auth/google${query}`;
+  };
   return (
     <div className="register-root-container">
       {/* Background Accent Lines */}

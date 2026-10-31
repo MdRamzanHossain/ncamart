@@ -49,28 +49,23 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // 3. Retrieve Google OAuth Credentials
-    let clientId = "";
-    let clientSecret = "";
+    // 3. Fast path: Retrieve Google OAuth Credentials (check env first, then DB)
+    let clientId =
+      process.env.GOOGLE_CLIENT_ID?.trim() ||
+      process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim() ||
+      "";
+    let clientSecret = process.env.GOOGLE_CLIENT_SECRET?.trim() || "";
     let redirectUri = "";
 
-    try {
-      const config = await settingsService.get("GOOGLE_AUTH_CONFIG");
-      clientId = config.clientId?.trim() || "";
-      clientSecret = config.clientSecret?.trim() || "";
-      redirectUri = config.redirectUri?.trim() || "";
-    } catch {
-      // DB settings fallback
-    }
-
-    if (!clientId) {
-      clientId =
-        process.env.GOOGLE_CLIENT_ID?.trim() ||
-        process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim() ||
-        "";
-    }
-    if (!clientSecret) {
-      clientSecret = process.env.GOOGLE_CLIENT_SECRET?.trim() || "";
+    if (!clientId || !clientSecret) {
+      try {
+        const config = await settingsService.get("GOOGLE_AUTH_CONFIG");
+        if (!clientId) clientId = config.clientId?.trim() || "";
+        if (!clientSecret) clientSecret = config.clientSecret?.trim() || "";
+        if (!redirectUri) redirectUri = config.redirectUri?.trim() || "";
+      } catch {
+        // DB settings fallback
+      }
     }
 
     if (!redirectUri || !redirectUri.startsWith("http")) {
