@@ -56,23 +56,24 @@ export const GET = withRoute(
     // 1. Fetch Staff Accounts
     try {
       const staffList = await staffAuthService.listStaff({ limit: 100 });
-      for (const s of staffList.staff) {
+      const staffMembers = (staffList as any).data || (staffList as any).staff || [];
+      for (const s of staffMembers) {
         unifiedUsers.push({
           id: s.id,
           name: s.full_name,
           email: s.email,
           phone: s.phone,
           type: "STAFF",
-          roles: s.roles,
+          roles: s.roles && s.roles.length > 0 ? s.roles : ["STAFF"],
           status: s.status as any,
           twoFactorEnabled: s.totp_enabled,
-          authProvider: s.email.includes("@gmail.com") ? "GOOGLE" : "CREDENTIALS",
+          authProvider: s.email?.includes("@gmail.com") ? "GOOGLE" : "CREDENTIALS",
           createdAt: s.created_at,
-          lastLoginAt: null,
+          lastLoginAt: s.last_login_at || null,
         });
       }
-    } catch {
-      // Memory fallback if DB offline
+    } catch (err) {
+      console.error("[GET /api/v1/admin/users] Error listing staff:", err);
     }
 
     // 2. Fetch Customer Accounts
@@ -84,8 +85,14 @@ export const GET = withRoute(
         .limit(query.limit);
 
       for (const c of customerRows) {
-        // Skip if customer email is already represented as staff
-        if (c.email && unifiedUsers.some((u) => u.email.toLowerCase() === c.email?.toLowerCase())) {
+        // Skip if customer email or phone is already represented as staff
+        const alreadyRepresented = unifiedUsers.some(
+          (u) =>
+            u.type === "STAFF" &&
+            ((c.email && u.email.toLowerCase() === c.email.toLowerCase()) ||
+              (c.phone && u.phone === c.phone))
+        );
+        if (alreadyRepresented) {
           continue;
         }
 
@@ -102,12 +109,12 @@ export const GET = withRoute(
           status: c.status as any,
           twoFactorEnabled: false,
           authProvider: isGoogle ? "GOOGLE" : isPhoneOtp ? "PHONE_OTP" : "CREDENTIALS",
-          createdAt: c.createdAt.toISOString(),
-          lastActiveAt: c.lastActiveAt ? c.lastActiveAt.toISOString() : null,
-        } as any);
+          createdAt: c.createdAt ? new Date(c.createdAt).toISOString() : new Date().toISOString(),
+          lastLoginAt: c.lastActiveAt ? new Date(c.lastActiveAt).toISOString() : null,
+        });
       }
-    } catch {
-      // Customer DB fallback
+    } catch (err) {
+      console.error("[GET /api/v1/admin/users] Error listing customers:", err);
     }
 
     // 3. Apply in-memory search and filters

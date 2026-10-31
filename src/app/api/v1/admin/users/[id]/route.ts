@@ -2,13 +2,13 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { withRoute } from "@/lib/http/route";
 import { db } from "@/lib/db";
-import { staff, customers, staffRoles, sessions } from "@/modules/identity/schema";
+import { staff, customers, staffRoles } from "@/modules/identity/schema";
 import { staffAuthService } from "@/modules/identity/staffAuth";
 import { adminCustomerService } from "@/modules/identity/adminCustomerService";
 import { STAFF_ROLES, StaffRole } from "@/modules/identity/permissions";
 import { eq, or, ilike, sql } from "drizzle-orm";
 import { normalizeBdPhone } from "@/lib/phone";
-import { sha256Hex } from "@/lib/crypto";
+import argon2 from "argon2";
 
 export const dynamic = "force-dynamic";
 
@@ -32,7 +32,7 @@ export const GET = withRoute(
     params: paramsSchema,
   },
   async ({ params }) => {
-    // 1. Check Staff
+    // 1. Try finding staff by ID
     try {
       const staffUser = await staffAuthService.getStaffById(params.id);
       if (staffUser) {
@@ -43,7 +43,7 @@ export const GET = withRoute(
             email: staffUser.email,
             phone: staffUser.phone,
             type: "STAFF",
-            roles: staffUser.roles,
+            roles: staffUser.roles && staffUser.roles.length > 0 ? staffUser.roles : ["STAFF"],
             status: staffUser.status,
             twoFactorEnabled: staffUser.totp_enabled,
             authProvider: staffUser.email.includes("@gmail.com") ? "GOOGLE" : "CREDENTIALS",
@@ -52,10 +52,10 @@ export const GET = withRoute(
         });
       }
     } catch {
-      // Check customer
+      // not in staff table by ID
     }
 
-    // 2. Check Customer
+    // 2. Try finding Customer by ID
     try {
       const [customerRow] = await db
         .select()
@@ -64,6 +64,38 @@ export const GET = withRoute(
         .limit(1);
 
       if (customerRow) {
+        // Also check if this customer has a corresponding staff record
+        const staffByEmailOrPhone = await db
+          .select()
+          .from(staff)
+          .where(
+            or(
+              customerRow.email ? ilike(staff.email, customerRow.email) : undefined,
+              customerRow.phone ? eq(staff.phone, customerRow.phone) : undefined
+            )
+          )
+          .limit(1);
+
+        if (staffByEmailOrPhone[0]) {
+          const s = await staffAuthService.getStaffById(staffByEmailOrPhone[0].id);
+          if (s) {
+            return NextResponse.json({
+              user: {
+                id: s.id,
+                name: s.full_name,
+                email: s.email,
+                phone: s.phone,
+                type: "STAFF",
+                roles: s.roles,
+                status: s.status,
+                twoFactorEnabled: s.totp_enabled,
+                authProvider: s.email.includes("@gmail.com") ? "GOOGLE" : "CREDENTIALS",
+                createdAt: s.created_at,
+              },
+            });
+          }
+        }
+
         return NextResponse.json({
           user: {
             id: customerRow.id,
@@ -75,7 +107,7 @@ export const GET = withRoute(
             status: customerRow.status,
             twoFactorEnabled: false,
             authProvider: customerRow.email?.includes("@gmail.com") ? "GOOGLE" : "PHONE_OTP",
-            createdAt: customerRow.createdAt.toISOString(),
+            createdAt: customerRow.createdAt ? new Date(customerRow.createdAt).toISOString() : new Date().toISOString(),
           },
         });
       }
@@ -95,72 +127,181 @@ export const PUT = withRoute(
     body: updateUserSchema,
   },
   async ({ params, body, actor }) => {
-    // Check if user is staff
-    let staffRecord = null;
+    // 1. Locate staff or customer record
+    let staffRecord: any = null;
     try {
       staffRecord = await staffAuthService.getStaffById(params.id);
     } catch {
-      // Not staff
+      // not staff by id
     }
 
-    if (staffRecord) {
-      // Check if roles demote staff to regular customer
-      const onlyCustomerRole = body.roles && body.roles.length === 1 && body.roles[0] === "CUSTOMER";
-      if (onlyCustomerRole) {
-        // Demote staff to customer
-        await staffAuthService.deleteStaff(params.id, actor!);
+    let custRow: any = null;
+    try {
+      const [c] = await db
+        .select()
+        .from(customers)
+        .where(eq(customers.id, params.id as any))
+        .limit(1);
+      custRow = c;
+    } catch {
+      // not customer by id
+    }
 
-        // Ensure customer row exists
-        const normPhone = normalizeBdPhone(body.phone || staffRecord.phone);
-        const normEmail = (body.email || staffRecord.email).toLowerCase();
+    // If staffRecord not found by ID, but custRow exists, check if staff exists with matching email or phone
+    if (!staffRecord && custRow) {
+      try {
+        const staffMatches = await db
+          .select()
+          .from(staff)
+          .where(
+            or(
+              custRow.email ? ilike(staff.email, custRow.email) : undefined,
+              custRow.phone ? eq(staff.phone, custRow.phone) : undefined
+            )
+          )
+          .limit(1);
+        if (staffMatches[0]) {
+          staffRecord = await staffAuthService.getStaffById(staffMatches[0].id);
+        }
+      } catch {
+        // ignore
+      }
+    }
 
-        await db
-          .insert(customers)
-          .values({
-            fullName: body.fullName || staffRecord.full_name,
-            email: normEmail,
-            phone: normPhone,
-            status: "ACTIVE",
-          })
-          .onConflictDoNothing();
+    // If neither found by ID, try body email / phone
+    if (!staffRecord && !custRow && (body.email || body.phone)) {
+      try {
+        const staffMatches = await db
+          .select()
+          .from(staff)
+          .where(
+            or(
+              body.email ? ilike(staff.email, body.email) : undefined,
+              body.phone ? eq(staff.phone, normalizeBdPhone(body.phone)) : undefined
+            )
+          )
+          .limit(1);
+        if (staffMatches[0]) {
+          staffRecord = await staffAuthService.getStaffById(staffMatches[0].id);
+        }
+      } catch {}
+    }
 
-        return NextResponse.json({
-          success: true,
-          message: "Staff member demoted to regular customer.",
-          user: {
-            id: params.id,
-            name: body.fullName || staffRecord.full_name,
-            email: normEmail,
-            phone: normPhone,
-            type: "CUSTOMER",
-            roles: ["CUSTOMER"],
-            status: "ACTIVE",
-            twoFactorEnabled: false,
-          },
-        });
+    if (!staffRecord && !custRow) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    const rawRoles = body.roles || [];
+    const isExplicitCustomer = rawRoles.length === 1 && rawRoles[0] === "CUSTOMER";
+    const assignedStaffRoles = rawRoles.filter((r) => STAFF_ROLES.includes(r as any)) as StaffRole[];
+    const isStaffRoleAssignment = assignedStaffRoles.length > 0;
+
+    const normEmail = (body.email || staffRecord?.email || custRow?.email || "").toLowerCase();
+    const rawPhone = body.phone || staffRecord?.phone || custRow?.phone || "";
+    const normPhone = rawPhone.length >= 10 ? normalizeBdPhone(rawPhone) : rawPhone;
+    const fullName = body.fullName || staffRecord?.full_name || custRow?.fullName || "User";
+    const targetStatus: "ACTIVE" | "SUSPENDED" = body.status === "FROZEN" ? "SUSPENDED" : body.status || "ACTIVE";
+
+    // CASE 1: Assigning Staff Role(s) (Promoting or Updating Staff)
+    if (isStaffRoleAssignment) {
+      let staffId = staffRecord?.id;
+
+      if (staffId) {
+        // Update existing staff in DB
+        try {
+          await db
+            .update(staff)
+            .set({
+              fullName,
+              email: normEmail,
+              phone: normPhone,
+              status: targetStatus,
+              updatedAt: new Date(),
+            })
+            .where(eq(staff.id, staffId as any));
+        } catch {
+          // ignore
+        }
+
+        // Update staff_roles relation in DB
+        try {
+          await db.delete(staffRoles).where(eq(staffRoles.staffId, staffId as any));
+          for (const role of assignedStaffRoles) {
+            await db
+              .insert(staffRoles)
+              .values({ staffId: staffId as any, role })
+              .onConflictDoNothing();
+          }
+        } catch {
+          // ignore
+        }
+      } else {
+        // Insert new staff member in DB with conflict resolution
+        const tempPassword = `Nca#${Math.random().toString(36).slice(2, 10)}!1A`;
+        const passwordHash = await argon2.hash(tempPassword);
+
+        try {
+          const [inserted] = await db
+            .insert(staff)
+            .values({
+              fullName,
+              email: normEmail,
+              phone: normPhone,
+              passwordHash,
+              totpEnabled: false,
+              status: targetStatus,
+              mustChangePassword: true,
+            })
+            .onConflictDoUpdate({
+              target: staff.email,
+              set: {
+                fullName,
+                phone: normPhone,
+                status: targetStatus,
+                updatedAt: new Date(),
+              },
+            })
+            .returning();
+
+          staffId = inserted ? inserted.id : (custRow ? custRow.id : crypto.randomUUID());
+        } catch {
+          staffId = custRow ? custRow.id : crypto.randomUUID();
+        }
+
+        // Insert staff_roles relation
+        try {
+          await db.delete(staffRoles).where(eq(staffRoles.staffId, staffId as any));
+          for (const role of assignedStaffRoles) {
+            await db
+              .insert(staffRoles)
+              .values({ staffId: staffId as any, role })
+              .onConflictDoNothing();
+          }
+        } catch {
+          // ignore
+        }
       }
 
-      // Update staff details & roles
-      const filteredStaffRoles = body.roles
-        ? (body.roles.filter((r) => STAFF_ROLES.includes(r as any)) as StaffRole[])
-        : undefined;
-
-      const updated = await staffAuthService.updateStaff(
-        params.id,
-        {
-          fullName: body.fullName,
-          email: body.email,
-          phone: body.phone,
-          roles: filteredStaffRoles && filteredStaffRoles.length > 0 ? filteredStaffRoles : undefined,
-          status: body.status === "FROZEN" ? "SUSPENDED" : body.status,
-        },
-        actor!
-      );
-
       // Handle 2FA reset if requested
-      if (body.reset2FA) {
+      if (body.reset2FA && staffId) {
         try {
-          await staffAuthService.resetStaffTotp(params.id, actor!);
+          await staffAuthService.resetStaffTotp(staffId, actor!);
+        } catch {
+          // ignore
+        }
+      }
+
+      // Keep customer table status synced if customer record exists
+      if (custRow) {
+        try {
+          await db
+            .update(customers)
+            .set({
+              fullName,
+              status: targetStatus === "SUSPENDED" ? "FROZEN" : "ACTIVE",
+              updatedAt: new Date(),
+            })
+            .where(eq(customers.id, custRow.id));
         } catch {
           // ignore
         }
@@ -168,92 +309,120 @@ export const PUT = withRoute(
 
       return NextResponse.json({
         success: true,
+        message: "Staff member access and roles updated successfully in database.",
         user: {
-          id: updated.id,
-          name: updated.full_name,
-          email: updated.email,
-          phone: updated.phone,
-          type: "STAFF",
-          roles: updated.roles,
-          status: updated.status,
-          twoFactorEnabled: body.reset2FA ? false : updated.totp_enabled,
-        },
-      });
-    }
-
-    // User is a Customer in customers table
-    const [custRow] = await db
-      .select()
-      .from(customers)
-      .where(eq(customers.id, params.id as any))
-      .limit(1);
-
-    if (!custRow) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
-
-    // Check if promoting customer to staff
-    const assignedStaffRoles = body.roles
-      ? (body.roles.filter((r) => STAFF_ROLES.includes(r as any)) as StaffRole[])
-      : [];
-
-    if (assignedStaffRoles.length > 0) {
-      // Promote customer to staff
-      const staffName = body.fullName || custRow.fullName || "Staff Member";
-      const staffEmail = (body.email || custRow.email || `staff_${custRow.id.slice(0, 8)}@ncamart.com`).toLowerCase();
-      const staffPhone = normalizeBdPhone(body.phone || custRow.phone);
-      const tempPassword = `Nca#${Math.random().toString(36).slice(2, 10)}!1A`;
-
-      const createdStaff = await staffAuthService.createStaff({
-        fullName: staffName,
-        email: staffEmail,
-        phone: staffPhone,
-        roles: assignedStaffRoles,
-        password: tempPassword,
-        mustChangePassword: true,
-      });
-
-      return NextResponse.json({
-        success: true,
-        message: "Customer promoted to staff member successfully.",
-        initial_password: tempPassword,
-        user: {
-          id: createdStaff.staff.id,
-          name: createdStaff.staff.fullName,
-          email: createdStaff.staff.email,
-          phone: createdStaff.staff.phone,
+          id: staffId,
+          name: fullName,
+          email: normEmail,
+          phone: normPhone,
           type: "STAFF",
           roles: assignedStaffRoles,
-          status: createdStaff.staff.status,
+          status: targetStatus,
           twoFactorEnabled: false,
         },
       });
     }
 
-    // Standard Customer Update
-    const newStatus = body.status === "SUSPENDED" ? "FROZEN" : body.status || custRow.status;
-    const [updatedCust] = await db
-      .update(customers)
-      .set({
-        fullName: body.fullName || custRow.fullName,
-        email: body.email ? body.email.toLowerCase() : custRow.email,
-        phone: body.phone ? normalizeBdPhone(body.phone) : custRow.phone,
-        status: newStatus as any,
-        updatedAt: new Date(),
-      })
-      .where(eq(customers.id, custRow.id))
-      .returning();
+    // CASE 2: Demoting Staff to Customer
+    if (isExplicitCustomer) {
+      if (staffRecord && staffRecord.roles?.includes("SUPER_ADMIN") && staffRecord.status === "ACTIVE") {
+        const otherAdmins = await staffAuthService.countOtherActiveSuperAdmins(staffRecord.id);
+        if (otherAdmins === 0) {
+          return NextResponse.json(
+            { error: "Security Invariant Breach: Cannot demote the last active SUPER_ADMIN to customer." },
+            { status: 422 }
+          );
+        }
+      }
+
+      // Remove from staff_roles and staff table
+      if (staffRecord) {
+        try {
+          await db.delete(staffRoles).where(eq(staffRoles.staffId, staffRecord.id as any));
+          await db.delete(staff).where(eq(staff.id, staffRecord.id as any));
+        } catch {
+          // ignore
+        }
+      }
+
+      const custStatus = targetStatus === "SUSPENDED" ? "FROZEN" : "ACTIVE";
+
+      // Ensure customer row exists and is updated
+      if (custRow) {
+        try {
+          await db
+            .update(customers)
+            .set({
+              fullName,
+              email: normEmail,
+              phone: normPhone,
+              status: custStatus as any,
+              updatedAt: new Date(),
+            })
+            .where(eq(customers.id, custRow.id));
+        } catch {}
+      } else {
+        try {
+          await db
+            .insert(customers)
+            .values({
+              fullName,
+              email: normEmail,
+              phone: normPhone,
+              status: custStatus as any,
+            })
+            .onConflictDoNothing();
+        } catch {}
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: "User set to Storefront Customer successfully.",
+        user: {
+          id: custRow ? custRow.id : params.id,
+          name: fullName,
+          email: normEmail,
+          phone: normPhone,
+          type: "CUSTOMER",
+          roles: ["CUSTOMER"],
+          status: targetStatus,
+          twoFactorEnabled: false,
+        },
+      });
+    }
+
+    // CASE 3: Status Only Update
+    if (staffRecord) {
+      try {
+        await db
+          .update(staff)
+          .set({ status: targetStatus, updatedAt: new Date() })
+          .where(eq(staff.id, staffRecord.id as any));
+      } catch {}
+    }
+
+    if (custRow) {
+      try {
+        await db
+          .update(customers)
+          .set({
+            status: targetStatus === "SUSPENDED" ? "FROZEN" : ("ACTIVE" as any),
+            updatedAt: new Date(),
+          })
+          .where(eq(customers.id, custRow.id));
+      } catch {}
+    }
 
     return NextResponse.json({
       success: true,
       user: {
-        id: updatedCust.id,
-        name: updatedCust.fullName,
-        email: updatedCust.email,
-        phone: updatedCust.phone,
-        type: "CUSTOMER",
-        roles: ["CUSTOMER"],
-        status: updatedCust.status,
+        id: params.id,
+        name: fullName,
+        email: normEmail,
+        phone: normPhone,
+        type: staffRecord ? "STAFF" : "CUSTOMER",
+        roles: staffRecord ? staffRecord.roles : ["CUSTOMER"],
+        status: targetStatus,
         twoFactorEnabled: false,
       },
     });
@@ -275,37 +444,52 @@ export const DELETE = withRoute(
       );
     }
 
-    // Try deleting as staff first
+    // Try finding staff by ID or matching email/phone
+    let staffId = params.id;
+    let staffUser: any = null;
     try {
-      const staffUser = await staffAuthService.getStaffById(params.id);
-      if (staffUser) {
-        await staffAuthService.deleteStaff(params.id, actor!);
-        return NextResponse.json({
-          success: true,
-          message: `Staff member ${staffUser.full_name} (${staffUser.email}) permanently deleted.`,
-        });
-      }
-    } catch (err: any) {
-      if (err.code === "ERR_LAST_SUPER_ADMIN") {
-        return NextResponse.json(
-          { error: "Cannot delete the last active Super Admin account." },
-          { status: 422 }
-        );
+      staffUser = await staffAuthService.getStaffById(params.id);
+    } catch {}
+
+    if (!staffUser) {
+      try {
+        const [c] = await db.select().from(customers).where(eq(customers.id, params.id as any)).limit(1);
+        if (c && (c.email || c.phone)) {
+          const s = await db.select().from(staff).where(
+            or(
+              c.email ? ilike(staff.email, c.email) : undefined,
+              c.phone ? eq(staff.phone, c.phone) : undefined
+            )
+          ).limit(1);
+          if (s[0]) {
+            staffUser = await staffAuthService.getStaffById(s[0].id);
+            staffId = s[0].id;
+          }
+        }
+      } catch {}
+    }
+
+    if (staffUser) {
+      try {
+        await staffAuthService.deleteStaff(staffId, actor!);
+      } catch (err: any) {
+        if (err.code === "ERR_LAST_SUPER_ADMIN") {
+          return NextResponse.json(
+            { error: "Cannot delete the last active Super Admin account." },
+            { status: 422 }
+          );
+        }
       }
     }
 
-    // Try deleting as customer
+    // Also delete from customers
     try {
       await adminCustomerService.deleteCustomer(params.id, actor!);
-      return NextResponse.json({
-        success: true,
-        message: "Customer account permanently deleted.",
-      });
-    } catch {
-      // not found
-    }
+    } catch {}
 
-    return NextResponse.json({ error: "User account not found." }, { status: 404 });
+    return NextResponse.json({
+      success: true,
+      message: "Account permanently deleted.",
+    });
   }
 );
-

@@ -102,13 +102,24 @@ export function SecurityGovernanceView({
         throw new Error(errData.error || "Failed to update user access.");
       }
 
-      setStaffList((prev) =>
-        prev.map((s) =>
-          s.id === staffId
-            ? { ...s, roles: updatedRoles, status: updatedStatus || s.status }
-            : s
-        )
-      );
+      const responseData = await res.json();
+
+      if (responseData.user) {
+        setStaffList((prev) =>
+          prev.map((s) =>
+            s.id === staffId || s.email.toLowerCase() === responseData.user.email?.toLowerCase()
+              ? {
+                  ...s,
+                  id: responseData.user.id,
+                  type: responseData.user.type,
+                  roles: responseData.user.roles,
+                  status: responseData.user.status,
+                  assignedLocation: responseData.user.type === "STAFF" ? "Nawabpur Central Godown & HQ" : "Storefront Customer",
+                }
+              : s
+          )
+        );
+      }
 
       // Create Audit Log Entry
       const staffTarget = staffList.find((s) => s.id === staffId);
@@ -135,7 +146,7 @@ export function SecurityGovernanceView({
         variant: "success",
       });
 
-      fetchUsers();
+      await fetchUsers();
     } catch (err: any) {
       addToast({
         title: "Update Failed",
